@@ -1,11 +1,11 @@
 # STM32F10x StdPeriph Integration Guide
 
-This project uses STM32F103RCT6 and should be built with STM32F10x Standard Peripheral Library as the hardware driver base.
+This project uses STM32F103C8T6 and should be built with STM32F10x Standard Peripheral Library as the hardware driver base.
 
 ## 1. Add preprocessor defines
 
 - USE_STDPERIPH_DRIVER
-- STM32F10X_HD
+- STM32F10X_MD
 
 ## 2. Add include paths
 
@@ -18,7 +18,7 @@ This project uses STM32F103RCT6 and should be built with STM32F10x Standard Peri
 ## 3. Add required CMSIS startup/system sources
 
 - ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x/system_stm32f10x.c
-- ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/arm/startup_stm32f10x_hd.s
+- ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/arm/startup_stm32f10x_md.s
 
 ## 4. Add StdPeriph driver sources used by current firmware
 

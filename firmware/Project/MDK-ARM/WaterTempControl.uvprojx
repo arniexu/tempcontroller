@@ -335,9 +335,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define></Define>
+              <Define>USE_STDPERIPH_DRIVER,STM32F10X_MD</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\Core\Inc;..\..\Drivers\BSP;..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\STM32F10x_StdPeriph_Driver\inc;..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\CMSIS\CM3</IncludePath>
+              <IncludePath>..\..\Core\Inc;..\..\Drivers\BSP;..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\STM32F10x_StdPeriph_Driver\inc;..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\CMSIS\CM3\CoreSupport;..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -470,6 +470,21 @@
               <FileName>ui_service.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Core\Src\ui_service.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>CMSIS</GroupName>
+          <Files>
+            <File>
+              <FileName>system_stm32f10x.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\system_stm32f10x.c</FilePath>
+            </File>
+            <File>
+              <FileName>startup_stm32f10x_md.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\startup\arm\startup_stm32f10x_md.s</FilePath>
             </File>
           </Files>
         </Group>

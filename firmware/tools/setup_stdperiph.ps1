@@ -13,10 +13,10 @@ if (-not (Test-Path $conf)) {
 }
 
 $sys = Join-Path $lib "Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x/system_stm32f10x.c"
-$startup = Join-Path $lib "Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/arm/startup_stm32f10x_hd.s"
+$startup = Join-Path $lib "Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/arm/startup_stm32f10x_md.s"
 if (-not (Test-Path $sys)) { throw "Missing system file: $sys" }
 if (-not (Test-Path $startup)) { throw "Missing startup file: $startup" }
 
 Write-Host "StdPeriph prerequisite files are present."
-Write-Host "Add defines: USE_STDPERIPH_DRIVER, STM32F10X_HD"
+Write-Host "Add defines: USE_STDPERIPH_DRIVER, STM32F10X_MD"
 Write-Host "See integration guide: Project/StdPeriphIntegration.md"
