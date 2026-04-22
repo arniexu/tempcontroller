@@ -1,0 +1,163 @@
+#include "protocol_export.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#include "bsp_uart.h"
+#include "debug_log.h"
+#include "log_service.h"
+#include "param_store.h"
+#include "temp_manager.h"
+
+static void send_ok(const char *payload)
+{
+	char line[160];
+	(void)snprintf(line, sizeof(line), "OK,%s\r\n", payload);
+	bsp_uart_write(line);
+}
+
+static void send_err(const char *payload)
+{
+	char line[160];
+	(void)snprintf(line, sizeof(line), "ERR,%s\r\n", payload);
+	bsp_uart_write(line);
+}
+
+static void handle_read_temp(void)
+{
+	char line[160];
+	const temp_snapshot_t *t = temp_manager_get_snapshot();
+	(void)snprintf(line,
+				   sizeof(line),
+				   "TEMP,%.2f,%.2f,%.2f,%.2f,mask=%u,degraded=%d,fault=%d",
+				   t->t1,
+				   t->t2,
+				   t->t3,
+				   t->t_ctrl,
+				   (unsigned int)t->valid_mask,
+				   t->sensor_degraded ? 1 : 0,
+				   t->sensor_fault ? 1 : 0);
+	send_ok(line);
+}
+
+static void handle_read_param(void)
+{
+	char line[160];
+	const app_params_t *p = param_store_get();
+	(void)snprintf(line,
+				   sizeof(line),
+				   "PARAM,set=%.2f,alarm=%.2f,kp=%.3f,ki=%.3f,kd=%.3f",
+				   p->set_temp_c,
+				   p->alarm_threshold_c,
+				   p->kp,
+				   p->ki,
+				   p->kd);
+	send_ok(line);
+}
+
+static void handle_set_temp(const char *cmd)
+{
+	float set_temp;
+	app_params_t *p;
+
+	if (sscanf(cmd, "SET_TEMP=%f", &set_temp) != 1)
+	{
+		debug_log_warn("PROTO", "bad set temp cmd: %s", cmd);
+		send_err("BAD_SET_TEMP");
+		return;
+	}
+
+	if ((set_temp < 20.0f) || (set_temp > 60.0f))
+	{
+		debug_log_warn("PROTO", "set temp out of range: %.2f", set_temp);
+		send_err("SET_TEMP_OUT_OF_RANGE");
+		return;
+	}
+
+	p = param_store_get_mutable();
+	p->set_temp_c = set_temp;
+	param_store_save(p);
+	debug_log_info("PROTO", "set temp applied: %.2f", set_temp);
+	send_ok("SET_TEMP_APPLIED");
+}
+
+static void handle_log_export(void)
+{
+	char line[200];
+	unsigned int i;
+	unsigned int cnt = log_service_count();
+	log_record_t rec;
+
+	bsp_uart_write("OK,LOG_BEGIN\r\n");
+	bsp_uart_write("index,t1,t2,t3,t_avg,set_temp,pid_out,heater,alarm\r\n");
+
+	for (i = 0U; i < cnt; ++i)
+	{
+		if (!log_service_get(i, &rec))
+		{
+			continue;
+		}
+
+		(void)snprintf(line,
+					   sizeof(line),
+					   "%u,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d\r\n",
+					   rec.index,
+					   rec.t1,
+					   rec.t2,
+					   rec.t3,
+					   rec.t_avg,
+					   rec.set_temp,
+					   rec.pid_out,
+					   rec.heater_on,
+					   rec.alarm_on);
+		bsp_uart_write(line);
+	}
+
+	bsp_uart_write("OK,LOG_END\r\n");
+}
+
+void protocol_export_init(void)
+{
+	bsp_uart_init();
+}
+
+void protocol_export_process(void)
+{
+	char cmd[80];
+
+	if (!bsp_uart_read_line(cmd, sizeof(cmd)))
+	{
+		return;
+	}
+
+	debug_log_info("PROTO", "rx cmd: %s", cmd);
+
+	if (strcmp(cmd, "READ_TEMP") == 0)
+	{
+		handle_read_temp();
+	}
+	else if (strcmp(cmd, "READ_PARAM") == 0)
+	{
+		handle_read_param();
+	}
+	else if (strncmp(cmd, "SET_TEMP=", 9) == 0)
+	{
+		handle_set_temp(cmd);
+	}
+	else if (strcmp(cmd, "LOG_CLEAR") == 0)
+	{
+		log_service_clear();
+		debug_log_info("PROTO", "log cleared");
+		send_ok("LOG_CLEARED");
+	}
+	else if (strcmp(cmd, "LOG_EXPORT") == 0)
+	{
+		debug_log_info("PROTO", "log export count=%u", log_service_count());
+		handle_log_export();
+	}
+	else
+	{
+		debug_log_warn("PROTO", "unknown cmd: %s", cmd);
+		send_err("UNKNOWN_CMD");
+	}
+}

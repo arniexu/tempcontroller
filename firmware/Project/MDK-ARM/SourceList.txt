@@ -1,0 +1,37 @@
+# Application sources (Core/Src)
+..\..\Core\Src\main.c
+..\..\Core\Src\app_main.c
+..\..\Core\Src\scheduler.c
+..\..\Core\Src\debug_log.c
+..\..\Core\Src\temp_manager.c
+..\..\Core\Src\pid_ctrl.c
+..\..\Core\Src\heater_ctrl.c
+..\..\Core\Src\alarm_service.c
+..\..\Core\Src\schedule_service.c
+..\..\Core\Src\param_store.c
+..\..\Core\Src\log_service.c
+..\..\Core\Src\ui_service.c
+..\..\Core\Src\protocol_export.c
+
+# BSP sources (Drivers/BSP)
+..\..\Drivers\BSP\bsp_ds18b20.c
+..\..\Drivers\BSP\bsp_relay.c
+..\..\Drivers\BSP\bsp_rtc.c
+..\..\Drivers\BSP\bsp_uart.c
+
+# CMSIS sources
+..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\system_stm32f10x.c
+..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\startup\arm\startup_stm32f10x_hd.s
+
+# StdPeriph sources
+..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\STM32F10x_StdPeriph_Driver\src\misc.c
+..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_bkp.c
+..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_flash.c
+..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_gpio.c
+..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c
+..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_pwr.c
+..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_rcc.c
+..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_rtc.c
+..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_spi.c
+..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_tim.c
+..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_usart.c
