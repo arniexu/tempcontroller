@@ -107,7 +107,7 @@ static int param_record_valid(const param_nv_record_t *r)
     return (param_record_crc(r) == r->crc32) ? 1 : 0;
 }
 
-#if (APP_PARAM_STORE_USE_EEPROM != 1U) && defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_STDPERIPH_DRIVER)
 static void read_record_from_flash(uint32_t addr, param_nv_record_t *out)
 {
     const uint8_t *src = (const uint8_t *)addr;
