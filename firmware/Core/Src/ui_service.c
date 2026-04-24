@@ -1,6 +1,7 @@
 #include "ui_service.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "bsp_key.h"
 #include "bsp_oled.h"
@@ -30,6 +31,9 @@ typedef struct
     int last_heater_on;
     int last_alarm_on;
     unsigned int info_reset_feedback_ticks;
+    unsigned int info_reset_arm_ticks;
+    int render_cache_valid;
+    char rendered_lines[BSP_OLED_LINE_COUNT][BSP_OLED_LINE_CHARS + 1U];
 } ui_ctx_t;
 
 static ui_ctx_t g_ui;
@@ -39,7 +43,8 @@ static int queue_push(ui_key_event_t key)
     unsigned int next = (g_ui.q_head + 1U) % (unsigned int)(sizeof(g_ui.queue) / sizeof(g_ui.queue[0]));
     if (next == g_ui.q_tail)
     {
-        return 0;
+        /* Drop the oldest event so newest key events are not lost under bursts. */
+        g_ui.q_tail = (g_ui.q_tail + 1U) % (unsigned int)(sizeof(g_ui.queue) / sizeof(g_ui.queue[0]));
     }
     g_ui.queue[g_ui.q_head] = key;
     g_ui.q_head = next;
@@ -158,8 +163,16 @@ static void process_key_event(app_params_t *params, ui_key_event_t key)
         case UI_KEY_SET_LONG:
             if ((g_ui.page == UI_PAGE_INFO) && (params != 0))
             {
-                param_store_load_defaults(params);
-                g_ui.info_reset_feedback_ticks = 20U;
+                if (g_ui.info_reset_arm_ticks > 0U)
+                {
+                    param_store_load_defaults(params);
+                    g_ui.info_reset_feedback_ticks = 20U;
+                    g_ui.info_reset_arm_ticks = 0U;
+                }
+                else
+                {
+                    g_ui.info_reset_arm_ticks = 30U;
+                }
             }
             else if (page_editable(g_ui.page))
             {
@@ -420,6 +433,10 @@ static void render_page(void)
         {
             (void)snprintf(line3, sizeof(line3), "DEFAULTS APPLIED");
         }
+        else if (g_ui.info_reset_arm_ticks > 0U)
+        {
+            (void)snprintf(line3, sizeof(line3), "HOLD AGAIN RESET");
+        }
         else
         {
             (void)snprintf(line3, sizeof(line3), "LONG SET=RESET");
@@ -431,12 +448,28 @@ static void render_page(void)
         break;
     }
 
-    bsp_oled_clear();
-    bsp_oled_draw_text(0U, line0);
-    bsp_oled_draw_text(1U, line1);
-    bsp_oled_draw_text(2U, line2);
-    bsp_oled_draw_text(3U, line3);
-    bsp_oled_refresh();
+    {
+        const char *new_lines[BSP_OLED_LINE_COUNT] = { line0, line1, line2, line3 };
+        unsigned int i;
+        int changed = 0;
+
+        for (i = 0U; i < BSP_OLED_LINE_COUNT; ++i)
+        {
+            if ((!g_ui.render_cache_valid) || (strcmp(g_ui.rendered_lines[i], new_lines[i]) != 0))
+            {
+                strncpy(g_ui.rendered_lines[i], new_lines[i], BSP_OLED_LINE_CHARS);
+                g_ui.rendered_lines[i][BSP_OLED_LINE_CHARS] = '\0';
+                bsp_oled_draw_text((uint8_t)i, g_ui.rendered_lines[i]);
+                changed = 1;
+            }
+        }
+
+        if (changed)
+        {
+            bsp_oled_refresh();
+            g_ui.render_cache_valid = 1;
+        }
+    }
 }
 
 void ui_service_init(void)
@@ -474,6 +507,15 @@ void ui_service_init(void)
     g_ui.last_heater_on = 0;
     g_ui.last_alarm_on = 0;
     g_ui.info_reset_feedback_ticks = 0U;
+    g_ui.info_reset_arm_ticks = 0U;
+    g_ui.render_cache_valid = 0;
+    {
+        unsigned int i;
+        for (i = 0U; i < BSP_OLED_LINE_COUNT; ++i)
+        {
+            g_ui.rendered_lines[i][0] = '\0';
+        }
+    }
 
     bsp_key_init();
     bsp_oled_init();
@@ -488,6 +530,10 @@ void ui_service_tick_100ms(app_params_t *params)
     if (g_ui.info_reset_feedback_ticks > 0U)
     {
         g_ui.info_reset_feedback_ticks--;
+    }
+    if (g_ui.info_reset_arm_ticks > 0U)
+    {
+        g_ui.info_reset_arm_ticks--;
     }
 
     poll_keys_to_events();

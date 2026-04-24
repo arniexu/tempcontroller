@@ -127,6 +127,11 @@ int test_ui_service_run(void)
 
     ui_service_inject_key_event(UI_KEY_SET_LONG);
     ui_service_tick_100ms(&p);
+    ui_service_tick_200ms(APP_MODE_IDLE, &t, &p, 0.0f, 0, 0);
+    TEST_ASSERT_TRUE(strstr(bsp_oled_mock_get_line(3U), "HOLD AGAIN RESET") != 0);
+
+    ui_service_inject_key_event(UI_KEY_SET_LONG);
+    ui_service_tick_100ms(&p);
     TEST_ASSERT_NEAR_FLOAT(p.set_temp_c, APP_TEMP_DEFAULT_SETPOINT_C, 0.01f);
     TEST_ASSERT_NEAR_FLOAT(p.alarm_threshold_c, APP_TEMP_ALARM_THRESHOLD_C, 0.01f);
     TEST_ASSERT_NEAR_FLOAT(p.kp, 8.0f, 0.01f);

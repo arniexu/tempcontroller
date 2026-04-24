@@ -25,7 +25,7 @@ static bool g_prev_alarm = false;
 static unsigned int g_log_tick_count = 0U;
 static app_params_t g_runtime_params;
 
-static void apply_runtime_params(const app_params_t *params)
+static void apply_schedule_params(const app_params_t *params)
 {
     schedule_config_t cfg;
 
@@ -38,6 +38,14 @@ static void apply_runtime_params(const app_params_t *params)
     cfg.start_min_of_day = (uint16_t)(params->schedule_start_min % 1440U);
     cfg.end_min_of_day = (uint16_t)(params->schedule_end_min % 1440U);
     schedule_service_set_config(&cfg);
+}
+
+static void apply_pid_params(const app_params_t *params)
+{
+    if (params == 0)
+    {
+        return;
+    }
 
     pid_init(&g_pid, params->kp, params->ki, params->kd, 1.0f, 0.0f, 100.0f);
 }
@@ -45,14 +53,30 @@ static void apply_runtime_params(const app_params_t *params)
 static void sync_runtime_params_if_changed(void)
 {
     const app_params_t *params = param_store_get();
+    int schedule_changed;
+    int pid_changed;
 
     if (memcmp(&g_runtime_params, params, sizeof(g_runtime_params)) == 0)
     {
         return;
     }
 
+    schedule_changed = (g_runtime_params.schedule_enabled != params->schedule_enabled) ||
+                       (g_runtime_params.schedule_start_min != params->schedule_start_min) ||
+                       (g_runtime_params.schedule_end_min != params->schedule_end_min);
+    pid_changed = (g_runtime_params.kp != params->kp) ||
+                  (g_runtime_params.ki != params->ki) ||
+                  (g_runtime_params.kd != params->kd);
+
     param_store_save(params);
-    apply_runtime_params(params);
+    if (schedule_changed)
+    {
+        apply_schedule_params(params);
+    }
+    if (pid_changed)
+    {
+        apply_pid_params(params);
+    }
     g_runtime_params = *params;
 }
 
@@ -94,7 +118,8 @@ void app_main_init(void)
 
     {
         const app_params_t *params = param_store_get();
-        apply_runtime_params(params);
+        apply_schedule_params(params);
+        apply_pid_params(params);
         g_runtime_params = *params;
     }
     heater_ctrl_init(APP_PID_WINDOW_MS);
