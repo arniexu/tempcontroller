@@ -19,7 +19,7 @@ This folder contains the first implementation baseline for the water temperature
 2. Map heater_ctrl.c state to real relay GPIO output.
 3. Implement OLED pages and key handling in ui_service.c.
 4. Implement RTC-based booking logic in schedule_service.c.
-5. Implement NV persistence in param_store.c using internal Flash dual-page journal (A/B) with version, sequence, and CRC32.
+5. Implement NV persistence in param_store.c using external EEPROM dual-slot journal (A/B) with version, sequence, and CRC32; keep internal Flash dual-page as fallback, and defer writes by 3 seconds to reduce storage wear.
 6. Enable USE_STDPERIPH_DRIVER and connect bsp_uart.c to your board-level USART IRQ/DMA strategy.
 
 ## Runtime model

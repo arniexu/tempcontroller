@@ -25,6 +25,13 @@
 
 #define APP_DEBUG_LOG_ENABLE            (1U)
 
+#define APP_PARAM_STORE_USE_EEPROM      (1U)
+#define APP_PARAM_STORE_FLUSH_DELAY_S   (3U)
+#define APP_EEPROM_I2C_ADDR_7BIT        (0x50U)
+#define APP_EEPROM_I2C_SPEED_HZ         (100000U)
+#define APP_EEPROM_TOTAL_SIZE_BYTES     (256U)
+#define APP_EEPROM_PAGE_SIZE_BYTES      (8U)
+
 #define APP_TASK_KEY_PERIOD_MS          (100U)
 #define APP_TASK_UI_PERIOD_MS           (200U)
 #define APP_TASK_CONTROL_PERIOD_MS      (1000U)

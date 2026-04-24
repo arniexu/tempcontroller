@@ -18,6 +18,8 @@ void param_store_init(void);
 void param_store_load_defaults(app_params_t *params);
 void param_store_load(app_params_t *params);
 void param_store_save(const app_params_t *params);
+void param_store_tick_1s(void);
+void param_store_flush_now(void);
 const app_params_t *param_store_get(void);
 app_params_t *param_store_get_mutable(void);
 

@@ -4,6 +4,8 @@
 
 #include "bsp_key.h"
 #include "bsp_oled.h"
+#include "bsp_rtc.h"
+#include "log_service.h"
 
 typedef struct
 {
@@ -27,6 +29,7 @@ typedef struct
     float last_pid_out;
     int last_heater_on;
     int last_alarm_on;
+    unsigned int info_reset_feedback_ticks;
 } ui_ctx_t;
 
 static ui_ctx_t g_ui;
@@ -146,8 +149,19 @@ static void process_key_event(app_params_t *params, ui_key_event_t key)
             g_ui.page = UI_PAGE_HOME;
             break;
         case UI_KEY_SET:
-        case UI_KEY_SET_LONG:
             if (page_editable(g_ui.page))
+            {
+                g_ui.editing = 1;
+                g_ui.pid_field = 0U;
+            }
+            break;
+        case UI_KEY_SET_LONG:
+            if ((g_ui.page == UI_PAGE_INFO) && (params != 0))
+            {
+                param_store_load_defaults(params);
+                g_ui.info_reset_feedback_ticks = 20U;
+            }
+            else if (page_editable(g_ui.page))
             {
                 g_ui.editing = 1;
                 g_ui.pid_field = 0U;
@@ -310,6 +324,37 @@ static const char *page_text(ui_page_t page)
     }
 }
 
+static void format_hhmm(unsigned int minutes, char *buf, unsigned int buf_len)
+{
+    unsigned int hh = (minutes / 60U) % 24U;
+    unsigned int mm = minutes % 60U;
+
+    (void)snprintf(buf, buf_len, "%02u:%02u", hh, mm);
+}
+
+static unsigned int schedule_next_boundary(unsigned int now_min, unsigned int start_min, unsigned int end_min)
+{
+    unsigned int start = start_min % 1440U;
+    unsigned int end = end_min % 1440U;
+    int active;
+
+    if (start == end)
+    {
+        return start;
+    }
+
+    if (start < end)
+    {
+        active = ((now_min >= start) && (now_min < end)) ? 1 : 0;
+    }
+    else
+    {
+        active = ((now_min >= start) || (now_min < end)) ? 1 : 0;
+    }
+
+    return active ? end : start;
+}
+
 static void render_page(void)
 {
     char line0[BSP_OLED_LINE_CHARS + 1U];
@@ -333,13 +378,52 @@ static void render_page(void)
         (void)snprintf(line3, sizeof(line3), "ALM %.1fC", g_ui.last_params.alarm_threshold_c);
         break;
     case UI_PAGE_SCHEDULE:
-        (void)snprintf(line3, sizeof(line3), "SCHED READY");
+        {
+            char start_text[6];
+            char end_text[6];
+            char now_text[6] = "--:--";
+            char next_text[6] = "--:--";
+            uint16_t now_min;
+
+            format_hhmm(g_ui.last_params.schedule_start_min, start_text, sizeof(start_text));
+            format_hhmm(g_ui.last_params.schedule_end_min, end_text, sizeof(end_text));
+
+            if (bsp_rtc_get_minutes_of_day(&now_min))
+            {
+                format_hhmm(now_min, now_text, sizeof(now_text));
+                format_hhmm(schedule_next_boundary((unsigned int)now_min,
+                                                   g_ui.last_params.schedule_start_min,
+                                                   g_ui.last_params.schedule_end_min),
+                            next_text,
+                            sizeof(next_text));
+            }
+
+            (void)snprintf(line2, sizeof(line2), "NOW %s NX %s", now_text, next_text);
+            (void)snprintf(line3,
+                           sizeof(line3),
+                           "%s %s-%s",
+                           g_ui.last_params.schedule_enabled != 0U ? "ON" : "OFF",
+                           start_text,
+                           end_text);
+        }
         break;
     case UI_PAGE_EXPORT:
-        (void)snprintf(line3, sizeof(line3), "EXPORT UART");
+        (void)snprintf(line2,
+                       sizeof(line2),
+                       "LOG %u PER %us",
+                       log_service_count(),
+                       g_ui.last_params.log_period_s);
+        (void)snprintf(line3, sizeof(line3), "CMD LOG_EXPORT");
         break;
     case UI_PAGE_INFO:
-        (void)snprintf(line3, sizeof(line3), "MASK 0x%02X", (unsigned int)g_ui.last_temp.valid_mask);
+        if (g_ui.info_reset_feedback_ticks > 0U)
+        {
+            (void)snprintf(line3, sizeof(line3), "DEFAULTS APPLIED");
+        }
+        else
+        {
+            (void)snprintf(line3, sizeof(line3), "LONG SET=RESET");
+        }
         break;
     case UI_PAGE_HOME:
     default:
@@ -389,6 +473,7 @@ void ui_service_init(void)
     g_ui.last_pid_out = 0.0f;
     g_ui.last_heater_on = 0;
     g_ui.last_alarm_on = 0;
+    g_ui.info_reset_feedback_ticks = 0U;
 
     bsp_key_init();
     bsp_oled_init();
@@ -399,6 +484,11 @@ void ui_service_init(void)
 void ui_service_tick_100ms(app_params_t *params)
 {
     ui_key_event_t key;
+
+    if (g_ui.info_reset_feedback_ticks > 0U)
+    {
+        g_ui.info_reset_feedback_ticks--;
+    }
 
     poll_keys_to_events();
     if (g_ui.pending_key != UI_KEY_NONE)

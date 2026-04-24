@@ -2,6 +2,7 @@
 
 #include <string.h>
 
+#include "app_config.h"
 #include "param_store.h"
 #include "schedule_service.h"
 #include "test_framework.h"
@@ -82,6 +83,16 @@ int test_protocol_export_run(void)
     bsp_uart_test_feed("SET_LOG_PERIOD=5");
     protocol_export_process();
     TEST_ASSERT_TRUE(strstr(bsp_uart_test_output(), "OK,LOG_PERIOD_APPLIED") != 0);
+    TEST_ASSERT_EQ_INT(param_store_get()->log_period_s, 5U);
+
+    {
+        unsigned int i;
+        for (i = 0U; i < APP_PARAM_STORE_FLUSH_DELAY_S; ++i)
+        {
+            param_store_tick_1s();
+        }
+    }
+    param_store_init();
     TEST_ASSERT_EQ_INT(param_store_get()->log_period_s, 5U);
 
     bsp_uart_test_reset();

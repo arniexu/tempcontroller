@@ -15,12 +15,46 @@
 #include "temp_manager.h"
 #include "ui_service.h"
 
+#include <string.h>
+
 static app_mode_t g_mode = APP_MODE_IDLE;
 static app_mode_t g_prev_mode = APP_MODE_IDLE;
 static pid_ctx_t g_pid;
 static float g_pid_out = 0.0f;
 static bool g_prev_alarm = false;
 static unsigned int g_log_tick_count = 0U;
+static app_params_t g_runtime_params;
+
+static void apply_runtime_params(const app_params_t *params)
+{
+    schedule_config_t cfg;
+
+    if (params == 0)
+    {
+        return;
+    }
+
+    cfg.enabled = (params->schedule_enabled != 0U);
+    cfg.start_min_of_day = (uint16_t)(params->schedule_start_min % 1440U);
+    cfg.end_min_of_day = (uint16_t)(params->schedule_end_min % 1440U);
+    schedule_service_set_config(&cfg);
+
+    pid_init(&g_pid, params->kp, params->ki, params->kd, 1.0f, 0.0f, 100.0f);
+}
+
+static void sync_runtime_params_if_changed(void)
+{
+    const app_params_t *params = param_store_get();
+
+    if (memcmp(&g_runtime_params, params, sizeof(g_runtime_params)) == 0)
+    {
+        return;
+    }
+
+    param_store_save(params);
+    apply_runtime_params(params);
+    g_runtime_params = *params;
+}
 
 static const char *mode_to_str(app_mode_t mode)
 {
@@ -55,20 +89,13 @@ void app_main_init(void)
     bsp_buzzer_init();
     bsp_buzzer_set(false);
     schedule_service_init();
-    {
-        schedule_config_t cfg;
-        const app_params_t *params = param_store_get();
-        cfg.enabled = (params->schedule_enabled != 0U);
-        cfg.start_min_of_day = (uint16_t)(params->schedule_start_min % 1440U);
-        cfg.end_min_of_day = (uint16_t)(params->schedule_end_min % 1440U);
-        schedule_service_set_config(&cfg);
-    }
     log_service_init();
     ui_service_init();
 
     {
         const app_params_t *params = param_store_get();
-        pid_init(&g_pid, params->kp, params->ki, params->kd, 1.0f, 0.0f, 100.0f);
+        apply_runtime_params(params);
+        g_runtime_params = *params;
     }
     heater_ctrl_init(APP_PID_WINDOW_MS);
 
@@ -98,6 +125,8 @@ void app_main_loop(void)
     if (flags.task_control_1s)
     {
         bool alarm_now;
+
+        param_store_tick_1s();
 
         temp_manager_update();
         temp = temp_manager_get_snapshot();
@@ -168,4 +197,5 @@ void app_main_loop(void)
     }
 
     protocol_export_process();
+    sync_runtime_params_if_changed();
 }

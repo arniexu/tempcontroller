@@ -1,6 +1,7 @@
 #include "param_store.h"
 
 #include "app_config.h"
+#include "bsp_eeprom.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -11,6 +12,15 @@
 
 #define PARAM_STORE_MAGIC         (0x50415241UL)
 #define PARAM_STORE_LAYOUT_VER    (1UL)
+
+#ifndef APP_PARAM_STORE_USE_EEPROM
+#define APP_PARAM_STORE_USE_EEPROM   (0U)
+#endif
+
+#if (APP_PARAM_STORE_USE_EEPROM == 1U)
+#define PARAM_STORE_EEPROM_SLOT_A_ADDR  (0U)
+#define PARAM_STORE_EEPROM_SLOT_B_ADDR  (sizeof(param_nv_record_t))
+#endif
 
 #if defined(USE_STDPERIPH_DRIVER)
 #define PARAM_STORE_PAGE_A_ADDR   (0x0800F800UL)
@@ -29,6 +39,8 @@ typedef struct
 } param_nv_record_t;
 
 static app_params_t g_params;
+static unsigned int g_flush_delay_s = 0U;
+static int g_flush_pending = 0;
 
 #if !defined(USE_STDPERIPH_DRIVER)
 static uint8_t g_nv_page_a[sizeof(param_nv_record_t)];
@@ -95,7 +107,7 @@ static int param_record_valid(const param_nv_record_t *r)
     return (param_record_crc(r) == r->crc32) ? 1 : 0;
 }
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if (APP_PARAM_STORE_USE_EEPROM != 1U) && defined(USE_STDPERIPH_DRIVER)
 static void read_record_from_flash(uint32_t addr, param_nv_record_t *out)
 {
     const uint8_t *src = (const uint8_t *)addr;
@@ -154,13 +166,103 @@ static int erase_page_if_written(uint32_t addr)
 }
 #endif
 
+#if (APP_PARAM_STORE_USE_EEPROM == 1U)
+static int read_record_from_eeprom(uint16_t addr, param_nv_record_t *out)
+{
+    return bsp_eeprom_read(addr, (uint8_t *)out, (uint16_t)sizeof(param_nv_record_t));
+}
+
+static int write_record_to_eeprom(uint16_t addr, const param_nv_record_t *rec)
+{
+    return bsp_eeprom_write(addr, (const uint8_t *)rec, (uint16_t)sizeof(param_nv_record_t));
+}
+
+static void read_record_from_fallback(unsigned int slot, param_nv_record_t *out)
+{
+#if defined(USE_STDPERIPH_DRIVER)
+    if (slot == 0U)
+    {
+        read_record_from_flash(PARAM_STORE_PAGE_A_ADDR, out);
+    }
+    else
+    {
+        read_record_from_flash(PARAM_STORE_PAGE_B_ADDR, out);
+    }
+#else
+    memset(out, 0xFF, sizeof(*out));
+    if (slot == 0U)
+    {
+        if (g_nv_page_a_written)
+        {
+            memcpy(out, g_nv_page_a, sizeof(*out));
+        }
+    }
+    else if (g_nv_page_b_written)
+    {
+        memcpy(out, g_nv_page_b, sizeof(*out));
+    }
+#endif
+}
+
+static int write_record_to_fallback(unsigned int slot, const param_nv_record_t *rec)
+{
+#if defined(USE_STDPERIPH_DRIVER)
+    if (slot == 0U)
+    {
+        if (program_record_to_flash(PARAM_STORE_PAGE_A_ADDR, rec))
+        {
+            return erase_page_if_written(PARAM_STORE_PAGE_B_ADDR);
+        }
+    }
+    else
+    {
+        if (program_record_to_flash(PARAM_STORE_PAGE_B_ADDR, rec))
+        {
+            return erase_page_if_written(PARAM_STORE_PAGE_A_ADDR);
+        }
+    }
+    return 0;
+#else
+    if (slot == 0U)
+    {
+        memcpy(g_nv_page_a, rec, sizeof(*rec));
+        g_nv_page_a_written = 1;
+        g_nv_page_b_written = 0;
+    }
+    else
+    {
+        memcpy(g_nv_page_b, rec, sizeof(*rec));
+        g_nv_page_b_written = 1;
+        g_nv_page_a_written = 0;
+    }
+    return 1;
+#endif
+}
+#endif
+
 static int load_from_nv(app_params_t *params, uint32_t *seq_out)
 {
     param_nv_record_t a;
     param_nv_record_t b;
     const param_nv_record_t *best = 0;
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if (APP_PARAM_STORE_USE_EEPROM == 1U)
+    int eeprom_a_ok;
+    int eeprom_b_ok;
+
+    memset(&a, 0xFF, sizeof(a));
+    memset(&b, 0xFF, sizeof(b));
+    eeprom_a_ok = read_record_from_eeprom(PARAM_STORE_EEPROM_SLOT_A_ADDR, &a);
+    eeprom_b_ok = read_record_from_eeprom(PARAM_STORE_EEPROM_SLOT_B_ADDR, &b);
+    if (!eeprom_a_ok)
+    {
+        read_record_from_fallback(0U, &a);
+    }
+    if (!eeprom_b_ok)
+    {
+        read_record_from_fallback(1U, &b);
+    }
+#elif defined(USE_STDPERIPH_DRIVER)
     read_record_from_flash(PARAM_STORE_PAGE_A_ADDR, &a);
     read_record_from_flash(PARAM_STORE_PAGE_B_ADDR, &b);
 #else
@@ -213,7 +315,23 @@ static void save_to_nv(const app_params_t *params)
     int a_valid;
     int b_valid;
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if (APP_PARAM_STORE_USE_EEPROM == 1U)
+    int eeprom_a_ok;
+    int eeprom_b_ok;
+
+    memset(&a, 0xFF, sizeof(a));
+    memset(&b, 0xFF, sizeof(b));
+    eeprom_a_ok = read_record_from_eeprom(PARAM_STORE_EEPROM_SLOT_A_ADDR, &a);
+    eeprom_b_ok = read_record_from_eeprom(PARAM_STORE_EEPROM_SLOT_B_ADDR, &b);
+    if (!eeprom_a_ok)
+    {
+        read_record_from_fallback(0U, &a);
+    }
+    if (!eeprom_b_ok)
+    {
+        read_record_from_fallback(1U, &b);
+    }
+#elif defined(USE_STDPERIPH_DRIVER)
     read_record_from_flash(PARAM_STORE_PAGE_A_ADDR, &a);
     read_record_from_flash(PARAM_STORE_PAGE_B_ADDR, &b);
 #else
@@ -252,7 +370,22 @@ static void save_to_nv(const app_params_t *params)
     rec.payload = *params;
     rec.crc32 = param_record_crc(&rec);
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if (APP_PARAM_STORE_USE_EEPROM == 1U)
+    if (!a_valid || (b_valid && (b.seq > a.seq)))
+    {
+        if (!write_record_to_eeprom(PARAM_STORE_EEPROM_SLOT_A_ADDR, &rec))
+        {
+            (void)write_record_to_fallback(0U, &rec);
+        }
+    }
+    else
+    {
+        if (!write_record_to_eeprom(PARAM_STORE_EEPROM_SLOT_B_ADDR, &rec))
+        {
+            (void)write_record_to_fallback(1U, &rec);
+        }
+    }
+#elif defined(USE_STDPERIPH_DRIVER)
     if (!a_valid || (b_valid && (b.seq > a.seq)))
     {
         if (program_record_to_flash(PARAM_STORE_PAGE_A_ADDR, &rec))
@@ -285,6 +418,13 @@ static void save_to_nv(const app_params_t *params)
 
 void param_store_init(void)
 {
+#if (APP_PARAM_STORE_USE_EEPROM == 1U)
+    bsp_eeprom_init();
+#endif
+
+    g_flush_delay_s = 0U;
+    g_flush_pending = 0;
+
     if (!load_from_nv(&g_params, 0))
     {
         param_store_load_defaults(&g_params);
@@ -335,7 +475,39 @@ void param_store_save(const app_params_t *params)
     {
         g_params.log_period_s = 1U;
     }
+    g_flush_pending = 1;
+    g_flush_delay_s = APP_PARAM_STORE_FLUSH_DELAY_S;
+}
+
+void param_store_tick_1s(void)
+{
+    if (!g_flush_pending)
+    {
+        return;
+    }
+
+    if (g_flush_delay_s > 0U)
+    {
+        g_flush_delay_s--;
+    }
+
+    if (g_flush_delay_s == 0U)
+    {
+        save_to_nv(&g_params);
+        g_flush_pending = 0;
+    }
+}
+
+void param_store_flush_now(void)
+{
+    if (!g_flush_pending)
+    {
+        return;
+    }
+
     save_to_nv(&g_params);
+    g_flush_pending = 0;
+    g_flush_delay_s = 0U;
 }
 
 const app_params_t *param_store_get(void)
