@@ -17,6 +17,7 @@ try {
       ../Core/Src/protocol_export.c `
       ../Core/Src/app_main.c `
       ../Drivers/BSP/bsp_ds18b20.c `
+      ../Drivers/BSP/bsp_buzzer.c `
       ../Drivers/BSP/bsp_key.c `
       ../Drivers/BSP/bsp_oled.c `
       ../Drivers/BSP/bsp_rtc.c `

@@ -8,6 +8,10 @@ typedef struct
     float kp;
     float ki;
     float kd;
+    unsigned int schedule_enabled;
+    unsigned int schedule_start_min;
+    unsigned int schedule_end_min;
+    unsigned int log_period_s;
 } app_params_t;
 
 void param_store_init(void);

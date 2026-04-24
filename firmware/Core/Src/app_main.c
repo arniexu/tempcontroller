@@ -3,6 +3,7 @@
 #include "alarm_service.h"
 #include "app_config.h"
 #include "app_state.h"
+#include "bsp_buzzer.h"
 #include "debug_log.h"
 #include "heater_ctrl.h"
 #include "log_service.h"
@@ -19,6 +20,7 @@ static app_mode_t g_prev_mode = APP_MODE_IDLE;
 static pid_ctx_t g_pid;
 static float g_pid_out = 0.0f;
 static bool g_prev_alarm = false;
+static unsigned int g_log_tick_count = 0U;
 
 static const char *mode_to_str(app_mode_t mode)
 {
@@ -50,7 +52,17 @@ void app_main_init(void)
 
     temp_manager_init();
     alarm_service_init();
+    bsp_buzzer_init();
+    bsp_buzzer_set(false);
     schedule_service_init();
+    {
+        schedule_config_t cfg;
+        const app_params_t *params = param_store_get();
+        cfg.enabled = (params->schedule_enabled != 0U);
+        cfg.start_min_of_day = (uint16_t)(params->schedule_start_min % 1440U);
+        cfg.end_min_of_day = (uint16_t)(params->schedule_end_min % 1440U);
+        schedule_service_set_config(&cfg);
+    }
     log_service_init();
     ui_service_init();
 
@@ -63,6 +75,7 @@ void app_main_init(void)
     g_mode = APP_MODE_IDLE;
     g_prev_mode = g_mode;
     g_prev_alarm = false;
+    g_log_tick_count = 0U;
 
     debug_log_info("APP", "init done set=%.2f alarm=%.2f", param_store_get()->set_temp_c, param_store_get()->alarm_threshold_c);
 }
@@ -94,6 +107,7 @@ void app_main_loop(void)
             alarm_service_update(temp->t1, temp->t2, temp->t3, params->alarm_threshold_c, temp->sensor_fault);
             schedule_service_update();
             alarm_now = alarm_service_is_active();
+            bsp_buzzer_set(alarm_now);
 
             if (alarm_now)
             {
@@ -133,7 +147,12 @@ void app_main_loop(void)
                 g_prev_alarm = alarm_now;
             }
 
-            log_service_push(temp, params->set_temp_c, g_pid_out, heater_ctrl_get_state() ? 1 : 0, alarm_now ? 1 : 0);
+            g_log_tick_count++;
+            if (g_log_tick_count >= ((params->log_period_s == 0U) ? 1U : params->log_period_s))
+            {
+                g_log_tick_count = 0U;
+                log_service_push(temp, params->set_temp_c, g_pid_out, heater_ctrl_get_state() ? 1 : 0, alarm_now ? 1 : 0);
+            }
         }
     }
 
