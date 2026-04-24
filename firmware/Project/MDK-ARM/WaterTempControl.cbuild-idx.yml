@@ -1,0 +1,19 @@
+build-idx:
+  generated-by: csolution version 2.13.0+p3-g40b6564e
+  csolution: WaterTempControl.csolution.yml
+  cbuild-run: out/WaterTempControl+Target_1.cbuild-run.yml
+  tmpdir: tmp
+  cprojects:
+    - cproject: WaterTempControl.cproject.yml
+  cbuilds:
+    - cbuild: out/WaterTempControl/Target_1/WaterTempControl+Target_1.cbuild.yml
+      project: WaterTempControl
+      configuration: +Target_1
+      messages:
+        warnings:
+          - no compiler registered. Add path to compiler 'bin' directory with environment variable <name>_TOOLCHAIN_<major>_<minor>_<patch>. <name> is one of AC6, GCC, IAR, CLANG
+          - file 'D:/tempcontroller/firmware/Project/MDK-ARM/.cmsis/WaterTempControl+Target_1.dbgconf' not found; use --update-rte
+        info:
+          - WaterTempControl.cbuild-pack.yml - file is already up-to-date
+          - WaterTempControl+Target_1.cbuild-run.yml - file is already up-to-date
+          - WaterTempControl+Target_1.cbuild.yml - file is already up-to-date

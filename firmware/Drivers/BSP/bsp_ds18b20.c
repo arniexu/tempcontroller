@@ -10,6 +10,8 @@
 #define DS18B20_CMD_SKIP_ROM      (0xCCU)
 #define DS18B20_CMD_CONVERT_T     (0x44U)
 #define DS18B20_CMD_READ_SCRATCH  (0xBEU)
+#define DS18B20_CONVERT_TIMEOUT_MS (750U)
+#define DS18B20_READ_RETRY         (2U)
 
 static GPIO_TypeDef *const g_sensor_port[BSP_DS18B20_SENSOR_COUNT] = {GPIOB, GPIOB, GPIOB};
 static const uint16_t g_sensor_pin[BSP_DS18B20_SENSOR_COUNT] = {GPIO_Pin_6, GPIO_Pin_7, GPIO_Pin_8};
@@ -51,7 +53,7 @@ static void ow_release(uint8_t index)
     GPIO_InitTypeDef gpio;
 
     gpio.GPIO_Pin = g_sensor_pin[index];
-    gpio.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    gpio.GPIO_Mode = GPIO_Mode_IPU;
     gpio.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(g_sensor_port[index], &gpio);
 }
@@ -157,6 +159,63 @@ static uint8_t ds18b20_crc8(const uint8_t *data, uint8_t len)
 
     return crc;
 }
+
+static bool ds18b20_wait_convert_done(uint8_t index)
+{
+    uint32_t wait_ms = 0U;
+
+    while (wait_ms < DS18B20_CONVERT_TIMEOUT_MS)
+    {
+        if (ow_read_pin(index) != 0U)
+        {
+            return true;
+        }
+        delay_ms(1U);
+        wait_ms++;
+    }
+
+    return false;
+}
+
+static bool ds18b20_read_once(uint8_t index, float *temp_c)
+{
+    uint8_t scratch[9];
+    int16_t raw;
+    uint8_t i;
+
+    if (!ow_reset(index))
+    {
+        return false;
+    }
+    ow_write_byte(index, DS18B20_CMD_SKIP_ROM);
+    ow_write_byte(index, DS18B20_CMD_CONVERT_T);
+
+    if (!ds18b20_wait_convert_done(index))
+    {
+        return false;
+    }
+
+    if (!ow_reset(index))
+    {
+        return false;
+    }
+    ow_write_byte(index, DS18B20_CMD_SKIP_ROM);
+    ow_write_byte(index, DS18B20_CMD_READ_SCRATCH);
+
+    for (i = 0U; i < 9U; ++i)
+    {
+        scratch[i] = ow_read_byte(index);
+    }
+
+    if (ds18b20_crc8(scratch, 8U) != scratch[8])
+    {
+        return false;
+    }
+
+    raw = (int16_t)((((uint16_t)scratch[1]) << 8U) | scratch[0]);
+    *temp_c = (float)raw / 16.0f;
+    return true;
+}
 #endif
 
 static float g_mock_temp[BSP_DS18B20_SENSOR_COUNT] = {25.0f, 25.2f, 24.9f};
@@ -193,39 +252,17 @@ bool bsp_ds18b20_read_c(uint8_t index, float *temp_c)
     return true;
 #else
 #if defined(USE_STDPERIPH_DRIVER)
-    uint8_t scratch[9];
-    int16_t raw;
-    uint8_t i;
+    uint8_t retry;
 
-    if (!ow_reset(index))
+    for (retry = 0U; retry < DS18B20_READ_RETRY; ++retry)
     {
-        return false;
-    }
-    ow_write_byte(index, DS18B20_CMD_SKIP_ROM);
-    ow_write_byte(index, DS18B20_CMD_CONVERT_T);
-
-    delay_ms(750U);
-
-    if (!ow_reset(index))
-    {
-        return false;
-    }
-    ow_write_byte(index, DS18B20_CMD_SKIP_ROM);
-    ow_write_byte(index, DS18B20_CMD_READ_SCRATCH);
-
-    for (i = 0U; i < 9U; ++i)
-    {
-        scratch[i] = ow_read_byte(index);
+        if (ds18b20_read_once(index, temp_c))
+        {
+            return true;
+        }
     }
 
-    if (ds18b20_crc8(scratch, 8U) != scratch[8])
-    {
-        return false;
-    }
-
-    raw = (int16_t)((((uint16_t)scratch[1]) << 8U) | scratch[0]);
-    *temp_c = (float)raw / 16.0f;
-    return true;
+    return false;
 #endif
     (void)index;
     return false;

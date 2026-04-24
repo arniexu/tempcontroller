@@ -1,0 +1,106 @@
+project:
+  packs:
+    - pack: Keil::STM32F1xx_DFP@^2.4.1
+  setups:
+    - setup: Options for Target_1
+      add-path:
+        - ../../Core/Inc
+        - ../../Drivers/BSP
+        - ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/inc
+        - ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/CoreSupport
+        - ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x
+      debug: "on"
+      define:
+        - USE_STDPERIPH_DRIVER
+        - STM32F10X_MD
+      misc:
+        - C:
+            - -std=c99
+          C-CPP:
+            - -fno-rtti
+            - -funsigned-char
+            - -fshort-enums
+            - -fshort-wchar
+            - -ffunction-sections
+            - -Wno-packed
+            - -Wno-missing-variable-declarations
+            - -Wno-missing-prototypes
+            - -Wno-missing-noreturn
+            - -Wno-sign-conversion
+            - -Wno-nonportable-include-path
+            - -Wno-reserved-id-macro
+            - -Wno-unused-macros
+            - -Wno-documentation-unknown-command
+            - -Wno-documentation
+            - -Wno-license-management
+            - -Wno-parentheses-equality
+          CPP:
+            - -xc++
+            - -std=c++11
+            - -fno-exceptions
+          ASM:
+            - -masm=auto
+          Link:
+            - --map
+            - --load_addr_map_info
+            - --xref
+            - --callgraph
+            - --symbols
+            - --info sizes
+            - --info totals
+            - --info unused
+            - --info veneers
+            - --strict
+            - --summary_stderr
+            - --info summarysizes
+  groups:
+    - group: BSP
+      files:
+        - file: ../../Drivers/BSP/bsp_ds18b20.c
+        - file: ../../Drivers/BSP/bsp_relay.c
+        - file: ../../Drivers/BSP/bsp_rtc.c
+        - file: ../../Drivers/BSP/bsp_uart.c
+    - group: CORE
+      files:
+        - file: ../../Core/Src/alarm_service.c
+        - file: ../../Core/Src/app_main.c
+        - file: ../../Core/Src/debug_log.c
+        - file: ../../Core/Src/heater_ctrl.c
+        - file: ../../Core/Src/log_service.c
+        - file: ../../Core/Src/main.c
+        - file: ../../Core/Src/param_store.c
+        - file: ../../Core/Src/pid_ctrl.c
+        - file: ../../Core/Src/protocol_export.c
+        - file: ../../Core/Src/schedule_service.c
+        - file: ../../Core/Src/scheduler.c
+        - file: ../../Core/Src/temp_manager.c
+        - file: ../../Core/Src/ui_service.c
+    - group: CMSIS
+      files:
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x/system_stm32f10x.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/arm/startup_stm32f10x_md.s
+    - group: STD
+      files:
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/misc.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_adc.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_bkp.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_can.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_cec.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_crc.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_dac.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_dbgmcu.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_dma.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_exti.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_flash.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_fsmc.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_gpio.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_i2c.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_iwdg.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_pwr.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_rcc.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_rtc.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_sdio.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_spi.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_tim.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_usart.c
+        - file: ../../ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_wwdg.c

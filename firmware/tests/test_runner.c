@@ -16,6 +16,7 @@ int main(void)
     const test_case_t cases[] = {
         {"scheduler", test_scheduler_run},
         {"pid", test_pid_run},
+        {"debug_log", test_debug_log_run},
         {"alarm_service", test_alarm_service_run},
         {"param_store", test_param_store_run},
         {"log_service", test_log_service_run},

@@ -81,6 +81,59 @@ static void handle_set_temp(const char *cmd)
 	send_ok("SET_TEMP_APPLIED");
 }
 
+static void handle_set_pid_values(float kp, float ki, float kd)
+{
+	app_params_t *p;
+
+	if ((kp < 0.0f) || (kp > 30.0f) || (ki < 0.0f) || (ki > 5.0f) || (kd < 0.0f) || (kd > 50.0f))
+	{
+		debug_log_warn("PROTO", "pid out of range kp=%.3f ki=%.3f kd=%.3f", kp, ki, kd);
+		send_err("PID_OUT_OF_RANGE");
+		return;
+	}
+
+	p = param_store_get_mutable();
+	p->kp = kp;
+	p->ki = ki;
+	p->kd = kd;
+	param_store_save(p);
+
+	debug_log_info("PROTO", "pid applied kp=%.3f ki=%.3f kd=%.3f", kp, ki, kd);
+	send_ok("PID_APPLIED");
+}
+
+static void handle_set_pid(const char *cmd)
+{
+	float kp;
+	float ki;
+	float kd;
+
+	if (sscanf(cmd, "SET_PID=%f,%f,%f", &kp, &ki, &kd) != 3)
+	{
+		debug_log_warn("PROTO", "bad set pid cmd: %s", cmd);
+		send_err("BAD_SET_PID");
+		return;
+	}
+
+	handle_set_pid_values(kp, ki, kd);
+}
+
+static void handle_conf_pid(const char *cmd)
+{
+	float kp;
+	float ki;
+	float kd;
+
+	if (sscanf(cmd, "CONF:PID %f,%f,%f", &kp, &ki, &kd) != 3)
+	{
+		debug_log_warn("PROTO", "bad conf pid cmd: %s", cmd);
+		send_err("BAD_CONF_PID");
+		return;
+	}
+
+	handle_set_pid_values(kp, ki, kd);
+}
+
 static void handle_log_export(void)
 {
 	char line[200];
@@ -143,6 +196,14 @@ void protocol_export_process(void)
 	else if (strncmp(cmd, "SET_TEMP=", 9) == 0)
 	{
 		handle_set_temp(cmd);
+	}
+	else if (strncmp(cmd, "SET_PID=", 8) == 0)
+	{
+		handle_set_pid(cmd);
+	}
+	else if (strncmp(cmd, "CONF:PID ", 9) == 0)
+	{
+		handle_conf_pid(cmd);
 	}
 	else if (strcmp(cmd, "LOG_CLEAR") == 0)
 	{

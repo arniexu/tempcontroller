@@ -26,6 +26,27 @@ int test_protocol_export_run(void)
     TEST_ASSERT_NEAR_FLOAT(param_store_get()->set_temp_c, 50.0f, 0.01f);
 
     bsp_uart_test_reset();
+    bsp_uart_test_feed("SET_PID=9.5,0.8,12.0");
+    protocol_export_process();
+    TEST_ASSERT_TRUE(strstr(bsp_uart_test_output(), "OK,PID_APPLIED") != 0);
+    TEST_ASSERT_NEAR_FLOAT(param_store_get()->kp, 9.5f, 0.01f);
+    TEST_ASSERT_NEAR_FLOAT(param_store_get()->ki, 0.8f, 0.01f);
+    TEST_ASSERT_NEAR_FLOAT(param_store_get()->kd, 12.0f, 0.01f);
+
+    bsp_uart_test_reset();
+    bsp_uart_test_feed("CONF:PID 8.0,0.3,15.0");
+    protocol_export_process();
+    TEST_ASSERT_TRUE(strstr(bsp_uart_test_output(), "OK,PID_APPLIED") != 0);
+    TEST_ASSERT_NEAR_FLOAT(param_store_get()->kp, 8.0f, 0.01f);
+    TEST_ASSERT_NEAR_FLOAT(param_store_get()->ki, 0.3f, 0.01f);
+    TEST_ASSERT_NEAR_FLOAT(param_store_get()->kd, 15.0f, 0.01f);
+
+    bsp_uart_test_reset();
+    bsp_uart_test_feed("SET_PID=100.0,0.3,15.0");
+    protocol_export_process();
+    TEST_ASSERT_TRUE(strstr(bsp_uart_test_output(), "ERR,PID_OUT_OF_RANGE") != 0);
+
+    bsp_uart_test_reset();
     bsp_uart_test_feed("NO_SUCH_CMD");
     protocol_export_process();
     TEST_ASSERT_TRUE(strstr(bsp_uart_test_output(), "ERR,UNKNOWN_CMD") != 0);

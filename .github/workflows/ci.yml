@@ -1,0 +1,196 @@
+name: basic-ci
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+jobs:
+  design-doc-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enforce design doc changed before firmware code changes
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.sha }}"
+          fi
+
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            if git rev-parse HEAD~1 >/dev/null 2>&1; then
+              BASE_SHA="$(git rev-parse HEAD~1)"
+            else
+              echo "No valid base commit found, skip design-doc gate for initial commit."
+              exit 0
+            fi
+          fi
+
+          CHANGED_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          CODE_CHANGED="$(echo "$CHANGED_FILES" | grep -E '^(firmware/Core/(Inc|Src)/.*\.(c|h)|firmware/Drivers/BSP/.*\.(c|h)|firmware/tests/.*\.(c|h)|WaterTempControl\.uvprojx|firmware/Project/MDK-ARM/.*)$' || true)"
+          DOC_CHANGED="$(echo "$CHANGED_FILES" | grep -E '^docs/STM32F103水温控制系统设计文档\.md$' || true)"
+
+          if [ -n "$CODE_CHANGED" ] && [ -z "$DOC_CHANGED" ]; then
+            echo "Design document gate failed: firmware-related code changed but docs/STM32F103水温控制系统设计文档.md was not updated."
+            exit 1
+          fi
+
+          echo "Design document gate passed."
+
+  module-selftest-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enforce self-test implementation for each Core module
+        shell: bash
+        run: |
+          set -e
+
+          for src in firmware/Core/Src/*.c; do
+            module="$(basename "$src" .c)"
+
+            if [ "$module" = "main" ]; then
+              continue
+            fi
+
+            test_base="$module"
+            if [ "$module" = "pid_ctrl" ]; then
+              test_base="pid"
+            fi
+
+            test_file="firmware/tests/test_${test_base}.c"
+            test_fn="test_${test_base}_run"
+
+            if [ ! -f "$test_file" ]; then
+              echo "Missing self-test file for module '$module': $test_file"
+              exit 1
+            fi
+
+            if ! grep -q "int ${test_fn}(void);" firmware/tests/test_decls.h; then
+              echo "Missing self-test declaration for module '$module': int ${test_fn}(void);"
+              exit 1
+            fi
+
+            if ! grep -q "${test_fn}" firmware/tests/test_runner.c; then
+              echo "Missing self-test registration for module '$module': ${test_fn}"
+              exit 1
+            fi
+          done
+
+          echo "Module self-test gate passed."
+
+  no-rtos-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enforce bare-metal scheduling policy
+        shell: bash
+        run: |
+          set -e
+
+          TARGET_PATHS="firmware/Core firmware/Drivers/BSP"
+          PATTERN='FreeRTOS|cmsis_os|cmsis_os2|osThread|osKernel|xTaskCreate|vTaskDelay|vTaskStartScheduler|taskENTER_CRITICAL|taskEXIT_CRITICAL'
+
+          if grep -R -n -E "$PATTERN" $TARGET_PATHS; then
+            echo "RTOS-related dependency detected. Policy requires bare-metal simple scheduling."
+            exit 1
+          fi
+
+          echo "No RTOS dependency detected."
+
+  flash-budget-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enforce flash layout budget from map
+        shell: bash
+        run: |
+          set -e
+
+          MAP_FILE="firmware/Project/MDK-ARM/Listings/WaterTempControl.map"
+          LIMIT_HEX="0xF800"
+          LIMIT_DEC=$((0xF800))
+
+          if [ ! -f "$MAP_FILE" ]; then
+            echo "Map file not found: $MAP_FILE"
+            echo "Please provide updated map file for flash budget verification."
+            exit 1
+          fi
+
+          SIZE_HEX="$(sed -n 's/.*Load Region LR_1.*Size: 0x\([0-9a-fA-F]\+\).*/0x\1/p' "$MAP_FILE" | head -n1)"
+          if [ -z "$SIZE_HEX" ]; then
+            echo "Failed to parse LR_1 size from map file."
+            exit 1
+          fi
+
+          SIZE_DEC=$((SIZE_HEX))
+          echo "LR_1 size: $SIZE_HEX ($SIZE_DEC bytes), limit: $LIMIT_HEX ($LIMIT_DEC bytes)"
+
+          if [ "$SIZE_DEC" -gt "$LIMIT_DEC" ]; then
+            echo "Flash budget gate failed: LR_1 exceeds 62KB app area."
+            exit 1
+          fi
+
+          echo "Flash budget gate passed."
+
+  firmware-tests:
+    needs: [design-doc-gate, module-selftest-gate, no-rtos-gate, flash-budget-gate]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install GCC
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc
+
+      - name: Build module tests
+        working-directory: firmware/tests
+        run: |
+          gcc -std=c11 -Wall -Wextra -Werror \
+            -I../Core/Inc -I../Drivers/BSP -I. \
+            ../Core/Src/scheduler.c \
+            ../Core/Src/pid_ctrl.c \
+            ../Core/Src/debug_log.c \
+            ../Core/Src/alarm_service.c \
+            ../Core/Src/param_store.c \
+            ../Core/Src/log_service.c \
+            ../Core/Src/heater_ctrl.c \
+            ../Core/Src/temp_manager.c \
+            ../Core/Src/schedule_service.c \
+            ../Core/Src/ui_service.c \
+            ../Core/Src/protocol_export.c \
+            ../Core/Src/app_main.c \
+            ../Drivers/BSP/bsp_ds18b20.c \
+            ../Drivers/BSP/bsp_key.c \
+            ../Drivers/BSP/bsp_oled.c \
+            ../Drivers/BSP/bsp_rtc.c \
+            ../Drivers/BSP/bsp_relay.c \
+            stubs/bsp_uart_test_stub.c \
+            test_scheduler.c test_pid.c test_debug_log.c test_alarm_service.c test_param_store.c \
+            test_log_service.c test_heater_ctrl.c test_temp_manager.c test_schedule_service.c \
+            test_ui_service.c test_protocol_export.c test_app_main.c test_runner.c \
+            -o module_tests
+
+      - name: Run module tests
+        working-directory: firmware/tests
+        run: ./module_tests

@@ -2,10 +2,19 @@
 
 This folder contains per-module self-tests for the firmware architecture.
 
+## Full test plan
+
+- Overall plan: ../../docs/整体测试计划.md
+- Recommended order:
+  1. Unit self-tests: run_tests.ps1
+  2. Stress checks: run_stress_tests.ps1
+  3. Performance checks: run_perf_checks.ps1
+
 ## Covered modules
 
 - scheduler
 - pid_ctrl
+- debug_log
 - alarm_service
 - param_store
 - log_service
@@ -46,4 +55,12 @@ Run:
 
 ```powershell
 .\module_tests.exe
+```
+
+## Script shortcuts
+
+```powershell
+.\run_tests.ps1
+.\run_stress_tests.ps1
+.\run_perf_checks.ps1
 ```

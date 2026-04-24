@@ -326,8 +326,8 @@
             <uC99>1</uC99>
             <uGnu>1</uGnu>
             <useXO>0</useXO>
-            <v6Lang>1</v6Lang>
-            <v6LangP>1</v6LangP>
+            <v6Lang>3</v6Lang>
+            <v6LangP>3</v6LangP>
             <vShortEn>1</vShortEn>
             <vShortWch>1</vShortWch>
             <v6Lto>0</v6Lto>
@@ -400,6 +400,16 @@
               <FileName>bsp_uart.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Drivers\BSP\bsp_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\bsp_key.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_oled.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\bsp_oled.c</FilePath>
             </File>
           </Files>
         </Group>

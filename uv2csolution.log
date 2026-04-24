@@ -1,0 +1,139 @@
+0 out of 6 target(s) converted
+
+Error: 6 error(s), 36 warning(s):
+
+Errors:
+
+	The target "STM32100E-EVAL" is configured to use Arm Compiler 5.
+
+	CMSIS csolution projects support Arm Compiler 6 only.
+
+	For details on how to manually migrate to AC6, see
+
+	https://developer.arm.com/documentation/100068/0621/Migrating-from-Arm-Compiler-5-to-Arm-Compiler-for-Embedded-6
+
+	The target "STM3210E-EVAL_XL" is configured to use Arm Compiler 5.
+
+	CMSIS csolution projects support Arm Compiler 6 only.
+
+	For details on how to manually migrate to AC6, see
+
+	https://developer.arm.com/documentation/100068/0621/Migrating-from-Arm-Compiler-5-to-Arm-Compiler-for-Embedded-6
+
+	The target "STM32100B-EVAL" is configured to use Arm Compiler 5.
+
+	CMSIS csolution projects support Arm Compiler 6 only.
+
+	For details on how to manually migrate to AC6, see
+
+	https://developer.arm.com/documentation/100068/0621/Migrating-from-Arm-Compiler-5-to-Arm-Compiler-for-Embedded-6
+
+	The target "STM3210C-EVAL" is configured to use Arm Compiler 5.
+
+	CMSIS csolution projects support Arm Compiler 6 only.
+
+	For details on how to manually migrate to AC6, see
+
+	https://developer.arm.com/documentation/100068/0621/Migrating-from-Arm-Compiler-5-to-Arm-Compiler-for-Embedded-6
+
+	The target "STM3210E-EVAL" is configured to use Arm Compiler 5.
+
+	CMSIS csolution projects support Arm Compiler 6 only.
+
+	For details on how to manually migrate to AC6, see
+
+	https://developer.arm.com/documentation/100068/0621/Migrating-from-Arm-Compiler-5-to-Arm-Compiler-for-Embedded-6
+
+	The target "STM3210B-EVAL" is configured to use Arm Compiler 5.
+
+	CMSIS csolution projects support Arm Compiler 6 only.
+
+	For details on how to manually migrate to AC6, see
+
+	https://developer.arm.com/documentation/100068/0621/Migrating-from-Arm-Compiler-5-to-Arm-Compiler-for-Embedded-6
+
+Warnings:
+
+	For target "STM32100E-EVAL" file 'D:/Core/Inc' does not exists
+
+	For target "STM32100E-EVAL" file 'D:/Drivers/BSP' does not exists
+
+	For target "STM32100E-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/CoreSupport' does not exists
+
+	For target "STM32100E-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x' does not exists
+
+	For target "STM32100E-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/inc' does not exists
+
+	For target "STM32100E-EVAL" file 'D:/tempcontroller/
+
+' does not exists
+
+	For target "STM3210E-EVAL_XL" file 'D:/Core/Inc' does not exists
+
+	For target "STM3210E-EVAL_XL" file 'D:/Drivers/BSP' does not exists
+
+	For target "STM3210E-EVAL_XL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/CoreSupport' does not exists
+
+	For target "STM3210E-EVAL_XL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x' does not exists
+
+	For target "STM3210E-EVAL_XL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/inc' does not exists
+
+	For target "STM3210E-EVAL_XL" file 'D:/tempcontroller/
+
+' does not exists
+
+	For target "STM32100B-EVAL" file 'D:/Core/Inc' does not exists
+
+	For target "STM32100B-EVAL" file 'D:/Drivers/BSP' does not exists
+
+	For target "STM32100B-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/CoreSupport' does not exists
+
+	For target "STM32100B-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x' does not exists
+
+	For target "STM32100B-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/inc' does not exists
+
+	For target "STM32100B-EVAL" file 'D:/tempcontroller/
+
+' does not exists
+
+	For target "STM3210C-EVAL" file 'D:/Core/Inc' does not exists
+
+	For target "STM3210C-EVAL" file 'D:/Drivers/BSP' does not exists
+
+	For target "STM3210C-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/CoreSupport' does not exists
+
+	For target "STM3210C-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x' does not exists
+
+	For target "STM3210C-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/inc' does not exists
+
+	For target "STM3210C-EVAL" file 'D:/tempcontroller/
+
+' does not exists
+
+	For target "STM3210E-EVAL" file 'D:/Core/Inc' does not exists
+
+	For target "STM3210E-EVAL" file 'D:/Drivers/BSP' does not exists
+
+	For target "STM3210E-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/CoreSupport' does not exists
+
+	For target "STM3210E-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x' does not exists
+
+	For target "STM3210E-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/inc' does not exists
+
+	For target "STM3210E-EVAL" file 'D:/tempcontroller/
+
+' does not exists
+
+	For target "STM3210B-EVAL" file 'D:/Core/Inc' does not exists
+
+	For target "STM3210B-EVAL" file 'D:/Drivers/BSP' does not exists
+
+	For target "STM3210B-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/CoreSupport' does not exists
+
+	For target "STM3210B-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x' does not exists
+
+	For target "STM3210B-EVAL" file 'D:/ThirdParty/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver/inc' does not exists
+
+	For target "STM3210B-EVAL" file 'D:/tempcontroller/
+
+' does not exists

@@ -61,6 +61,29 @@ static float sensor_filtered_value(const sensor_ctx_t *ctx)
     return sum / (float)ctx->count;
 }
 
+static float median3(float a, float b, float c)
+{
+    if (a > b)
+    {
+        float t = a;
+        a = b;
+        b = t;
+    }
+    if (b > c)
+    {
+        float t = b;
+        b = c;
+        c = t;
+    }
+    if (a > b)
+    {
+        float t = a;
+        a = b;
+        b = t;
+    }
+    return b;
+}
+
 static void sensor_push_sample(sensor_ctx_t *ctx, float t)
 {
     ctx->samples[ctx->head] = t;
@@ -108,8 +131,9 @@ void temp_manager_update(void)
 {
     float reading;
     float filtered[APP_TEMP_SENSOR_COUNT];
-    float ctrl_sum = 0.0f;
-    unsigned int valid_count = 0U;
+    float usable_for_ctrl[APP_TEMP_SENSOR_COUNT];
+    unsigned int usable_count = 0U;
+    unsigned int fresh_valid_count = 0U;
     unsigned int i;
 
     g_temp.valid_mask = 0x00U;
@@ -123,6 +147,7 @@ void temp_manager_update(void)
             sensor_push_sample(&g_sensor[i], reading);
             filtered[i] = sensor_filtered_value(&g_sensor[i]);
             g_temp.valid_mask |= (uint8_t)(1U << i);
+            fresh_valid_count++;
         }
         else
         {
@@ -136,28 +161,33 @@ void temp_manager_update(void)
                 filtered[i] = sensor_filtered_value(&g_sensor[i]);
             }
         }
+
+        if ((g_sensor[i].count > 0U) && (g_sensor[i].consecutive_fail < APP_TEMP_MAX_CONSEC_FAIL))
+        {
+            usable_for_ctrl[usable_count] = filtered[i];
+            usable_count++;
+        }
     }
 
     g_temp.t1 = filtered[0U];
     g_temp.t2 = filtered[1U];
     g_temp.t3 = filtered[2U];
 
-    for (i = 0U; i < APP_TEMP_SENSOR_COUNT; ++i)
+    if (usable_count >= 3U)
     {
-        if (g_sensor[i].consecutive_fail < APP_TEMP_MAX_CONSEC_FAIL)
-        {
-            ctrl_sum += filtered[i];
-            valid_count++;
-        }
+        g_temp.t_ctrl = median3(usable_for_ctrl[0U], usable_for_ctrl[1U], usable_for_ctrl[2U]);
+    }
+    else if (usable_count == 2U)
+    {
+        g_temp.t_ctrl = (usable_for_ctrl[0U] + usable_for_ctrl[1U]) * 0.5f;
+    }
+    else if (usable_count == 1U)
+    {
+        g_temp.t_ctrl = usable_for_ctrl[0U];
     }
 
-    if (valid_count > 0U)
-    {
-        g_temp.t_ctrl = ctrl_sum / (float)valid_count;
-    }
-
-    g_temp.sensor_degraded = (valid_count == 2U);
-    g_temp.sensor_fault = (valid_count <= 1U);
+    g_temp.sensor_degraded = (usable_count == 2U);
+    g_temp.sensor_fault = (usable_count <= 1U);
 
     if (g_temp.valid_mask != g_prev_mask)
     {
@@ -182,7 +212,7 @@ void temp_manager_update(void)
     {
         if (g_temp.sensor_fault)
         {
-            debug_log_error("TEMP", "sensor fault, valid_count=%u", valid_count);
+            debug_log_error("TEMP", "sensor fault, usable=%u fresh=%u", usable_count, fresh_valid_count);
         }
         else
         {

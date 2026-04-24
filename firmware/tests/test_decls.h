@@ -3,6 +3,7 @@
 
 int test_scheduler_run(void);
 int test_pid_run(void);
+int test_debug_log_run(void);
 int test_alarm_service_run(void);
 int test_param_store_run(void);
 int test_log_service_run(void);

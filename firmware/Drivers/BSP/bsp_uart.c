@@ -8,6 +8,8 @@
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_usart.h"
 
+#define BSP_UART_TX_TIMEOUT_LOOPS   (200000U)
+
 static char g_line_buf[128];
 static unsigned int g_line_len = 0U;
 static bool g_line_ready = false;
@@ -17,6 +19,11 @@ static void uart_poll_rx(void)
     while (USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == SET)
     {
         char ch = (char)(USART_ReceiveData(USART1) & 0xFFU);
+
+        if (g_line_ready)
+        {
+            continue;
+        }
 
         if ((ch == '\r') || (ch == '\n'))
         {
@@ -101,6 +108,8 @@ bool bsp_uart_read_line(char *buf, unsigned int buf_size)
 void bsp_uart_write(const char *text)
 {
 #if defined(USE_STDPERIPH_DRIVER)
+    uint32_t timeout;
+
     if (text == 0)
     {
         return;
@@ -109,9 +118,18 @@ void bsp_uart_write(const char *text)
     while (*text != '\0')
     {
         USART_SendData(USART1, (uint16_t)(unsigned char)(*text));
-        while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET)
+
+        timeout = BSP_UART_TX_TIMEOUT_LOOPS;
+        while ((USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) && (timeout > 0U))
         {
+            timeout--;
         }
+
+        if (timeout == 0U)
+        {
+            break;
+        }
+
         text++;
     }
 #else
