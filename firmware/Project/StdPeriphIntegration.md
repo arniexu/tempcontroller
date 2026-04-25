@@ -47,4 +47,5 @@ Do not add host test stubs in firmware/tests/stubs when building target firmware
 - File Core/Inc/stm32f10x_conf.h has been added and is used by StdPeriph drivers.
 - Current BSP drivers already contain USE_STDPERIPH_DRIVER branches.
 - DS18B20 StdPeriph bit-bang implementation is enabled when APP_USE_MOCK_TEMP_SOURCE is set to 0.
-- DS18B20 default pin mapping: PB6 -> T1, PB7 -> T2, PB8 -> T3 (external 4.7k pull-up required for each line).
+- DS18B20 remapped pin mapping: PA4 -> T1, PA5 -> T2, PA6 -> T3 (external 4.7k pull-up required for each line).
+- EEPROM I2C1 keeps default pins: PB6=SCL, PB7=SDA. This avoids DS18B20/I2C1 overlap.

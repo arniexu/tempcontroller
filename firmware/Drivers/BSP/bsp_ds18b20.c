@@ -4,10 +4,10 @@
 
 #if defined(USE_STDPERIPH_DRIVER)
 #include "stm32f10x.h"
+#include "stm32f10x_exti.h"
 #include "stm32f10x_gpio.h"
 #include "misc.h"
 #include "stm32f10x_rcc.h"
-#include "stm32f10x_dma.h"
 #include "stm32f10x_tim.h"
 
 #define DS18B20_CMD_SKIP_ROM      (0xCCU)
@@ -16,11 +16,10 @@
 #define DS18B20_CONVERT_TIMEOUT_MS (750U)
 #define DS18B20_READ_RETRY         (2U)
 
-static GPIO_TypeDef *const g_sensor_port[BSP_DS18B20_SENSOR_COUNT] = {GPIOB, GPIOB, GPIOB};
-static const uint16_t g_sensor_pin[BSP_DS18B20_SENSOR_COUNT] = {GPIO_Pin_6, GPIO_Pin_7, GPIO_Pin_8};
+static GPIO_TypeDef *const g_sensor_port[BSP_DS18B20_SENSOR_COUNT] = {GPIOA, GPIOA, GPIOA};
+static const uint16_t g_sensor_pin[BSP_DS18B20_SENSOR_COUNT] = {GPIO_Pin_4, GPIO_Pin_5, GPIO_Pin_6};
 static int g_delay_timer_ready = 0;
 static volatile uint8_t g_presence_fall_seen[BSP_DS18B20_SENSOR_COUNT] = {0U, 0U, 0U};
-static volatile uint16_t g_presence_capture[BSP_DS18B20_SENSOR_COUNT] = {0U, 0U, 0U};
 
 typedef enum
 {
@@ -54,119 +53,50 @@ static void ds18b20_diag_inc(uint32_t *counter)
     }
 }
 
-static uint16_t ds18b20_ic_it_for_index(uint8_t index)
+static uint32_t ds18b20_exti_line_for_index(uint8_t index)
 {
     switch (index)
     {
     case 0U:
-        return TIM_IT_CC1;
+        return EXTI_Line4;
     case 1U:
-        return TIM_IT_CC2;
+        return EXTI_Line5;
     case 2U:
-        return TIM_IT_CC3;
+        return EXTI_Line6;
     default:
         return 0U;
     }
-}
-
-static DMA_Channel_TypeDef *ds18b20_dma_channel_for_index(uint8_t index)
-{
-    switch (index)
-    {
-    case 0U:
-        return DMA1_Channel1;
-    case 1U:
-        return DMA1_Channel4;
-    case 2U:
-        return DMA1_Channel5;
-    default:
-        return 0;
-    }
-}
-
-static uint32_t ds18b20_dma_tc_flag_for_index(uint8_t index)
-{
-    switch (index)
-    {
-    case 0U:
-        return DMA1_FLAG_TC1;
-    case 1U:
-        return DMA1_FLAG_TC4;
-    case 2U:
-        return DMA1_FLAG_TC5;
-    default:
-        return 0U;
-    }
-}
-
-static uint32_t ds18b20_dma_te_flag_for_index(uint8_t index)
-{
-    switch (index)
-    {
-    case 0U:
-        return DMA1_FLAG_TE1;
-    case 1U:
-        return DMA1_FLAG_TE4;
-    case 2U:
-        return DMA1_FLAG_TE5;
-    default:
-        return 0U;
-    }
-}
-
-static void ds18b20_presence_dma_arm(uint8_t index)
-{
-    DMA_Channel_TypeDef *ch = ds18b20_dma_channel_for_index(index);
-
-    if (ch == 0)
-    {
-        return;
-    }
-
-    g_presence_capture[index] = 0U;
-    DMA_Cmd(ch, DISABLE);
-    DMA_SetCurrDataCounter(ch, 1U);
-    DMA_ClearFlag(ds18b20_dma_tc_flag_for_index(index) | ds18b20_dma_te_flag_for_index(index));
-    DMA_Cmd(ch, ENABLE);
-}
-
-static void ds18b20_presence_dma_disarm(uint8_t index)
-{
-    DMA_Channel_TypeDef *ch = ds18b20_dma_channel_for_index(index);
-
-    if (ch == 0)
-    {
-        return;
-    }
-
-    DMA_Cmd(ch, DISABLE);
-    DMA_ClearFlag(ds18b20_dma_tc_flag_for_index(index) | ds18b20_dma_te_flag_for_index(index));
 }
 
 static void ds18b20_ic_clear(uint8_t index)
 {
-    uint16_t it = ds18b20_ic_it_for_index(index);
+    uint32_t line = ds18b20_exti_line_for_index(index);
 
-    if (it == 0U)
+    if (line == 0U)
     {
         return;
     }
 
     g_presence_fall_seen[index] = 0U;
-    g_presence_capture[index] = 0U;
-    TIM_ClearITPendingBit(TIM4, it);
+    EXTI_ClearITPendingBit(line);
 }
 
 static void ds18b20_ic_enable(uint8_t index, int enable)
 {
-    uint16_t it = ds18b20_ic_it_for_index(index);
+    EXTI_InitTypeDef exti;
+    uint32_t line = ds18b20_exti_line_for_index(index);
 
-    if (it == 0U)
+    if (line == 0U)
     {
         return;
     }
 
-    TIM_ITConfig(TIM4, it, (enable != 0) ? ENABLE : DISABLE);
+    EXTI_StructInit(&exti);
+    exti.EXTI_Line = line;
+    exti.EXTI_Mode = EXTI_Mode_Interrupt;
+    exti.EXTI_Trigger = EXTI_Trigger_Falling;
+    exti.EXTI_LineCmd = (enable != 0) ? ENABLE : DISABLE;
+    EXTI_Init(&exti);
 }
 
 static void ds18b20_cc4_schedule(uint16_t delta_us)
@@ -280,17 +210,7 @@ static bool ow_reset(uint8_t index)
     }
 
     ds18b20_ic_clear(index);
-
-    if (g_presence_mode == BSP_DS18B20_PRESENCE_IRQ_DMA)
-    {
-        ds18b20_presence_dma_arm(index);
-        ds18b20_ic_enable(index, 0);
-    }
-    else
-    {
-        ds18b20_presence_dma_disarm(index);
-        ds18b20_ic_enable(index, 1);
-    }
+    ds18b20_ic_enable(index, 1);
 
     ow_drive_low(index);
 
@@ -461,7 +381,7 @@ static bool ds18b20_read_once(uint8_t index, float *temp_c)
 }
 #endif
 
-static bsp_ds18b20_presence_mode_t g_presence_mode = BSP_DS18B20_PRESENCE_IRQ_DMA;
+static bsp_ds18b20_presence_mode_t g_presence_mode = BSP_DS18B20_PRESENCE_IRQ_ONLY;
 static bsp_ds18b20_diag_t g_diag = {0};
 
 static float g_mock_temp[BSP_DS18B20_SENSOR_COUNT] = {25.0f, 25.2f, 24.9f};
@@ -472,18 +392,31 @@ void bsp_ds18b20_init(void)
 #if defined(USE_STDPERIPH_DRIVER)
     GPIO_InitTypeDef gpio;
     TIM_TimeBaseInitTypeDef tim;
-    TIM_ICInitTypeDef ic;
-    DMA_InitTypeDef dma;
+    EXTI_InitTypeDef exti;
     NVIC_InitTypeDef nvic;
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 | RCC_APB1Periph_TIM4, ENABLE);
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
 
-    gpio.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8;
-    gpio.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    gpio.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6;
+    gpio.GPIO_Mode = GPIO_Mode_IPU;
     gpio.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOB, &gpio);
+    GPIO_Init(GPIOA, &gpio);
+
+    GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, GPIO_PinSource4);
+    GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, GPIO_PinSource5);
+    GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, GPIO_PinSource6);
+
+    EXTI_StructInit(&exti);
+    exti.EXTI_Mode = EXTI_Mode_Interrupt;
+    exti.EXTI_Trigger = EXTI_Trigger_Falling;
+    exti.EXTI_LineCmd = DISABLE;
+    exti.EXTI_Line = EXTI_Line4;
+    EXTI_Init(&exti);
+    exti.EXTI_Line = EXTI_Line5;
+    EXTI_Init(&exti);
+    exti.EXTI_Line = EXTI_Line6;
+    EXTI_Init(&exti);
 
     TIM_TimeBaseStructInit(&tim);
     tim.TIM_Prescaler = (uint16_t)((SystemCoreClock / 1000000U) - 1U);
@@ -500,49 +433,6 @@ void bsp_ds18b20_init(void)
     tim.TIM_CounterMode = TIM_CounterMode_Up;
     TIM_TimeBaseInit(TIM4, &tim);
 
-    TIM_ICStructInit(&ic);
-    ic.TIM_ICPolarity = TIM_ICPolarity_Falling;
-    ic.TIM_ICSelection = TIM_ICSelection_DirectTI;
-    ic.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-    ic.TIM_ICFilter = 0x00U;
-
-    ic.TIM_Channel = TIM_Channel_1;
-    TIM_ICInit(TIM4, &ic);
-    ic.TIM_Channel = TIM_Channel_2;
-    TIM_ICInit(TIM4, &ic);
-    ic.TIM_Channel = TIM_Channel_3;
-    TIM_ICInit(TIM4, &ic);
-
-    DMA_StructInit(&dma);
-    dma.DMA_DIR = DMA_DIR_PeripheralSRC;
-    dma.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-    dma.DMA_MemoryInc = DMA_MemoryInc_Disable;
-    dma.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
-    dma.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
-    dma.DMA_Mode = DMA_Mode_Normal;
-    dma.DMA_Priority = DMA_Priority_High;
-    dma.DMA_M2M = DMA_M2M_Disable;
-    dma.DMA_BufferSize = 1U;
-
-    dma.DMA_PeripheralBaseAddr = (uint32_t)&TIM4->CCR1;
-    dma.DMA_MemoryBaseAddr = (uint32_t)&g_presence_capture[0];
-    DMA_Init(DMA1_Channel1, &dma);
-
-    dma.DMA_PeripheralBaseAddr = (uint32_t)&TIM4->CCR2;
-    dma.DMA_MemoryBaseAddr = (uint32_t)&g_presence_capture[1];
-    DMA_Init(DMA1_Channel4, &dma);
-
-    dma.DMA_PeripheralBaseAddr = (uint32_t)&TIM4->CCR3;
-    dma.DMA_MemoryBaseAddr = (uint32_t)&g_presence_capture[2];
-    DMA_Init(DMA1_Channel5, &dma);
-
-    DMA_ITConfig(DMA1_Channel1, DMA_IT_TC | DMA_IT_TE, ENABLE);
-    DMA_ITConfig(DMA1_Channel4, DMA_IT_TC | DMA_IT_TE, ENABLE);
-    DMA_ITConfig(DMA1_Channel5, DMA_IT_TC | DMA_IT_TE, ENABLE);
-
-    TIM_DMACmd(TIM4, TIM_DMA_CC1 | TIM_DMA_CC2 | TIM_DMA_CC3, ENABLE);
-
-    TIM_ITConfig(TIM4, TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3, DISABLE);
     TIM_ITConfig(TIM4, TIM_IT_CC4, DISABLE);
 
     nvic.NVIC_IRQChannel = TIM4_IRQn;
@@ -551,21 +441,15 @@ void bsp_ds18b20_init(void)
     nvic.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&nvic);
 
-    nvic.NVIC_IRQChannel = DMA1_Channel1_IRQn;
+    nvic.NVIC_IRQChannel = EXTI4_IRQn;
     nvic.NVIC_IRQChannelPreemptionPriority = 2U;
     nvic.NVIC_IRQChannelSubPriority = 2U;
     nvic.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&nvic);
 
-    nvic.NVIC_IRQChannel = DMA1_Channel4_IRQn;
+    nvic.NVIC_IRQChannel = EXTI9_5_IRQn;
     nvic.NVIC_IRQChannelPreemptionPriority = 2U;
-    nvic.NVIC_IRQChannelSubPriority = 2U;
-    nvic.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&nvic);
-
-    nvic.NVIC_IRQChannel = DMA1_Channel5_IRQn;
-    nvic.NVIC_IRQChannelPreemptionPriority = 2U;
-    nvic.NVIC_IRQChannelSubPriority = 2U;
+    nvic.NVIC_IRQChannelSubPriority = 3U;
     nvic.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&nvic);
 
@@ -573,82 +457,37 @@ void bsp_ds18b20_init(void)
     g_delay_timer_ready = 1;
 #endif
 
-    g_presence_mode = BSP_DS18B20_PRESENCE_IRQ_DMA;
+    g_presence_mode = BSP_DS18B20_PRESENCE_IRQ_ONLY;
     bsp_ds18b20_reset_diag();
 }
 
 #if defined(USE_STDPERIPH_DRIVER)
-void DMA1_Channel1_IRQHandler(void)
+void EXTI4_IRQHandler(void)
 {
-    if (DMA_GetITStatus(DMA1_IT_TC1) != RESET)
+    if (EXTI_GetITStatus(EXTI_Line4) != RESET)
     {
-        DMA_ClearITPendingBit(DMA1_IT_TC1);
-        DMA_Cmd(DMA1_Channel1, DISABLE);
         g_presence_fall_seen[0] = 1U;
-    }
-
-    if (DMA_GetITStatus(DMA1_IT_TE1) != RESET)
-    {
-        DMA_ClearITPendingBit(DMA1_IT_TE1);
-        DMA_Cmd(DMA1_Channel1, DISABLE);
-        ds18b20_diag_inc(&g_diag.dma_error_count);
+        EXTI_ClearITPendingBit(EXTI_Line4);
     }
 }
 
-void DMA1_Channel4_IRQHandler(void)
+void EXTI9_5_IRQHandler(void)
 {
-    if (DMA_GetITStatus(DMA1_IT_TC4) != RESET)
+    if (EXTI_GetITStatus(EXTI_Line5) != RESET)
     {
-        DMA_ClearITPendingBit(DMA1_IT_TC4);
-        DMA_Cmd(DMA1_Channel4, DISABLE);
         g_presence_fall_seen[1] = 1U;
+        EXTI_ClearITPendingBit(EXTI_Line5);
     }
 
-    if (DMA_GetITStatus(DMA1_IT_TE4) != RESET)
+    if (EXTI_GetITStatus(EXTI_Line6) != RESET)
     {
-        DMA_ClearITPendingBit(DMA1_IT_TE4);
-        DMA_Cmd(DMA1_Channel4, DISABLE);
-        ds18b20_diag_inc(&g_diag.dma_error_count);
-    }
-}
-
-void DMA1_Channel5_IRQHandler(void)
-{
-    if (DMA_GetITStatus(DMA1_IT_TC5) != RESET)
-    {
-        DMA_ClearITPendingBit(DMA1_IT_TC5);
-        DMA_Cmd(DMA1_Channel5, DISABLE);
         g_presence_fall_seen[2] = 1U;
-    }
-
-    if (DMA_GetITStatus(DMA1_IT_TE5) != RESET)
-    {
-        DMA_ClearITPendingBit(DMA1_IT_TE5);
-        DMA_Cmd(DMA1_Channel5, DISABLE);
-        ds18b20_diag_inc(&g_diag.dma_error_count);
+        EXTI_ClearITPendingBit(EXTI_Line6);
     }
 }
 
 void TIM4_IRQHandler(void)
 {
-    if (TIM_GetITStatus(TIM4, TIM_IT_CC1) != RESET)
-    {
-        TIM_ClearITPendingBit(TIM4, TIM_IT_CC1);
-        g_presence_fall_seen[0] = 1U;
-    }
-
-    if (TIM_GetITStatus(TIM4, TIM_IT_CC2) != RESET)
-    {
-        TIM_ClearITPendingBit(TIM4, TIM_IT_CC2);
-        g_presence_fall_seen[1] = 1U;
-    }
-
-    if (TIM_GetITStatus(TIM4, TIM_IT_CC3) != RESET)
-    {
-        TIM_ClearITPendingBit(TIM4, TIM_IT_CC3);
-        g_presence_fall_seen[2] = 1U;
-    }
-
     if (TIM_GetITStatus(TIM4, TIM_IT_CC4) != RESET)
     {
         TIM_ClearITPendingBit(TIM4, TIM_IT_CC4);
@@ -773,7 +612,15 @@ bool bsp_ds18b20_read_c(uint8_t index, float *temp_c)
 
 void bsp_ds18b20_set_presence_mode(bsp_ds18b20_presence_mode_t mode)
 {
-    if ((mode != BSP_DS18B20_PRESENCE_IRQ_ONLY) && (mode != BSP_DS18B20_PRESENCE_IRQ_DMA))
+    if (mode == BSP_DS18B20_PRESENCE_IRQ_DMA)
+    {
+        /* PA4/PA5/PA6 remap uses EXTI presence detection only. */
+        g_presence_mode = BSP_DS18B20_PRESENCE_IRQ_ONLY;
+        g_diag.presence_mode = BSP_DS18B20_PRESENCE_IRQ_ONLY;
+        return;
+    }
+
+    if (mode != BSP_DS18B20_PRESENCE_IRQ_ONLY)
     {
         return;
     }
