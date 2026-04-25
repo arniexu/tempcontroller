@@ -3,11 +3,9 @@
 #include "alarm_service.h"
 #include "app_config.h"
 #include "app_state.h"
-#include "bsp_buzzer.h"
-#include "bsp_eeprom.h"
-#include "bsp_oled.h"
 #include "debug_log.h"
 #include "heater_ctrl.h"
+#include "hw_platform_port.h"
 #include "log_service.h"
 #include "param_store.h"
 #include "pid_ctrl.h"
@@ -113,8 +111,8 @@ void app_main_init(void)
 
     temp_manager_init();
     alarm_service_init();
-    bsp_buzzer_init();
-    bsp_buzzer_set(false);
+    hw_buzzer_init();
+    hw_buzzer_set(false);
     schedule_service_init();
     log_service_init();
     ui_service_init();
@@ -174,7 +172,7 @@ void app_main_loop(void)
             alarm_service_update(temp->t1, temp->t2, temp->t3, params->alarm_threshold_c, temp->sensor_fault);
             schedule_service_update();
             alarm_now = alarm_service_is_active();
-            bsp_buzzer_set(alarm_now);
+            hw_buzzer_set(alarm_now);
 
             if (alarm_now)
             {
@@ -235,7 +233,7 @@ void app_main_loop(void)
     }
 
     protocol_export_process();
-    (void)bsp_oled_process();
-    bsp_eeprom_process();
+    (void)hw_oled_process();
+    hw_eeprom_process();
     sync_runtime_params_if_changed();
 }

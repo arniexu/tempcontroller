@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #include "app_config.h"
-#include "bsp_uart.h"
+#include "hw_platform_port.h"
 #include "scheduler.h"
 
 static void debug_log_v(const char *level, const char *tag, const char *fmt, va_list ap)
@@ -17,7 +17,7 @@ static void debug_log_v(const char *level, const char *tag, const char *fmt, va_
     (void)vsnprintf(msg, sizeof(msg), fmt, ap);
     ms = scheduler_now_ms();
     (void)snprintf(line, sizeof(line), "[%lu][%s][%s] %s\r\n", (unsigned long)ms, level, tag, msg);
-    bsp_uart_write(line);
+    hw_uart_write(line);
 #else
     (void)level;
     (void)tag;

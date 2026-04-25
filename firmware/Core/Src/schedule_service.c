@@ -1,6 +1,6 @@
 #include "schedule_service.h"
 
-#include "bsp_rtc.h"
+#include "hw_platform_port.h"
 
 static bool g_heating_allowed = true;
 static schedule_config_t g_cfg;
@@ -25,7 +25,7 @@ static bool schedule_is_active(uint16_t now_min, const schedule_config_t *cfg)
 
 void schedule_service_init(void)
 {
-    bsp_rtc_init();
+    hw_rtc_init();
 
     g_cfg.enabled = false;
     g_cfg.start_min_of_day = 0U;
@@ -43,7 +43,7 @@ void schedule_service_update(void)
         return;
     }
 
-    if (!bsp_rtc_get_minutes_of_day(&now_min))
+    if (!hw_rtc_get_minutes_of_day(&now_min))
     {
         g_heating_allowed = false;
         return;

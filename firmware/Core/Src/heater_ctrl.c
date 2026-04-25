@@ -1,7 +1,7 @@
 #include "heater_ctrl.h"
 
 #include "app_config.h"
-#include "bsp_relay.h"
+#include "hw_platform_port.h"
 
 static uint32_t g_window_ms = 10000U;
 static uint32_t g_elapsed_ms = 0U;
@@ -12,7 +12,7 @@ static uint32_t g_global_ms = 0U;
 
 void heater_ctrl_init(uint32_t window_ms)
 {
-    bsp_relay_init();
+    hw_relay_init();
 
     g_window_ms = (window_ms == 0U) ? 10000U : window_ms;
     g_elapsed_ms = 0U;
@@ -64,7 +64,7 @@ void heater_ctrl_update_1ms(void)
 
     g_heater_on = desired_on;
     g_last_toggle_ms = g_global_ms;
-    bsp_relay_set(g_heater_on);
+    hw_relay_set(g_heater_on);
 }
 
 bool heater_ctrl_get_state(void)
@@ -77,5 +77,5 @@ void heater_ctrl_force_off(void)
     g_output_percent = 0.0f;
     g_heater_on = false;
     g_last_toggle_ms = g_global_ms;
-    bsp_relay_set(false);
+    hw_relay_set(false);
 }

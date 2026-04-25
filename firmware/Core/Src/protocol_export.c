@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "bsp_uart.h"
 #include "debug_log.h"
+#include "hw_platform_port.h"
 #include "log_service.h"
 #include "param_store.h"
 #include "schedule_service.h"
@@ -14,14 +14,14 @@ static void send_ok(const char *payload)
 {
 	char line[160];
 	(void)snprintf(line, sizeof(line), "OK,%s\r\n", payload);
-	bsp_uart_write(line);
+	hw_uart_write(line);
 }
 
 static void send_err(const char *payload)
 {
 	char line[160];
 	(void)snprintf(line, sizeof(line), "ERR,%s\r\n", payload);
-	bsp_uart_write(line);
+	hw_uart_write(line);
 }
 
 static void handle_read_temp(void)
@@ -296,8 +296,8 @@ static void handle_log_export(void)
 	unsigned int cnt = log_service_count();
 	log_record_t rec;
 
-	bsp_uart_write("OK,LOG_BEGIN\r\n");
-	bsp_uart_write("index,t1,t2,t3,t_avg,set_temp,pid_out,heater,alarm\r\n");
+	hw_uart_write("OK,LOG_BEGIN\r\n");
+	hw_uart_write("index,t1,t2,t3,t_avg,set_temp,pid_out,heater,alarm\r\n");
 
 	for (i = 0U; i < cnt; ++i)
 	{
@@ -318,22 +318,22 @@ static void handle_log_export(void)
 					   rec.pid_out,
 					   rec.heater_on,
 					   rec.alarm_on);
-		bsp_uart_write(line);
+		hw_uart_write(line);
 	}
 
-	bsp_uart_write("OK,LOG_END\r\n");
+	hw_uart_write("OK,LOG_END\r\n");
 }
 
 void protocol_export_init(void)
 {
-	bsp_uart_init();
+	hw_uart_init();
 }
 
 void protocol_export_process(void)
 {
 	char cmd[80];
 
-	if (!bsp_uart_read_line(cmd, sizeof(cmd)))
+	if (!hw_uart_read_line(cmd, sizeof(cmd)))
 	{
 		return;
 	}

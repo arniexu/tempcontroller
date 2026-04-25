@@ -1,8 +1,8 @@
 #include "temp_manager.h"
 
 #include "app_config.h"
-#include "bsp_ds18b20.h"
 #include "debug_log.h"
+#include "hw_temp_port.h"
 
 typedef struct
 {
@@ -103,7 +103,7 @@ void temp_manager_init(void)
 {
     unsigned int i;
 
-    bsp_ds18b20_init();
+    hw_temp_port_init();
 
     for (i = 0U; i < APP_TEMP_SENSOR_COUNT; ++i)
     {
@@ -142,7 +142,7 @@ void temp_manager_update(void)
     {
         filtered[i] = 0.0f;
 
-        if (bsp_ds18b20_read_c((uint8_t)i, &reading) && temp_in_range(reading) && step_is_reasonable(&g_sensor[i], reading))
+        if (hw_temp_port_read_c((uint8_t)i, &reading) && temp_in_range(reading) && step_is_reasonable(&g_sensor[i], reading))
         {
             sensor_push_sample(&g_sensor[i], reading);
             filtered[i] = sensor_filtered_value(&g_sensor[i]);

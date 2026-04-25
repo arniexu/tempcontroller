@@ -1,7 +1,7 @@
 #include "param_store.h"
 
 #include "app_config.h"
-#include "bsp_eeprom.h"
+#include "hw_platform_port.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -202,12 +202,12 @@ static int erase_page_if_written(uint32_t addr)
 #if (APP_PARAM_STORE_USE_EEPROM == 1U)
 static int read_record_from_eeprom(uint16_t addr, param_nv_record_t *out)
 {
-    return bsp_eeprom_read(addr, (uint8_t *)out, (uint16_t)sizeof(param_nv_record_t));
+    return hw_eeprom_read(addr, (uint8_t *)out, (uint16_t)sizeof(param_nv_record_t));
 }
 
 static int write_record_to_eeprom(uint16_t addr, const param_nv_record_t *rec)
 {
-    return bsp_eeprom_write(addr, (const uint8_t *)rec, (uint16_t)sizeof(param_nv_record_t));
+    return hw_eeprom_write(addr, (const uint8_t *)rec, (uint16_t)sizeof(param_nv_record_t));
 }
 
 static void read_record_from_fallback(unsigned int slot, param_nv_record_t *out)
@@ -452,7 +452,7 @@ static void save_to_nv(const app_params_t *params)
 void param_store_init(void)
 {
 #if (APP_PARAM_STORE_USE_EEPROM == 1U)
-    bsp_eeprom_init();
+    hw_eeprom_init();
 #endif
 
     g_flush_delay_s = 0U;

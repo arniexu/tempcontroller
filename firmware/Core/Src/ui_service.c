@@ -3,9 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "bsp_key.h"
-#include "bsp_oled.h"
-#include "bsp_rtc.h"
+#include "hw_platform_port.h"
 #include "log_service.h"
 
 typedef struct
@@ -23,7 +21,7 @@ typedef struct
         unsigned int hold_ticks;
         int set_long_fired;
         unsigned int repeat_ticks;
-    } key_track[BSP_KEY_COUNT];
+    } key_track[HW_KEY_COUNT];
     app_mode_t last_mode;
     temp_snapshot_t last_temp;
     app_params_t last_params;
@@ -33,7 +31,7 @@ typedef struct
     unsigned int info_reset_feedback_ticks;
     unsigned int info_reset_arm_ticks;
     int render_cache_valid;
-    char rendered_lines[BSP_OLED_LINE_COUNT][BSP_OLED_LINE_CHARS + 1U];
+    char rendered_lines[HW_OLED_LINE_COUNT][HW_OLED_LINE_CHARS + 1U];
 } ui_ctx_t;
 
 static ui_ctx_t g_ui;
@@ -223,9 +221,9 @@ static void poll_keys_to_events(void)
 {
     unsigned int i;
 
-    for (i = 0U; i < (unsigned int)BSP_KEY_COUNT; ++i)
+    for (i = 0U; i < (unsigned int)HW_KEY_COUNT; ++i)
     {
-        int pressed = bsp_key_get_state((bsp_key_id_t)i) ? 1 : 0;
+        int pressed = hw_key_get_state((hw_key_id_t)i) ? 1 : 0;
 
         if (pressed)
         {
@@ -241,7 +239,7 @@ static void poll_keys_to_events(void)
                 g_ui.key_track[i].hold_ticks++;
             }
 
-            if (i == (unsigned int)BSP_KEY_SET)
+            if (i == (unsigned int)HW_KEY_SET)
             {
                 if ((!g_ui.key_track[i].set_long_fired) && (g_ui.key_track[i].hold_ticks >= 10U))
                 {
@@ -249,14 +247,14 @@ static void poll_keys_to_events(void)
                     g_ui.key_track[i].set_long_fired = 1;
                 }
             }
-            else if ((i == (unsigned int)BSP_KEY_UP) || (i == (unsigned int)BSP_KEY_DOWN))
+            else if ((i == (unsigned int)HW_KEY_UP) || (i == (unsigned int)HW_KEY_DOWN))
             {
                 if (g_ui.key_track[i].hold_ticks >= 5U)
                 {
                     g_ui.key_track[i].repeat_ticks++;
                     if (g_ui.key_track[i].repeat_ticks >= 2U)
                     {
-                        (void)queue_push((i == (unsigned int)BSP_KEY_UP) ? UI_KEY_UP_REPEAT : UI_KEY_DOWN_REPEAT);
+                        (void)queue_push((i == (unsigned int)HW_KEY_UP) ? UI_KEY_UP_REPEAT : UI_KEY_DOWN_REPEAT);
                         g_ui.key_track[i].repeat_ticks = 0U;
                     }
                 }
@@ -266,22 +264,22 @@ static void poll_keys_to_events(void)
         {
             if (g_ui.key_track[i].prev_pressed)
             {
-                if (i == (unsigned int)BSP_KEY_SET)
+                if (i == (unsigned int)HW_KEY_SET)
                 {
                     if (!g_ui.key_track[i].set_long_fired)
                     {
                         (void)queue_push(UI_KEY_SET);
                     }
                 }
-                else if (i == (unsigned int)BSP_KEY_UP)
+                else if (i == (unsigned int)HW_KEY_UP)
                 {
                     (void)queue_push(UI_KEY_UP);
                 }
-                else if (i == (unsigned int)BSP_KEY_DOWN)
+                else if (i == (unsigned int)HW_KEY_DOWN)
                 {
                     (void)queue_push(UI_KEY_DOWN);
                 }
-                else if (i == (unsigned int)BSP_KEY_BACK)
+                else if (i == (unsigned int)HW_KEY_BACK)
                 {
                     (void)queue_push(UI_KEY_BACK);
                 }
@@ -370,10 +368,10 @@ static unsigned int schedule_next_boundary(unsigned int now_min, unsigned int st
 
 static void render_page(void)
 {
-    char line0[BSP_OLED_LINE_CHARS + 1U];
-    char line1[BSP_OLED_LINE_CHARS + 1U];
-    char line2[BSP_OLED_LINE_CHARS + 1U];
-    char line3[BSP_OLED_LINE_CHARS + 1U];
+    char line0[HW_OLED_LINE_CHARS + 1U];
+    char line1[HW_OLED_LINE_CHARS + 1U];
+    char line2[HW_OLED_LINE_CHARS + 1U];
+    char line3[HW_OLED_LINE_CHARS + 1U];
 
     (void)snprintf(line0, sizeof(line0), "%s %s%s", mode_text(g_ui.last_mode), page_text(g_ui.page), g_ui.editing ? "*" : "");
     (void)snprintf(line1, sizeof(line1), "TC %.1f ST %.1f", g_ui.last_temp.t_ctrl, g_ui.last_params.set_temp_c);
@@ -401,7 +399,7 @@ static void render_page(void)
             format_hhmm(g_ui.last_params.schedule_start_min, start_text, sizeof(start_text));
             format_hhmm(g_ui.last_params.schedule_end_min, end_text, sizeof(end_text));
 
-            if (bsp_rtc_get_minutes_of_day(&now_min))
+            if (hw_rtc_get_minutes_of_day(&now_min))
             {
                 format_hhmm(now_min, now_text, sizeof(now_text));
                 format_hhmm(schedule_next_boundary((unsigned int)now_min,
@@ -449,24 +447,24 @@ static void render_page(void)
     }
 
     {
-        const char *new_lines[BSP_OLED_LINE_COUNT] = { line0, line1, line2, line3 };
+        const char *new_lines[HW_OLED_LINE_COUNT] = { line0, line1, line2, line3 };
         unsigned int i;
         int changed = 0;
 
-        for (i = 0U; i < BSP_OLED_LINE_COUNT; ++i)
+        for (i = 0U; i < HW_OLED_LINE_COUNT; ++i)
         {
             if ((!g_ui.render_cache_valid) || (strcmp(g_ui.rendered_lines[i], new_lines[i]) != 0))
             {
-                strncpy(g_ui.rendered_lines[i], new_lines[i], BSP_OLED_LINE_CHARS);
-                g_ui.rendered_lines[i][BSP_OLED_LINE_CHARS] = '\0';
-                bsp_oled_draw_text((uint8_t)i, g_ui.rendered_lines[i]);
+                strncpy(g_ui.rendered_lines[i], new_lines[i], HW_OLED_LINE_CHARS);
+                g_ui.rendered_lines[i][HW_OLED_LINE_CHARS] = '\0';
+                hw_oled_draw_text((uint8_t)i, g_ui.rendered_lines[i]);
                 changed = 1;
             }
         }
 
         if (changed)
         {
-            bsp_oled_refresh();
+            hw_oled_refresh();
             g_ui.render_cache_valid = 1;
         }
     }
@@ -482,7 +480,7 @@ void ui_service_init(void)
     g_ui.q_tail = 0U;
     {
         unsigned int i;
-        for (i = 0U; i < (unsigned int)BSP_KEY_COUNT; ++i)
+        for (i = 0U; i < (unsigned int)HW_KEY_COUNT; ++i)
         {
             g_ui.key_track[i].prev_pressed = 0;
             g_ui.key_track[i].hold_ticks = 0U;
@@ -511,16 +509,16 @@ void ui_service_init(void)
     g_ui.render_cache_valid = 0;
     {
         unsigned int i;
-        for (i = 0U; i < BSP_OLED_LINE_COUNT; ++i)
+        for (i = 0U; i < HW_OLED_LINE_COUNT; ++i)
         {
             g_ui.rendered_lines[i][0] = '\0';
         }
     }
 
-    bsp_key_init();
-    bsp_oled_init();
-    bsp_oled_clear();
-    bsp_oled_refresh();
+    hw_key_init();
+    hw_oled_init();
+    hw_oled_clear();
+    hw_oled_refresh();
 }
 
 void ui_service_tick_100ms(app_params_t *params)
