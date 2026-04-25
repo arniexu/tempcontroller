@@ -31,6 +31,16 @@ int test_protocol_export_run(void)
     TEST_ASSERT_NEAR_FLOAT(param_store_get()->set_temp_c, 50.0f, 0.01f);
 
     bsp_uart_test_reset();
+    bsp_uart_test_feed("SET_TEMP=nan");
+    protocol_export_process();
+    TEST_ASSERT_TRUE(strstr(bsp_uart_test_output(), "ERR,BAD_SET_TEMP") != 0);
+
+    bsp_uart_test_reset();
+    bsp_uart_test_feed("SET_TEMP=50.0,evil");
+    protocol_export_process();
+    TEST_ASSERT_TRUE(strstr(bsp_uart_test_output(), "ERR,BAD_SET_TEMP") != 0);
+
+    bsp_uart_test_reset();
     bsp_uart_test_feed("SET_PID=9.5,0.8,12.0");
     protocol_export_process();
     TEST_ASSERT_TRUE(strstr(bsp_uart_test_output(), "OK,PID_APPLIED") != 0);
@@ -50,6 +60,11 @@ int test_protocol_export_run(void)
     bsp_uart_test_feed("SET_PID=100.0,0.3,15.0");
     protocol_export_process();
     TEST_ASSERT_TRUE(strstr(bsp_uart_test_output(), "ERR,PID_OUT_OF_RANGE") != 0);
+
+    bsp_uart_test_reset();
+    bsp_uart_test_feed("SET_PID=9.5,0.8,12.0,overflow");
+    protocol_export_process();
+    TEST_ASSERT_TRUE(strstr(bsp_uart_test_output(), "ERR,BAD_SET_PID") != 0);
 
     bsp_uart_test_reset();
     bsp_uart_test_feed("SET_ALARM=65.0");
@@ -78,6 +93,11 @@ int test_protocol_export_run(void)
     bsp_uart_test_feed("CONF:SCH 1,1500,20");
     protocol_export_process();
     TEST_ASSERT_TRUE(strstr(bsp_uart_test_output(), "ERR,SCHEDULE_OUT_OF_RANGE") != 0);
+
+    bsp_uart_test_reset();
+    bsp_uart_test_feed("SET_SCHEDULE=1,480,600,trailing");
+    protocol_export_process();
+    TEST_ASSERT_TRUE(strstr(bsp_uart_test_output(), "ERR,BAD_SET_SCHEDULE") != 0);
 
     bsp_uart_test_reset();
     bsp_uart_test_feed("SET_LOG_PERIOD=5");

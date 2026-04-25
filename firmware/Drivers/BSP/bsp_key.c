@@ -7,7 +7,9 @@
 #include "stm32f10x_rcc.h"
 #endif
 
+#if !defined(USE_STDPERIPH_DRIVER)
 static bool g_mock_pressed[BSP_KEY_COUNT] = {false, false, false, false};
+#endif
 
 #if defined(USE_STDPERIPH_DRIVER)
 static volatile bool g_key_pressed[BSP_KEY_COUNT] = {false, false, false, false};
@@ -120,12 +122,17 @@ bool bsp_key_get_state(bsp_key_id_t key)
 
 void bsp_key_mock_set_state(bsp_key_id_t key, bool pressed)
 {
+#if defined(USE_STDPERIPH_DRIVER)
+    (void)key;
+    (void)pressed;
+#else
     if ((unsigned int)key >= (unsigned int)BSP_KEY_COUNT)
     {
         return;
     }
 
     g_mock_pressed[(unsigned int)key] = pressed;
+#endif
 }
 
 #if defined(USE_STDPERIPH_DRIVER)

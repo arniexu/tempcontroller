@@ -2,6 +2,8 @@
 
 #include "app_config.h"
 
+static bsp_ds18b20_diag_t g_diag = {0};
+
 #if defined(USE_STDPERIPH_DRIVER)
 #include "stm32f10x.h"
 #include "stm32f10x_exti.h"
@@ -18,7 +20,6 @@
 
 static GPIO_TypeDef *const g_sensor_port[BSP_DS18B20_SENSOR_COUNT] = {GPIOA, GPIOA, GPIOA};
 static const uint16_t g_sensor_pin[BSP_DS18B20_SENSOR_COUNT] = {GPIO_Pin_4, GPIO_Pin_5, GPIO_Pin_6};
-static int g_delay_timer_ready = 0;
 static volatile uint8_t g_presence_fall_seen[BSP_DS18B20_SENSOR_COUNT] = {0U, 0U, 0U};
 
 typedef enum
@@ -339,6 +340,7 @@ static bool ds18b20_wait_convert_done(uint8_t index)
     return done;
 }
 
+#if (APP_USE_MOCK_TEMP_SOURCE == 0U)
 static bool ds18b20_read_once(uint8_t index, float *temp_c)
 {
     uint8_t scratch[9];
@@ -380,9 +382,9 @@ static bool ds18b20_read_once(uint8_t index, float *temp_c)
     return true;
 }
 #endif
+#endif
 
 static bsp_ds18b20_presence_mode_t g_presence_mode = BSP_DS18B20_PRESENCE_IRQ_ONLY;
-static bsp_ds18b20_diag_t g_diag = {0};
 
 static float g_mock_temp[BSP_DS18B20_SENSOR_COUNT] = {25.0f, 25.2f, 24.9f};
 static bool g_mock_valid[BSP_DS18B20_SENSOR_COUNT] = {true, true, true};
@@ -454,7 +456,6 @@ void bsp_ds18b20_init(void)
     NVIC_Init(&nvic);
 
     TIM_Cmd(TIM4, ENABLE);
-    g_delay_timer_ready = 1;
 #endif
 
     g_presence_mode = BSP_DS18B20_PRESENCE_IRQ_ONLY;

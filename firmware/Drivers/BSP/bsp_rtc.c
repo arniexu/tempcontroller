@@ -67,8 +67,10 @@ static void rtc_init_counter_if_needed(void)
 }
 #endif
 
+#if !defined(USE_STDPERIPH_DRIVER)
 static uint16_t g_mock_minutes_of_day = 0U;
 static bool g_mock_valid = true;
+#endif
 
 void bsp_rtc_init(void)
 {
@@ -113,10 +115,18 @@ bool bsp_rtc_get_minutes_of_day(uint16_t *minutes_of_day)
 
 void bsp_rtc_mock_set_minutes_of_day(uint16_t minutes_of_day)
 {
+#if defined(USE_STDPERIPH_DRIVER)
+    (void)minutes_of_day;
+#else
     g_mock_minutes_of_day = (uint16_t)(minutes_of_day % 1440U);
+#endif
 }
 
 void bsp_rtc_mock_set_valid(bool valid)
 {
+#if defined(USE_STDPERIPH_DRIVER)
+    (void)valid;
+#else
     g_mock_valid = valid;
+#endif
 }

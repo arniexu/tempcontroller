@@ -1,6 +1,8 @@
 #include "protocol_export.h"
 
+#include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "debug_log.h"
@@ -13,6 +15,10 @@
 static void send_ok(const char *payload)
 {
 	char line[160];
+	if (payload == 0)
+	{
+		payload = "";
+	}
 	(void)snprintf(line, sizeof(line), "OK,%s\r\n", payload);
 	hw_uart_write(line);
 }
@@ -20,8 +26,90 @@ static void send_ok(const char *payload)
 static void send_err(const char *payload)
 {
 	char line[160];
+	if (payload == 0)
+	{
+		payload = "";
+	}
 	(void)snprintf(line, sizeof(line), "ERR,%s\r\n", payload);
 	hw_uart_write(line);
+}
+
+static int parse_float_exact(const char *s, float *out)
+{
+	char *end = 0;
+	double val;
+
+	if ((s == 0) || (out == 0))
+	{
+		return 0;
+	}
+
+	val = strtod(s, &end);
+	if ((end == s) || (end == 0) || (*end != '\0') || !isfinite(val))
+	{
+		return 0;
+	}
+
+	*out = (float)val;
+	return 1;
+}
+
+static int parse_u32_exact(const char *s, unsigned int *out)
+{
+	char *end = 0;
+	unsigned long val;
+
+	if ((s == 0) || (out == 0))
+	{
+		return 0;
+	}
+
+	val = strtoul(s, &end, 10);
+	if ((end == s) || (end == 0) || (*end != '\0') || (val > 0xFFFFFFFFUL))
+	{
+		return 0;
+	}
+
+	*out = (unsigned int)val;
+	return 1;
+}
+
+static int parse_float3_exact(const char *s, float *a, float *b, float *c)
+{
+	char lhs[24];
+	char mid[24];
+	char rhs[24];
+
+	if ((s == 0) || (a == 0) || (b == 0) || (c == 0))
+	{
+		return 0;
+	}
+
+	if (sscanf(s, "%23[^,],%23[^,],%23s", lhs, mid, rhs) != 3)
+	{
+		return 0;
+	}
+
+	return parse_float_exact(lhs, a) && parse_float_exact(mid, b) && parse_float_exact(rhs, c);
+}
+
+static int parse_u32_3_exact(const char *s, unsigned int *a, unsigned int *b, unsigned int *c)
+{
+	char lhs[24];
+	char mid[24];
+	char rhs[24];
+
+	if ((s == 0) || (a == 0) || (b == 0) || (c == 0))
+	{
+		return 0;
+	}
+
+	if (sscanf(s, "%23[^,],%23[^,],%23s", lhs, mid, rhs) != 3)
+	{
+		return 0;
+	}
+
+	return parse_u32_exact(lhs, a) && parse_u32_exact(mid, b) && parse_u32_exact(rhs, c);
 }
 
 static void handle_read_temp(void)
@@ -64,8 +152,9 @@ static void handle_set_temp(const char *cmd)
 {
 	float set_temp;
 	app_params_t *p;
+	const char *arg = "SET_TEMP=";
 
-	if (sscanf(cmd, "SET_TEMP=%f", &set_temp) != 1)
+	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_float_exact(cmd + strlen(arg), &set_temp))
 	{
 		debug_log_warn("PROTO", "bad set temp cmd: %s", cmd);
 		send_err("BAD_SET_TEMP");
@@ -180,8 +269,9 @@ static void handle_set_pid(const char *cmd)
 	float kp;
 	float ki;
 	float kd;
+	const char *arg = "SET_PID=";
 
-	if (sscanf(cmd, "SET_PID=%f,%f,%f", &kp, &ki, &kd) != 3)
+	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_float3_exact(cmd + strlen(arg), &kp, &ki, &kd))
 	{
 		debug_log_warn("PROTO", "bad set pid cmd: %s", cmd);
 		send_err("BAD_SET_PID");
@@ -196,8 +286,9 @@ static void handle_conf_pid(const char *cmd)
 	float kp;
 	float ki;
 	float kd;
+	const char *arg = "CONF:PID ";
 
-	if (sscanf(cmd, "CONF:PID %f,%f,%f", &kp, &ki, &kd) != 3)
+	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_float3_exact(cmd + strlen(arg), &kp, &ki, &kd))
 	{
 		debug_log_warn("PROTO", "bad conf pid cmd: %s", cmd);
 		send_err("BAD_CONF_PID");
@@ -210,8 +301,9 @@ static void handle_conf_pid(const char *cmd)
 static void handle_set_alarm(const char *cmd)
 {
 	float alarm_c;
+	const char *arg = "SET_ALARM=";
 
-	if (sscanf(cmd, "SET_ALARM=%f", &alarm_c) != 1)
+	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_float_exact(cmd + strlen(arg), &alarm_c))
 	{
 		send_err("BAD_SET_ALARM");
 		return;
@@ -223,8 +315,9 @@ static void handle_set_alarm(const char *cmd)
 static void handle_conf_alarm(const char *cmd)
 {
 	float alarm_c;
+	const char *arg = "CONF:ALARM ";
 
-	if (sscanf(cmd, "CONF:ALARM %f", &alarm_c) != 1)
+	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_float_exact(cmd + strlen(arg), &alarm_c))
 	{
 		send_err("BAD_CONF_ALARM");
 		return;
@@ -238,8 +331,9 @@ static void handle_set_schedule(const char *cmd)
 	unsigned int enabled;
 	unsigned int start_min;
 	unsigned int end_min;
+	const char *arg = "SET_SCHEDULE=";
 
-	if (sscanf(cmd, "SET_SCHEDULE=%u,%u,%u", &enabled, &start_min, &end_min) != 3)
+	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_u32_3_exact(cmd + strlen(arg), &enabled, &start_min, &end_min))
 	{
 		send_err("BAD_SET_SCHEDULE");
 		return;
@@ -253,8 +347,9 @@ static void handle_conf_schedule(const char *cmd)
 	unsigned int enabled;
 	unsigned int start_min;
 	unsigned int end_min;
+	const char *arg = "CONF:SCH ";
 
-	if (sscanf(cmd, "CONF:SCH %u,%u,%u", &enabled, &start_min, &end_min) != 3)
+	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_u32_3_exact(cmd + strlen(arg), &enabled, &start_min, &end_min))
 	{
 		send_err("BAD_CONF_SCH");
 		return;
@@ -266,8 +361,9 @@ static void handle_conf_schedule(const char *cmd)
 static void handle_set_log_period(const char *cmd)
 {
 	unsigned int period_s;
+	const char *arg = "SET_LOG_PERIOD=";
 
-	if (sscanf(cmd, "SET_LOG_PERIOD=%u", &period_s) != 1)
+	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_u32_exact(cmd + strlen(arg), &period_s))
 	{
 		send_err("BAD_SET_LOG_PERIOD");
 		return;
@@ -279,8 +375,9 @@ static void handle_set_log_period(const char *cmd)
 static void handle_conf_log_period(const char *cmd)
 {
 	unsigned int period_s;
+	const char *arg = "CONF:LOGPERIOD ";
 
-	if (sscanf(cmd, "CONF:LOGPERIOD %u", &period_s) != 1)
+	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_u32_exact(cmd + strlen(arg), &period_s))
 	{
 		send_err("BAD_CONF_LOGPERIOD");
 		return;
