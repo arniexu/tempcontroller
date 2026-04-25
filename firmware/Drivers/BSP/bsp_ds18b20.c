@@ -6,6 +6,7 @@
 #include "stm32f10x.h"
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_rcc.h"
+#include "stm32f10x_tim.h"
 
 #define DS18B20_CMD_SKIP_ROM      (0xCCU)
 #define DS18B20_CMD_CONVERT_T     (0x44U)
@@ -15,16 +16,25 @@
 
 static GPIO_TypeDef *const g_sensor_port[BSP_DS18B20_SENSOR_COUNT] = {GPIOB, GPIOB, GPIOB};
 static const uint16_t g_sensor_pin[BSP_DS18B20_SENSOR_COUNT] = {GPIO_Pin_6, GPIO_Pin_7, GPIO_Pin_8};
+static int g_delay_timer_ready = 0;
 
 static void delay_us(uint32_t us)
 {
-    volatile uint32_t count;
-
-    count = (SystemCoreClock / 8000000U) * us;
-    while (count > 0U)
+    if (g_delay_timer_ready)
     {
-        __NOP();
-        count--;
+        uint32_t start = TIM_GetCounter(TIM2);
+        while ((uint32_t)(TIM_GetCounter(TIM2) - start) < us)
+        {
+        }
+    }
+    else
+    {
+        volatile uint32_t count = (SystemCoreClock / 8000000U) * us;
+        while (count > 0U)
+        {
+            __NOP();
+            count--;
+        }
     }
 }
 
@@ -225,13 +235,24 @@ void bsp_ds18b20_init(void)
 {
 #if defined(USE_STDPERIPH_DRIVER)
     GPIO_InitTypeDef gpio;
+    TIM_TimeBaseInitTypeDef tim;
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 
     gpio.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8;
     gpio.GPIO_Mode = GPIO_Mode_IN_FLOATING;
     gpio.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOB, &gpio);
+
+    TIM_TimeBaseStructInit(&tim);
+    tim.TIM_Prescaler = (uint16_t)((SystemCoreClock / 1000000U) - 1U);
+    tim.TIM_Period = 0xFFFFU;
+    tim.TIM_ClockDivision = TIM_CKD_DIV1;
+    tim.TIM_CounterMode = TIM_CounterMode_Up;
+    TIM_TimeBaseInit(TIM2, &tim);
+    TIM_Cmd(TIM2, ENABLE);
+    g_delay_timer_ready = 1;
 #endif
 }
 

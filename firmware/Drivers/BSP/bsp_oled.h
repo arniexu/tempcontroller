@@ -10,6 +10,8 @@ void bsp_oled_init(void);
 void bsp_oled_clear(void);
 void bsp_oled_draw_text(uint8_t line, const char *text);
 void bsp_oled_refresh(void);
+int bsp_oled_process(void);
+int bsp_oled_is_busy(void);
 const char *bsp_oled_mock_get_line(uint8_t line);
 
 #endif

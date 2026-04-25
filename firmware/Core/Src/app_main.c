@@ -4,6 +4,8 @@
 #include "app_config.h"
 #include "app_state.h"
 #include "bsp_buzzer.h"
+#include "bsp_eeprom.h"
+#include "bsp_oled.h"
 #include "debug_log.h"
 #include "heater_ctrl.h"
 #include "log_service.h"
@@ -24,6 +26,7 @@ static float g_pid_out = 0.0f;
 static bool g_prev_alarm = false;
 static unsigned int g_log_tick_count = 0U;
 static app_params_t g_runtime_params;
+static uint32_t g_last_1ms_tick = 0U;
 
 static void apply_schedule_params(const app_params_t *params)
 {
@@ -128,6 +131,7 @@ void app_main_init(void)
     g_prev_mode = g_mode;
     g_prev_alarm = false;
     g_log_tick_count = 0U;
+    g_last_1ms_tick = scheduler_now_ms();
 
     debug_log_info("APP", "init done set=%.2f alarm=%.2f", param_store_get()->set_temp_c, param_store_get()->alarm_threshold_c);
 }
@@ -136,9 +140,18 @@ void app_main_loop(void)
 {
     scheduler_flags_t flags;
     const temp_snapshot_t *temp;
+    uint32_t now_ms;
 
+#if !defined(USE_STDPERIPH_DRIVER)
     scheduler_tick_1ms();
-    heater_ctrl_update_1ms();
+#endif
+
+    now_ms = scheduler_now_ms();
+    while (g_last_1ms_tick != now_ms)
+    {
+        g_last_1ms_tick++;
+        heater_ctrl_update_1ms();
+    }
 
     scheduler_poll(&flags);
 
@@ -222,5 +235,7 @@ void app_main_loop(void)
     }
 
     protocol_export_process();
+    (void)bsp_oled_process();
+    bsp_eeprom_process();
     sync_runtime_params_if_changed();
 }

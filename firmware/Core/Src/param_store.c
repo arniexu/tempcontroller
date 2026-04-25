@@ -7,11 +7,15 @@
 #include <string.h>
 
 #if defined(USE_STDPERIPH_DRIVER)
+#include "stm32f10x_crc.h"
 #include "stm32f10x_flash.h"
+#include "stm32f10x_rcc.h"
 #endif
 
 #define PARAM_STORE_MAGIC         (0x50415241UL)
-#define PARAM_STORE_LAYOUT_VER    (1UL)
+#define PARAM_STORE_LAYOUT_VER_V1 (1UL)
+#define PARAM_STORE_LAYOUT_VER_V2 (2UL)
+#define PARAM_STORE_LAYOUT_VER    (PARAM_STORE_LAYOUT_VER_V2)
 
 #ifndef APP_PARAM_STORE_USE_EEPROM
 #define APP_PARAM_STORE_USE_EEPROM   (0U)
@@ -41,6 +45,10 @@ typedef struct
 static app_params_t g_params;
 static unsigned int g_flush_delay_s = 0U;
 static int g_flush_pending = 0;
+
+#if defined(USE_STDPERIPH_DRIVER)
+static int g_crc_hw_inited = 0;
+#endif
 
 #if !defined(USE_STDPERIPH_DRIVER)
 static uint8_t g_nv_page_a[sizeof(param_nv_record_t)];
@@ -81,9 +89,28 @@ static uint32_t crc32_calc(const void *buf, unsigned int len)
     return ~crc;
 }
 
-static uint32_t param_record_crc(const param_nv_record_t *r)
+static uint32_t param_record_crc_sw(const param_nv_record_t *r)
 {
     return crc32_calc(r, (unsigned int)(sizeof(param_nv_record_t) - sizeof(uint32_t)));
+}
+
+static uint32_t param_record_crc_hw(const param_nv_record_t *r)
+{
+#if defined(USE_STDPERIPH_DRIVER)
+    const uint32_t *w = (const uint32_t *)r;
+    const uint32_t word_count = (uint32_t)((sizeof(param_nv_record_t) - sizeof(uint32_t)) / sizeof(uint32_t));
+
+    if (!g_crc_hw_inited)
+    {
+        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_CRC, ENABLE);
+        g_crc_hw_inited = 1;
+    }
+
+    CRC_ResetDR();
+    return CRC_CalcBlockCRC((uint32_t *)w, word_count);
+#else
+    return param_record_crc_sw(r);
+#endif
 }
 
 static int param_record_valid(const param_nv_record_t *r)
@@ -96,7 +123,7 @@ static int param_record_valid(const param_nv_record_t *r)
     {
         return 0;
     }
-    if (r->layout_ver != PARAM_STORE_LAYOUT_VER)
+    if ((r->layout_ver != PARAM_STORE_LAYOUT_VER_V1) && (r->layout_ver != PARAM_STORE_LAYOUT_VER_V2))
     {
         return 0;
     }
@@ -104,7 +131,13 @@ static int param_record_valid(const param_nv_record_t *r)
     {
         return 0;
     }
-    return (param_record_crc(r) == r->crc32) ? 1 : 0;
+
+    if (r->layout_ver == PARAM_STORE_LAYOUT_VER_V1)
+    {
+        return (param_record_crc_sw(r) == r->crc32) ? 1 : 0;
+    }
+
+    return (param_record_crc_hw(r) == r->crc32) ? 1 : 0;
 }
 
 #if defined(USE_STDPERIPH_DRIVER)
@@ -368,7 +401,7 @@ static void save_to_nv(const app_params_t *params)
     rec.seq = next_seq;
     rec.payload_len = (uint32_t)sizeof(app_params_t);
     rec.payload = *params;
-    rec.crc32 = param_record_crc(&rec);
+    rec.crc32 = (rec.layout_ver == PARAM_STORE_LAYOUT_VER_V1) ? param_record_crc_sw(&rec) : param_record_crc_hw(&rec);
 
 #if (APP_PARAM_STORE_USE_EEPROM == 1U)
     if (!a_valid || (b_valid && (b.seq > a.seq)))

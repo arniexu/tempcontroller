@@ -1,5 +1,9 @@
 #include "scheduler.h"
 
+#if defined(USE_STDPERIPH_DRIVER)
+#include "stm32f10x.h"
+#endif
+
 static volatile uint32_t g_ms = 0U;
 static uint32_t g_last_key = 0U;
 static uint32_t g_last_ui = 0U;
@@ -11,12 +15,23 @@ void scheduler_init(void)
     g_last_key = 0U;
     g_last_ui = 0U;
     g_last_control = 0U;
+
+#if defined(USE_STDPERIPH_DRIVER)
+    (void)SysTick_Config(SystemCoreClock / 1000U);
+#endif
 }
 
 void scheduler_tick_1ms(void)
 {
     g_ms++;
 }
+
+#if defined(USE_STDPERIPH_DRIVER)
+void SysTick_Handler(void)
+{
+    scheduler_tick_1ms();
+}
+#endif
 
 void scheduler_poll(scheduler_flags_t *flags)
 {

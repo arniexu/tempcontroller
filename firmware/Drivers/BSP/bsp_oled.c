@@ -5,6 +5,7 @@
 #if defined(USE_STDPERIPH_DRIVER)
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_i2c.h"
+#include "misc.h"
 #include "stm32f10x_rcc.h"
 
 #define OLED_I2C                    I2C2
@@ -16,12 +17,30 @@
 #define OLED_ADDR                   (0x3CU)
 #define OLED_TIMEOUT                (10000U)
 
+static volatile uint32_t g_i2c2_evt_count = 0U;
+static volatile uint32_t g_i2c2_err_count = 0U;
+
 static int oled_wait_event(uint32_t event)
 {
     uint32_t timeout = OLED_TIMEOUT;
+    uint32_t err_start = g_i2c2_err_count;
+
     while ((I2C_CheckEvent(OLED_I2C, event) == ERROR) && (timeout > 0U))
     {
+        if (g_i2c2_err_count != err_start)
+        {
+            return 0;
+        }
+
         timeout--;
+        if (g_i2c2_evt_count > 0U)
+        {
+            g_i2c2_evt_count = 0U;
+        }
+        else
+        {
+            __WFI();
+        }
     }
     return timeout > 0U;
 }
@@ -136,6 +155,60 @@ static void glyph_5x7(char c, uint8_t out[5])
 #endif
 
 static char g_lines[BSP_OLED_LINE_COUNT][BSP_OLED_LINE_CHARS + 1U];
+static uint8_t g_frame[BSP_OLED_LINE_COUNT][128U];
+static uint8_t g_refresh_pending = 0U;
+static uint8_t g_refresh_page = 0U;
+
+static void oled_build_frame(void)
+{
+#if defined(USE_STDPERIPH_DRIVER)
+    uint8_t page;
+    uint8_t col;
+    uint8_t c;
+    uint8_t glyph[5];
+
+    for (page = 0U; page < BSP_OLED_LINE_COUNT; ++page)
+    {
+        for (col = 0U; col < 128U; ++col)
+        {
+            g_frame[page][col] = 0x00U;
+        }
+
+        for (col = 0U; col < BSP_OLED_LINE_CHARS; ++col)
+        {
+            uint8_t x = (uint8_t)(col * 6U);
+            c = (uint8_t)g_lines[page][col];
+            if (c == '\0')
+            {
+                c = ' ';
+            }
+            if ((c >= 'a') && (c <= 'z'))
+            {
+                c = (uint8_t)(c - ('a' - 'A'));
+            }
+
+            glyph_5x7((char)c, glyph);
+            g_frame[page][x + 0U] = glyph[0];
+            g_frame[page][x + 1U] = glyph[1];
+            g_frame[page][x + 2U] = glyph[2];
+            g_frame[page][x + 3U] = glyph[3];
+            g_frame[page][x + 4U] = glyph[4];
+            g_frame[page][x + 5U] = 0x00U;
+        }
+    }
+#else
+    unsigned int page;
+    unsigned int col;
+
+    for (page = 0U; page < BSP_OLED_LINE_COUNT; ++page)
+    {
+        for (col = 0U; col < 128U; ++col)
+        {
+            g_frame[page][col] = 0x00U;
+        }
+    }
+#endif
+}
 
 void bsp_oled_init(void)
 {
@@ -144,6 +217,7 @@ void bsp_oled_init(void)
 #if defined(USE_STDPERIPH_DRIVER)
     GPIO_InitTypeDef gpio;
     I2C_InitTypeDef i2c;
+    NVIC_InitTypeDef nvic;
 
     RCC_APB2PeriphClockCmd(OLED_GPIO_CLK, ENABLE);
     RCC_APB1PeriphClockCmd(OLED_I2C_CLK, ENABLE);
@@ -163,6 +237,16 @@ void bsp_oled_init(void)
     i2c.I2C_ClockSpeed = 400000U;
     I2C_Init(OLED_I2C, &i2c);
     I2C_Cmd(OLED_I2C, ENABLE);
+    I2C_ITConfig(OLED_I2C, I2C_IT_EVT | I2C_IT_ERR, ENABLE);
+
+    nvic.NVIC_IRQChannelPreemptionPriority = 3U;
+    nvic.NVIC_IRQChannelSubPriority = 2U;
+    nvic.NVIC_IRQChannelCmd = ENABLE;
+
+    nvic.NVIC_IRQChannel = I2C2_EV_IRQn;
+    NVIC_Init(&nvic);
+    nvic.NVIC_IRQChannel = I2C2_ER_IRQn;
+    NVIC_Init(&nvic);
 
     oled_cmd(0xAEU);
     oled_cmd(0x20U);
@@ -200,6 +284,35 @@ void bsp_oled_init(void)
     }
 }
 
+#if defined(USE_STDPERIPH_DRIVER)
+void I2C2_EV_IRQHandler(void)
+{
+    g_i2c2_evt_count++;
+}
+
+void I2C2_ER_IRQHandler(void)
+{
+    if (I2C_GetITStatus(OLED_I2C, I2C_IT_BERR) != RESET)
+    {
+        I2C_ClearITPendingBit(OLED_I2C, I2C_IT_BERR);
+    }
+    if (I2C_GetITStatus(OLED_I2C, I2C_IT_ARLO) != RESET)
+    {
+        I2C_ClearITPendingBit(OLED_I2C, I2C_IT_ARLO);
+    }
+    if (I2C_GetITStatus(OLED_I2C, I2C_IT_AF) != RESET)
+    {
+        I2C_ClearITPendingBit(OLED_I2C, I2C_IT_AF);
+    }
+    if (I2C_GetITStatus(OLED_I2C, I2C_IT_OVR) != RESET)
+    {
+        I2C_ClearITPendingBit(OLED_I2C, I2C_IT_OVR);
+    }
+
+    g_i2c2_err_count++;
+}
+#endif
+
 void bsp_oled_clear(void)
 {
     unsigned int i;
@@ -223,37 +336,39 @@ void bsp_oled_draw_text(uint8_t line, const char *text)
 
 void bsp_oled_refresh(void)
 {
+    oled_build_frame();
+    g_refresh_page = 0U;
+    g_refresh_pending = 1U;
+}
+
+int bsp_oled_process(void)
+{
 #if defined(USE_STDPERIPH_DRIVER)
-    uint8_t page;
-    uint8_t col;
-    uint8_t c;
-    uint8_t glyph[5];
-
-    for (page = 0U; page < BSP_OLED_LINE_COUNT; ++page)
+    if (!g_refresh_pending)
     {
-        oled_cmd((uint8_t)(0xB0U + page));
-        oled_cmd(0x00U);
-        oled_cmd(0x10U);
-
-        for (col = 0U; col < BSP_OLED_LINE_CHARS; ++col)
-        {
-            c = (uint8_t)g_lines[page][col];
-            if (c == '\0')
-            {
-                c = ' ';
-            }
-            if ((c >= 'a') && (c <= 'z'))
-            {
-                c = (uint8_t)(c - ('a' - 'A'));
-            }
-
-            glyph_5x7((char)c, glyph);
-            oled_data(glyph, 5U);
-            glyph[0] = 0x00U;
-            oled_data(glyph, 1U);
-        }
+        return 0;
     }
+
+    oled_cmd((uint8_t)(0xB0U + g_refresh_page));
+    oled_cmd(0x00U);
+    oled_cmd(0x10U);
+    oled_data(g_frame[g_refresh_page], 128U);
+
+    g_refresh_page++;
+    if (g_refresh_page >= BSP_OLED_LINE_COUNT)
+    {
+        g_refresh_pending = 0U;
+    }
+
+    return (g_refresh_pending != 0U) ? 1 : 0;
+#else
+    return 0;
 #endif
+}
+
+int bsp_oled_is_busy(void)
+{
+    return (g_refresh_pending != 0U) ? 1 : 0;
 }
 
 const char *bsp_oled_mock_get_line(uint8_t line)
