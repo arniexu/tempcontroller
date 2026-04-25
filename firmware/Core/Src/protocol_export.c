@@ -14,7 +14,7 @@
 
 static void send_ok(const char *payload)
 {
-	char line[160];
+	char line[160] = {0};
 	if (payload == 0)
 	{
 		payload = "";
@@ -25,7 +25,7 @@ static void send_ok(const char *payload)
 
 static void send_err(const char *payload)
 {
-	char line[160];
+	char line[160] = {0};
 	if (payload == 0)
 	{
 		payload = "";
@@ -37,7 +37,7 @@ static void send_err(const char *payload)
 static int parse_float_exact(const char *s, float *out)
 {
 	char *end = 0;
-	double val;
+	double val = 0.0;
 
 	if ((s == 0) || (out == 0))
 	{
@@ -57,7 +57,7 @@ static int parse_float_exact(const char *s, float *out)
 static int parse_u32_exact(const char *s, unsigned int *out)
 {
 	char *end = 0;
-	unsigned long val;
+	unsigned long val = 0UL;
 
 	if ((s == 0) || (out == 0))
 	{
@@ -76,9 +76,9 @@ static int parse_u32_exact(const char *s, unsigned int *out)
 
 static int parse_float3_exact(const char *s, float *a, float *b, float *c)
 {
-	char lhs[24];
-	char mid[24];
-	char rhs[24];
+	char lhs[24] = {0};
+	char mid[24] = {0};
+	char rhs[24] = {0};
 
 	if ((s == 0) || (a == 0) || (b == 0) || (c == 0))
 	{
@@ -95,9 +95,9 @@ static int parse_float3_exact(const char *s, float *a, float *b, float *c)
 
 static int parse_u32_3_exact(const char *s, unsigned int *a, unsigned int *b, unsigned int *c)
 {
-	char lhs[24];
-	char mid[24];
-	char rhs[24];
+	char lhs[24] = {0};
+	char mid[24] = {0};
+	char rhs[24] = {0};
 
 	if ((s == 0) || (a == 0) || (b == 0) || (c == 0))
 	{
@@ -114,7 +114,7 @@ static int parse_u32_3_exact(const char *s, unsigned int *a, unsigned int *b, un
 
 static void handle_read_temp(void)
 {
-	char line[160];
+	char line[160] = {0};
 	const temp_snapshot_t *t = temp_manager_get_snapshot();
 	(void)snprintf(line,
 				   sizeof(line),
@@ -131,7 +131,7 @@ static void handle_read_temp(void)
 
 static void handle_read_param(void)
 {
-	char line[160];
+	char line[160] = {0};
 	const app_params_t *p = param_store_get();
 	(void)snprintf(line,
 				   sizeof(line),
@@ -150,8 +150,8 @@ static void handle_read_param(void)
 
 static void handle_set_temp(const char *cmd)
 {
-	float set_temp;
-	app_params_t *p;
+	float set_temp = 0.0f;
+	app_params_t *p = 0;
 	const char *arg = "SET_TEMP=";
 
 	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_float_exact(cmd + strlen(arg), &set_temp))
@@ -266,9 +266,9 @@ static void handle_set_log_period_values(unsigned int period_s)
 
 static void handle_set_pid(const char *cmd)
 {
-	float kp;
-	float ki;
-	float kd;
+	float kp = 0.0f;
+	float ki = 0.0f;
+	float kd = 0.0f;
 	const char *arg = "SET_PID=";
 
 	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_float3_exact(cmd + strlen(arg), &kp, &ki, &kd))
@@ -283,9 +283,9 @@ static void handle_set_pid(const char *cmd)
 
 static void handle_conf_pid(const char *cmd)
 {
-	float kp;
-	float ki;
-	float kd;
+	float kp = 0.0f;
+	float ki = 0.0f;
+	float kd = 0.0f;
 	const char *arg = "CONF:PID ";
 
 	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_float3_exact(cmd + strlen(arg), &kp, &ki, &kd))
@@ -300,7 +300,7 @@ static void handle_conf_pid(const char *cmd)
 
 static void handle_set_alarm(const char *cmd)
 {
-	float alarm_c;
+	float alarm_c = 0.0f;
 	const char *arg = "SET_ALARM=";
 
 	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_float_exact(cmd + strlen(arg), &alarm_c))
@@ -314,7 +314,7 @@ static void handle_set_alarm(const char *cmd)
 
 static void handle_conf_alarm(const char *cmd)
 {
-	float alarm_c;
+	float alarm_c = 0.0f;
 	const char *arg = "CONF:ALARM ";
 
 	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_float_exact(cmd + strlen(arg), &alarm_c))
@@ -328,9 +328,9 @@ static void handle_conf_alarm(const char *cmd)
 
 static void handle_set_schedule(const char *cmd)
 {
-	unsigned int enabled;
-	unsigned int start_min;
-	unsigned int end_min;
+	unsigned int enabled = 0U;
+	unsigned int start_min = 0U;
+	unsigned int end_min = 0U;
 	const char *arg = "SET_SCHEDULE=";
 
 	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_u32_3_exact(cmd + strlen(arg), &enabled, &start_min, &end_min))
@@ -344,9 +344,9 @@ static void handle_set_schedule(const char *cmd)
 
 static void handle_conf_schedule(const char *cmd)
 {
-	unsigned int enabled;
-	unsigned int start_min;
-	unsigned int end_min;
+	unsigned int enabled = 0U;
+	unsigned int start_min = 0U;
+	unsigned int end_min = 0U;
 	const char *arg = "CONF:SCH ";
 
 	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_u32_3_exact(cmd + strlen(arg), &enabled, &start_min, &end_min))
@@ -360,7 +360,7 @@ static void handle_conf_schedule(const char *cmd)
 
 static void handle_set_log_period(const char *cmd)
 {
-	unsigned int period_s;
+	unsigned int period_s = 0U;
 	const char *arg = "SET_LOG_PERIOD=";
 
 	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_u32_exact(cmd + strlen(arg), &period_s))
@@ -374,7 +374,7 @@ static void handle_set_log_period(const char *cmd)
 
 static void handle_conf_log_period(const char *cmd)
 {
-	unsigned int period_s;
+	unsigned int period_s = 0U;
 	const char *arg = "CONF:LOGPERIOD ";
 
 	if ((cmd == 0) || (strncmp(cmd, arg, strlen(arg)) != 0) || !parse_u32_exact(cmd + strlen(arg), &period_s))
@@ -388,10 +388,10 @@ static void handle_conf_log_period(const char *cmd)
 
 static void handle_log_export(void)
 {
-	char line[200];
-	unsigned int i;
+	char line[200] = {0};
+	unsigned int i = 0U;
 	unsigned int cnt = log_service_count();
-	log_record_t rec;
+	log_record_t rec = {0};
 
 	hw_uart_write("OK,LOG_BEGIN\r\n");
 	hw_uart_write("index,t1,t2,t3,t_avg,set_temp,pid_out,heater,alarm\r\n");
@@ -428,7 +428,7 @@ void protocol_export_init(void)
 
 void protocol_export_process(void)
 {
-	char cmd[80];
+	char cmd[80] = {0};
 
 	if (!hw_uart_read_line(cmd, sizeof(cmd)))
 	{
