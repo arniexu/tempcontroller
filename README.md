@@ -1,136 +1,136 @@
-# WaterTempControl Firmware (STM32F103)
+# WaterTempControl 固件（STM32F103）
 
-This folder contains the firmware implementation for the STM32F103-based water temperature controller, including application logic, hardware abstraction ports, BSP drivers, and host-side unit tests.
+本目录包含基于 STM32F103 的水温控制系统固件实现，覆盖应用业务逻辑、硬件抽象端口、BSP 驱动与主机侧单元测试。
 
-## Current status
+## 当前状态
 
-- Core services are implemented: scheduler, temperature manager, heater control, PID, alarm, schedule, UI, logging, parameter store, and protocol export.
-- Hardware separation is in place: business logic uses HW ports, while GPIO/I2C/UART details stay in BSP.
-- Host tests are available for module-level verification.
+- 核心服务已实现：调度器、温度管理、加热控制、PID、报警、预约计划、UI、日志、参数存储与协议导出。
+- 已完成硬件分层：业务逻辑通过硬件端口访问底层，GPIO/I2C/UART 等细节收敛在 BSP。
+- 提供主机侧模块测试，可用于回归验证。
 
-## Folder layout
+## 目录结构
 
-- `Core/Inc`: public interfaces and service contracts.
-- `Core/Src`: business logic and orchestration.
-- `Drivers/BSP`: STM32 StdPeriph hardware drivers and host mock paths.
-- `tests`: host-side test runner, module tests, and stubs.
-- `Project/MDK-ARM`: Keil project and build outputs.
+- Core/Inc：公共接口与服务契约。
+- Core/Src：业务逻辑与流程编排。
+- Drivers/BSP：STM32 StdPeriph 驱动与主机模拟实现。
+- tests：主机测试入口、模块测试与桩实现。
+- Project/MDK-ARM：Keil 工程与构建产物。
 
-## Runtime model
+## 运行节奏
 
-- 1 ms task: scheduler tick and heater window update.
-- 100 ms task: key scan and input service.
-- 200 ms task: UI render/refresh.
-- 1 s task: sensor sampling, control loop, alarm check, schedule evaluation, and log processing.
+- 1 ms 任务：调度器时基与加热窗口更新。
+- 100 ms 任务：按键扫描与输入服务。
+- 200 ms 任务：界面渲染与刷新。
+- 1 s 任务：温度采样、控制计算、报警检查、预约评估与日志处理。
 
-## Detailed Dysfunction Description (Failure Modes and Safe Behavior)
+## 失效与异常行为说明（Dysfunction）
 
-This section describes expected behavior under abnormal input, hardware faults, and edge conditions.
+本节描述系统在异常输入、硬件故障与边界条件下的预期行为与安全策略。
 
-### 1) Sensor path dysfunction
+### 1) 传感器链路异常
 
-- Symptom: DS18B20 timeout, CRC error, or repeated read failure.
-- Detection: driver diagnostics counters and consecutive failure logic.
-- System behavior: invalid samples are rejected, degraded/fault state is raised, and control uses safe logic rather than trusting bad sensor values.
-- Risk controlled: avoids unsafe heating decisions from corrupted or stale temperature data.
+- 现象：DS18B20 超时、CRC 错误或连续读取失败。
+- 检测：驱动诊断计数器与连续失败判定。
+- 系统行为：拒绝无效采样，标记降级/故障状态，控制逻辑不信任异常温度值。
+- 风险控制：避免因为脏数据或陈旧数据造成不安全加热。
 
-### 2) Protocol command dysfunction
+### 2) 协议命令异常
 
-- Symptom: malformed command syntax, trailing extra payload, NaN/Inf numeric values, or out-of-range configuration values.
-- Detection: strict parser validation in protocol command handlers.
-- System behavior: command is rejected and explicit error response is returned (for example BAD_xxx, OUT_OF_RANGE, UNKNOWN_CMD).
-- Risk controlled: prevents invalid runtime configuration from entering control/alarm/schedule parameters.
+- 现象：命令格式错误、尾随多余参数、NaN/Inf 数值、参数越界。
+- 检测：命令处理器执行严格解析与范围校验。
+- 系统行为：拒绝命令并返回明确错误（如 BAD_xxx、OUT_OF_RANGE、UNKNOWN_CMD）。
+- 风险控制：防止非法配置写入控制/报警/计划参数。
 
-### 3) Storage dysfunction (EEPROM)
+### 3) 存储链路异常（EEPROM）
 
-- Symptom: I2C transfer error, timeout, or busy/retry exhaustion while loading or saving parameters.
-- Detection: EEPROM status path and write/read return codes.
-- System behavior: failed transaction is rejected; previous valid configuration remains effective.
-- Risk controlled: avoids applying partially written or invalid persistent data.
+- 现象：I2C 传输错误、超时、忙重试耗尽，或读写失败。
+- 检测：EEPROM 状态码与驱动返回值。
+- 系统行为：本次事务失败即回退，保持上一份有效配置继续运行。
+- 风险控制：避免加载或应用半写入/损坏参数。
 
-### 4) RTC/timebase dysfunction
+### 4) RTC 时基异常
 
-- Symptom: RTC source not ready or invalid time read.
-- Detection: RTC readiness checks and return status from time query.
-- System behavior: schedule logic handles invalid time gracefully instead of forcing an unsafe state transition.
-- Risk controlled: avoids unpredictable schedule-triggered heater operation when clock source is unreliable.
+- 现象：RTC 时钟源未就绪或时间读取无效。
+- 检测：RTC 就绪检查与时间读取返回状态。
+- 系统行为：预约逻辑在无效时间条件下保持安全处理，不做危险切换。
+- 风险控制：避免时钟异常导致不可预期的定时加热动作。
 
-### 5) UI/key input dysfunction
+### 5) UI/按键输入异常
 
-- Symptom: key bounce/noise or edge-trigger anomalies.
-- Detection: periodic scan plus state tracking.
-- System behavior: key actions are interpreted via controlled input flow; invalid transitions do not directly force critical outputs.
-- Risk controlled: prevents accidental configuration jumps due to electrical noise.
+- 现象：按键抖动、噪声干扰、边沿异常触发。
+- 检测：周期扫描与状态跟踪。
+- 系统行为：按键动作经过受控输入流处理，异常跳变不直接驱动关键输出。
+- 风险控制：降低误触导致参数跳变或模式误切换的风险。
 
-### 6) Actuator path dysfunction
+### 6) 执行器链路异常
 
-- Symptom: relay control request under fault/degraded context.
-- Detection: control mode and alarm/safety checks in service layer.
-- System behavior: safety conditions dominate and can force conservative actuator state.
-- Risk controlled: heater output does not remain active when fault criteria are met.
+- 现象：在故障/降级上下文中仍有继电器动作请求。
+- 检测：服务层模式判断与报警安全条件检查。
+- 系统行为：安全条件优先，可强制进入保守输出状态。
+- 风险控制：避免在故障条件下持续加热。
 
-### 7) Build-path dysfunction (host vs target drift)
+### 7) 构建路径漂移异常（主机与目标不一致）
 
-- Symptom: behavior mismatch between host test and MCU target builds.
-- Detection: dual-path compilation and module self-tests.
-- System behavior: shared state visibility and interfaces are aligned to reduce path-specific divergence.
-- Risk controlled: lowers regression risk where one build passes but another fails.
+- 现象：主机测试行为与 MCU 目标构建行为不一致。
+- 检测：双路径编译与模块自测。
+- 系统行为：统一共享状态可见性与接口定义，减少路径分叉。
+- 风险控制：降低“测试通过但目标失败”或“目标可跑但测试异常”的回归概率。
 
-## Hardware Pinout Description (from current BSP implementation)
+## 硬件引脚说明（基于当前 BSP 实现）
 
-The following pin map reflects the current firmware source. Verify against your PCB revision before production flashing.
+以下引脚映射来自当前固件源码，量产前请与实际 PCB 版本逐项核对。
 
-### GPIO and peripheral mapping
+### GPIO 与外设映射
 
-- `PA0`: KEY_SET input, EXTI0 (active-low with pull-up).
-- `PA1`: KEY_UP input, EXTI1 (active-low with pull-up).
-- `PA2`: KEY_DOWN input, EXTI2 (active-low with pull-up).
-- `PA3`: KEY_BACK input, EXTI3 (active-low with pull-up).
-- `PA4`: DS18B20 sensor #1 OneWire data (with EXTI4 fall detection path).
-- `PA5`: DS18B20 sensor #2 OneWire data (with EXTI5 fall detection path).
-- `PA6`: DS18B20 sensor #3 OneWire data (with EXTI6 fall detection path).
-- `PA9`: USART1_TX (protocol/debug output).
-- `PA10`: USART1_RX (protocol command input).
-- `PB6`: I2C1_SCL for EEPROM.
-- `PB7`: I2C1_SDA for EEPROM.
-- `PB10`: I2C2_SCL for OLED.
-- `PB11`: I2C2_SDA for OLED.
-- `PB12`: Relay output.
-- `PB13`: Buzzer output.
+- PA0：KEY_SET 输入，EXTI0（上拉，低电平按下）。
+- PA1：KEY_UP 输入，EXTI1（上拉，低电平按下）。
+- PA2：KEY_DOWN 输入，EXTI2（上拉，低电平按下）。
+- PA3：KEY_BACK 输入，EXTI3（上拉，低电平按下）。
+- PA4：DS18B20 #1 OneWire 数据线（含 EXTI4 下降沿检测）。
+- PA5：DS18B20 #2 OneWire 数据线（含 EXTI5 下降沿检测）。
+- PA6：DS18B20 #3 OneWire 数据线（含 EXTI6 下降沿检测）。
+- PA9：USART1_TX（协议/调试输出）。
+- PA10：USART1_RX（协议命令输入）。
+- PB6：I2C1_SCL（EEPROM）。
+- PB7：I2C1_SDA（EEPROM）。
+- PB10：I2C2_SCL（OLED）。
+- PB11：I2C2_SDA（OLED）。
+- PB12：继电器控制输出。
+- PB13：蜂鸣器控制输出。
 
-### Logical peripheral summary
+### 逻辑外设摘要
 
-- Temperature sensors: 3 x DS18B20 on PA4/PA5/PA6.
-- EEPROM: I2C1, 7-bit address from `APP_EEPROM_I2C_ADDR_7BIT` (default 0x50).
-- OLED: I2C2, fixed 7-bit device address 0x3C.
-- UART protocol channel: USART1 at `APP_UART_BAUDRATE` (default 115200).
-- RTC: backup-domain RTC (LSE preferred, LSI fallback), no dedicated GPIO in driver API.
+- 温度传感器：3 路 DS18B20，接 PA4/PA5/PA6。
+- EEPROM：I2C1，7 位地址由 APP_EEPROM_I2C_ADDR_7BIT 配置（默认 0x50）。
+- OLED：I2C2，设备地址固定 0x3C（7 位）。
+- 协议串口：USART1，波特率由 APP_UART_BAUDRATE 配置（默认 115200）。
+- RTC：后备域 RTC（优先 LSE，回退 LSI），驱动 API 不暴露专用 GPIO。
 
-### Pin conflict notes
+### 引脚冲突说明
 
-- Current DS18B20 lines are on `PA4/PA5/PA6`.
-- Current EEPROM lines are on `PB6/PB7`.
-- This avoids DS18B20 and EEPROM bus overlap present in older mappings.
+- 当前 DS18B20 使用 PA4/PA5/PA6。
+- 当前 EEPROM 使用 PB6/PB7。
+- 该映射规避了旧版本中 DS18B20 与 EEPROM 总线重叠的问题。
 
-## Integration notes
+## 集成说明
 
-1. Build target mode with `USE_STDPERIPH_DRIVER` for MCU deployment.
-2. Set `APP_USE_MOCK_TEMP_SOURCE` to `0` for real DS18B20 hardware.
-3. Confirm board pull-ups for OneWire and both I2C buses.
-4. Validate relay/buzzer active level on your hardware revision.
-5. For persistence wear reduction, keep deferred parameter flush enabled (`APP_PARAM_STORE_FLUSH_DELAY_S`).
+1. MCU 目标构建需启用 USE_STDPERIPH_DRIVER。
+2. 使用真实 DS18B20 时，将 APP_USE_MOCK_TEMP_SOURCE 设置为 0。
+3. 确认 OneWire 与两路 I2C 总线具备正确上拉。
+4. 按实际硬件版本核对继电器/蜂鸣器有效电平。
+5. 为降低存储磨损，建议保持参数延迟落盘（APP_PARAM_STORE_FLUSH_DELAY_S）。
 
-## Configuration defaults (selected)
+## 关键默认配置
 
-- Temperature setpoint default: 45.0 C.
-- Alarm threshold default: 60.0 C.
-- PID window: 10000 ms.
-- UART baudrate: 115200.
-- EEPROM I2C speed: 100 kHz.
-- Scheduler periods: 100 ms (keys), 200 ms (UI), 1000 ms (control).
+- 默认设定温度：45.0 C。
+- 默认报警阈值：60.0 C。
+- PID 窗口：10000 ms。
+- UART 波特率：115200。
+- EEPROM I2C 速率：100 kHz。
+- 调度周期：按键 100 ms，UI 200 ms，控制 1000 ms。
 
-## References
+## 参考资料
 
-- Integration guide: `Project/StdPeriphIntegration.md`.
-- Keil project: `Project/MDK-ARM/WaterTempControl.uvprojx`.
-- Host tests: `tests/run_tests.ps1`.
+- 集成指南：Project/StdPeriphIntegration.md。
+- Keil 工程：Project/MDK-ARM/WaterTempControl.uvprojx。
+- 主机测试入口：tests/run_tests.ps1。
