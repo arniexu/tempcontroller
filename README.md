@@ -95,7 +95,7 @@
 - PB9：I2C1_SDA（OLED，I2C1 Remap）。
 - PB10：I2C2_SCL（EEPROM）。
 - PB11：I2C2_SDA（EEPROM）。
-- PB12：继电器控制输出。
+- PB5：继电器控制输出。
 - PB13：蜂鸣器控制输出。
 
 ### 逻辑外设摘要

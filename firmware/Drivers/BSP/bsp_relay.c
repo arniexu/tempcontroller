@@ -14,11 +14,11 @@ void bsp_relay_init(void)
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 
-    gpio.GPIO_Pin = GPIO_Pin_12;
+    gpio.GPIO_Pin = GPIO_Pin_5;
     gpio.GPIO_Speed = GPIO_Speed_2MHz;
     gpio.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_Init(GPIOB, &gpio);
-    GPIO_ResetBits(GPIOB, GPIO_Pin_12);
+    GPIO_ResetBits(GPIOB, GPIO_Pin_5);
 #endif
 
     g_relay_on = false;
@@ -31,11 +31,11 @@ void bsp_relay_set(bool on)
 #if defined(USE_STDPERIPH_DRIVER)
     if (on)
     {
-        GPIO_SetBits(GPIOB, GPIO_Pin_12);
+        GPIO_SetBits(GPIOB, GPIO_Pin_5);
     }
     else
     {
-        GPIO_ResetBits(GPIOB, GPIO_Pin_12);
+        GPIO_ResetBits(GPIOB, GPIO_Pin_5);
     }
 #endif
 }
