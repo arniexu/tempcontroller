@@ -8,12 +8,12 @@
 #include "misc.h"
 #include "stm32f10x_rcc.h"
 
-#define OLED_I2C                    I2C2
-#define OLED_I2C_CLK                RCC_APB1Periph_I2C2
+#define OLED_I2C                    I2C1
+#define OLED_I2C_CLK                RCC_APB1Periph_I2C1
 #define OLED_GPIO_PORT              GPIOB
 #define OLED_GPIO_CLK               RCC_APB2Periph_GPIOB
-#define OLED_PIN_SCL                GPIO_Pin_10
-#define OLED_PIN_SDA                GPIO_Pin_11
+#define OLED_PIN_SCL                GPIO_Pin_8
+#define OLED_PIN_SDA                GPIO_Pin_9
 #define OLED_ADDR                   (0x3CU)
 #define OLED_TIMEOUT                (10000U)
 
@@ -219,8 +219,9 @@ void bsp_oled_init(void)
     I2C_InitTypeDef i2c;
     NVIC_InitTypeDef nvic;
 
-    RCC_APB2PeriphClockCmd(OLED_GPIO_CLK, ENABLE);
+    RCC_APB2PeriphClockCmd(OLED_GPIO_CLK | RCC_APB2Periph_AFIO, ENABLE);
     RCC_APB1PeriphClockCmd(OLED_I2C_CLK, ENABLE);
+    GPIO_PinRemapConfig(GPIO_Remap_I2C1, ENABLE);
 
     gpio.GPIO_Pin = OLED_PIN_SCL | OLED_PIN_SDA;
     gpio.GPIO_Mode = GPIO_Mode_AF_OD;
@@ -243,9 +244,9 @@ void bsp_oled_init(void)
     nvic.NVIC_IRQChannelSubPriority = 2U;
     nvic.NVIC_IRQChannelCmd = ENABLE;
 
-    nvic.NVIC_IRQChannel = I2C2_EV_IRQn;
+    nvic.NVIC_IRQChannel = I2C1_EV_IRQn;
     NVIC_Init(&nvic);
-    nvic.NVIC_IRQChannel = I2C2_ER_IRQn;
+    nvic.NVIC_IRQChannel = I2C1_ER_IRQn;
     NVIC_Init(&nvic);
 
     oled_cmd(0xAEU);
@@ -285,12 +286,12 @@ void bsp_oled_init(void)
 }
 
 #if defined(USE_STDPERIPH_DRIVER)
-void I2C2_EV_IRQHandler(void)
+void I2C1_EV_IRQHandler(void)
 {
     g_i2c2_evt_count++;
 }
 
-void I2C2_ER_IRQHandler(void)
+void I2C1_ER_IRQHandler(void)
 {
     if (I2C_GetITStatus(OLED_I2C, I2C_IT_BERR) != RESET)
     {

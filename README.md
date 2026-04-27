@@ -91,26 +91,26 @@
 - PA6：DS18B20 #3 OneWire 数据线（含 EXTI6 下降沿检测）。
 - PA9：USART1_TX（协议/调试输出）。
 - PA10：USART1_RX（协议命令输入）。
-- PB6：I2C1_SCL（EEPROM）。
-- PB7：I2C1_SDA（EEPROM）。
-- PB10：I2C2_SCL（OLED）。
-- PB11：I2C2_SDA（OLED）。
+- PB8：I2C1_SCL（OLED，I2C1 Remap）。
+- PB9：I2C1_SDA（OLED，I2C1 Remap）。
+- PB10：I2C2_SCL（EEPROM）。
+- PB11：I2C2_SDA（EEPROM）。
 - PB12：继电器控制输出。
 - PB13：蜂鸣器控制输出。
 
 ### 逻辑外设摘要
 
 - 温度传感器：3 路 DS18B20，接 PA4/PA5/PA6。
-- EEPROM：I2C1，7 位地址由 APP_EEPROM_I2C_ADDR_7BIT 配置（默认 0x50）。
-- OLED：I2C2，设备地址固定 0x3C（7 位）。
+- EEPROM：I2C2，7 位地址由 APP_EEPROM_I2C_ADDR_7BIT 配置（默认 0x50）。
+- OLED：I2C1（Remap 至 PB8/PB9），设备地址固定 0x3C（7 位）。
 - 协议串口：USART1，波特率由 APP_UART_BAUDRATE 配置（默认 115200）。
 - RTC：后备域 RTC（优先 LSE，回退 LSI），驱动 API 不暴露专用 GPIO。
 
 ### 引脚冲突说明
 
 - 当前 DS18B20 使用 PA4/PA5/PA6。
-- 当前 EEPROM 使用 PB6/PB7。
-- 该映射规避了旧版本中 DS18B20 与 EEPROM 总线重叠的问题。
+- 当前 EEPROM 使用 PB10/PB11，OLED 使用 PB8/PB9。
+- 该映射避免了 DS18B20 与 I2C 总线引脚重叠，并与当前 BSP 驱动一致。
 
 ## 集成说明
 

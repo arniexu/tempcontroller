@@ -47,23 +47,23 @@
 
 #if defined(USE_STDPERIPH_DRIVER)
 
-#define EEPROM_I2C                      I2C1
+#define EEPROM_I2C                      I2C2
 #define EEPROM_GPIO_PORT                GPIOB
-#define EEPROM_SCL_PIN                  GPIO_Pin_6
-#define EEPROM_SDA_PIN                  GPIO_Pin_7
+#define EEPROM_SCL_PIN                  GPIO_Pin_10
+#define EEPROM_SDA_PIN                  GPIO_Pin_11
 #define EEPROM_I2C_DMA_CLK              RCC_AHBPeriph_DMA1
-#define EEPROM_I2C_DMA_TX_CHANNEL       DMA1_Channel6
-#define EEPROM_I2C_DMA_TX_IRQn          DMA1_Channel6_IRQn
-#define EEPROM_I2C_DMA_TX_TC_FLAG       DMA1_FLAG_TC6
-#define EEPROM_I2C_DMA_TX_TE_FLAG       DMA1_FLAG_TE6
-#define EEPROM_I2C_DMA_TX_GL_FLAG       DMA1_FLAG_GL6
+#define EEPROM_I2C_DMA_TX_CHANNEL       DMA1_Channel4
+#define EEPROM_I2C_DMA_TX_IRQn          DMA1_Channel4_IRQn
+#define EEPROM_I2C_DMA_TX_TC_FLAG       DMA1_FLAG_TC4
+#define EEPROM_I2C_DMA_TX_TE_FLAG       DMA1_FLAG_TE4
+#define EEPROM_I2C_DMA_TX_GL_FLAG       DMA1_FLAG_GL4
 #define EEPROM_I2C_ADDR_8BIT            ((uint8_t)(APP_EEPROM_I2C_ADDR_7BIT << 1U))
 #define EEPROM_TIMEOUT                  (20000U)
 #define EEPROM_READY_RETRY              (200U)
 #define EEPROM_ASYNC_MAX_LEN            (128U)
 
-static volatile uint32_t g_i2c1_evt_count = 0U;
-static volatile uint32_t g_i2c1_err_count = 0U;
+static volatile uint32_t g_i2c_evt_count = 0U;
+static volatile uint32_t g_i2c_err_count = 0U;
 static volatile int g_eeprom_inited = 0;
 static volatile int g_async_busy = 0;
 static volatile int g_async_status = 1;
@@ -92,12 +92,12 @@ static void irq_unlock(uint32_t primask)
 static int i2c_wait_event(uint32_t event)
 {
     uint32_t timeout = EEPROM_TIMEOUT;
-    uint32_t err_start = g_i2c1_err_count;
-    uint32_t evt_seen = g_i2c1_evt_count;
+    uint32_t err_start = g_i2c_err_count;
+    uint32_t evt_seen = g_i2c_evt_count;
 
     while (I2C_CheckEvent(EEPROM_I2C, event) == ERROR)
     {
-        if (g_i2c1_err_count != err_start)
+        if (g_i2c_err_count != err_start)
         {
             return 0;
         }
@@ -108,7 +108,7 @@ static int i2c_wait_event(uint32_t event)
         }
         --timeout;
 
-        if (g_i2c1_evt_count == evt_seen)
+        if (g_i2c_evt_count == evt_seen)
         {
             if (__get_PRIMASK() == 0U)
             {
@@ -119,7 +119,7 @@ static int i2c_wait_event(uint32_t event)
                 __NOP();
             }
         }
-        evt_seen = g_i2c1_evt_count;
+        evt_seen = g_i2c_evt_count;
     }
     return 1;
 }
@@ -127,12 +127,12 @@ static int i2c_wait_event(uint32_t event)
 static int i2c_wait_flag_clear(uint32_t flag)
 {
     uint32_t timeout = EEPROM_TIMEOUT;
-    uint32_t err_start = g_i2c1_err_count;
-    uint32_t evt_seen = g_i2c1_evt_count;
+    uint32_t err_start = g_i2c_err_count;
+    uint32_t evt_seen = g_i2c_evt_count;
 
     while (I2C_GetFlagStatus(EEPROM_I2C, flag) != RESET)
     {
-        if (g_i2c1_err_count != err_start)
+        if (g_i2c_err_count != err_start)
         {
             return 0;
         }
@@ -143,7 +143,7 @@ static int i2c_wait_flag_clear(uint32_t flag)
         }
         --timeout;
 
-        if (g_i2c1_evt_count == evt_seen)
+        if (g_i2c_evt_count == evt_seen)
         {
             if (__get_PRIMASK() == 0U)
             {
@@ -154,7 +154,7 @@ static int i2c_wait_flag_clear(uint32_t flag)
                 __NOP();
             }
         }
-        evt_seen = g_i2c1_evt_count;
+        evt_seen = g_i2c_evt_count;
     }
     return 1;
 }
@@ -296,7 +296,7 @@ void bsp_eeprom_init(void)
     NVIC_InitTypeDef nvic;
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE);
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C2, ENABLE);
     RCC_AHBPeriphClockCmd(EEPROM_I2C_DMA_CLK, ENABLE);
 
     gpio.GPIO_Pin = EEPROM_SCL_PIN | EEPROM_SDA_PIN;
@@ -319,17 +319,17 @@ void bsp_eeprom_init(void)
     nvic.NVIC_IRQChannelSubPriority = 1U;
     nvic.NVIC_IRQChannelCmd = ENABLE;
 
-    nvic.NVIC_IRQChannel = I2C1_EV_IRQn;
+    nvic.NVIC_IRQChannel = I2C2_EV_IRQn;
     NVIC_Init(&nvic);
-    nvic.NVIC_IRQChannel = I2C1_ER_IRQn;
+    nvic.NVIC_IRQChannel = I2C2_ER_IRQn;
     NVIC_Init(&nvic);
 
     nvic.NVIC_IRQChannel = EEPROM_I2C_DMA_TX_IRQn;
     nvic.NVIC_IRQChannelSubPriority = 0U;
     NVIC_Init(&nvic);
 
-    g_i2c1_evt_count = 0U;
-    g_i2c1_err_count = 0U;
+    g_i2c_evt_count = 0U;
+    g_i2c_err_count = 0U;
     g_async_busy = 0;
     g_async_status = 1;
     g_async_addr = 0U;
@@ -340,7 +340,7 @@ void bsp_eeprom_init(void)
     g_eeprom_inited = 1;
 }
 
-void DMA1_Channel6_IRQHandler(void)
+void DMA1_Channel4_IRQHandler(void)
 {
     if (DMA_GetFlagStatus(EEPROM_I2C_DMA_TX_TE_FLAG) != RESET)
     {
@@ -386,12 +386,12 @@ void DMA1_Channel6_IRQHandler(void)
     }
 }
 
-void I2C1_EV_IRQHandler(void)
+void I2C2_EV_IRQHandler(void)
 {
-    g_i2c1_evt_count++;
+    g_i2c_evt_count++;
 }
 
-void I2C1_ER_IRQHandler(void)
+void I2C2_ER_IRQHandler(void)
 {
     if (I2C_GetITStatus(EEPROM_I2C, I2C_IT_BERR) != RESET)
     {
@@ -410,7 +410,7 @@ void I2C1_ER_IRQHandler(void)
         I2C_ClearITPendingBit(EEPROM_I2C, I2C_IT_OVR);
     }
 
-    g_i2c1_err_count++;
+    g_i2c_err_count++;
 }
 
 void bsp_eeprom_mock_set_access_ok(int read_ok, int write_ok)

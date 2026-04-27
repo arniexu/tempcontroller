@@ -1,4 +1,5 @@
 #include "scheduler.h"
+#include "app_config.h"
 
 #if defined(USE_STDPERIPH_DRIVER)
 #include "stm32f10x.h"
@@ -8,6 +9,10 @@ static volatile uint32_t g_ms = 0U;
 static uint32_t g_last_key = 0U;
 static uint32_t g_last_ui = 0U;
 static uint32_t g_last_control = 0U;
+
+#define SCHED_KEY_PERIOD_MS     ((APP_TASK_KEY_PERIOD_MS == 0U) ? 1U : APP_TASK_KEY_PERIOD_MS)
+#define SCHED_UI_PERIOD_MS      ((APP_TASK_UI_PERIOD_MS == 0U) ? 1U : APP_TASK_UI_PERIOD_MS)
+#define SCHED_CONTROL_PERIOD_MS ((APP_TASK_CONTROL_PERIOD_MS == 0U) ? 1U : APP_TASK_CONTROL_PERIOD_MS)
 
 void scheduler_init(void)
 {
@@ -48,19 +53,19 @@ void scheduler_poll(scheduler_flags_t *flags)
 
     now = g_ms;
 
-    if ((now - g_last_key) >= 100U)
+    if ((now - g_last_key) >= SCHED_KEY_PERIOD_MS)
     {
         g_last_key = now;
         flags->task_key_100ms = true;
     }
 
-    if ((now - g_last_ui) >= 200U)
+    if ((now - g_last_ui) >= SCHED_UI_PERIOD_MS)
     {
         g_last_ui = now;
         flags->task_ui_200ms = true;
     }
 
-    if ((now - g_last_control) >= 1000U)
+    if ((now - g_last_control) >= SCHED_CONTROL_PERIOD_MS)
     {
         g_last_control = now;
         flags->task_control_1s = true;
