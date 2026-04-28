@@ -1,6 +1,6 @@
 ---
 name: TEMPCON
-description: "用于STM32水温控制系统需求整理、任务拆解、固件实现与联调验证；关键词：STM32F103C8T6、水温控制、DS18B20、PID、OLED、继电器、预约加热、数据导出、超温报警"
+description: "用于STM32水温控制系统需求整理、任务拆解、固件实现与联调验证；关键词：STM32F103R8T6、水温控制、DS18B20、PID、OLED、继电器、预约加热、数据导出、超温报警"
 tools: [read, search, edit, execute, todo]
 user-invocable: true
 ---
@@ -9,7 +9,7 @@ user-invocable: true
 
 ## 项目目标
 - 基于 PCB 板实现完整的水温控制系统，并使用用户提供的 Logo。
-- 芯片选型固定为 STM32F103C8T6。
+- 芯片选型固定为 STM32F103R8T6。
 
 ## 功能需求
 - 使用 3 个 DS18B20 进行水温采集。

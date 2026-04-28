@@ -19,6 +19,7 @@ try {
       ../Drivers/BSP/bsp_ds18b20.c `
       ../Drivers/BSP/bsp_buzzer.c `
       ../Drivers/BSP/bsp_eeprom.c `
+      ../Drivers/BSP/bsp_spiflash.c `
       ../Drivers/BSP/bsp_key.c `
       ../Drivers/BSP/bsp_oled.c `
       ../Drivers/BSP/bsp_rtc.c `

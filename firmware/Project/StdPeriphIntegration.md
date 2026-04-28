@@ -1,6 +1,6 @@
 # STM32F10x StdPeriph Integration Guide
 
-This project uses STM32F103C8T6 and should be built with STM32F10x Standard Peripheral Library as the hardware driver base.
+This project uses STM32F103R8T6 and should be built with STM32F10x Standard Peripheral Library as the hardware driver base.
 
 ## 1. Add preprocessor defines
 

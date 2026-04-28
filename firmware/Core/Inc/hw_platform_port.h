@@ -20,6 +20,7 @@ typedef enum
 #include "bsp_oled.h"
 #include "bsp_relay.h"
 #include "bsp_rtc.h"
+#include "bsp_spiflash.h"
 #include "bsp_uart.h"
 
 #define HW_OLED_LINE_COUNT  BSP_OLED_LINE_COUNT
@@ -63,6 +64,26 @@ static inline int hw_eeprom_write(uint16_t addr, const uint8_t *buf, uint16_t le
 static inline void hw_eeprom_process(void)
 {
     bsp_eeprom_process();
+}
+
+static inline void hw_spiflash_init(void)
+{
+    bsp_spiflash_init();
+}
+
+static inline int hw_spiflash_read(uint32_t addr, uint8_t *buf, uint32_t len)
+{
+    return bsp_spiflash_read(addr, buf, len);
+}
+
+static inline int hw_spiflash_write(uint32_t addr, const uint8_t *buf, uint32_t len)
+{
+    return bsp_spiflash_write(addr, buf, len);
+}
+
+static inline void hw_spiflash_process(void)
+{
+    bsp_spiflash_process();
 }
 
 static inline int hw_oled_process(void)
@@ -138,6 +159,11 @@ void hw_eeprom_init(void);
 int hw_eeprom_read(uint16_t addr, uint8_t *buf, uint16_t len);
 int hw_eeprom_write(uint16_t addr, const uint8_t *buf, uint16_t len);
 void hw_eeprom_process(void);
+
+void hw_spiflash_init(void);
+int hw_spiflash_read(uint32_t addr, uint8_t *buf, uint32_t len);
+int hw_spiflash_write(uint32_t addr, const uint8_t *buf, uint32_t len);
+void hw_spiflash_process(void);
 
 void hw_oled_init(void);
 void hw_oled_clear(void);

@@ -1,5 +1,5 @@
-#ifndef REGIONS_STM32F103C8_H
-#define REGIONS_STM32F103C8_H
+#ifndef REGIONS_STM32F103R8_H
+#define REGIONS_STM32F103R8_H
 
 
 //-------- <<< Use Configuration Wizard in Context Menu >>> --------------------
@@ -98,4 +98,4 @@
 // </h>
 
 
-#endif /* REGIONS_STM32F103C8_H */
+#endif /* REGIONS_STM32F103R8_H */

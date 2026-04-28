@@ -42,6 +42,7 @@ gcc -std=c11 -Wall -Wextra -Werror \
   ../Core/Src/protocol_export.c \
   ../Core/Src/app_main.c \
   ../Drivers/BSP/bsp_ds18b20.c \
+  ../Drivers/BSP/bsp_spiflash.c \
   ../Drivers/BSP/bsp_rtc.c \
   ../Drivers/BSP/bsp_relay.c \
   stubs/bsp_uart_test_stub.c \

@@ -1,6 +1,6 @@
 #include "param_store.h"
 #include "app_config.h"
-#include "bsp_eeprom.h"
+#include "bsp_spiflash.h"
 #include "test_framework.h"
 
 int test_param_store_run(void)
@@ -55,7 +55,7 @@ int test_param_store_run(void)
     p.schedule_start_min = 60U;
     p.schedule_end_min = 120U;
     p.log_period_s = 9U;
-    bsp_eeprom_mock_set_access_ok(0, 0);
+    bsp_spiflash_mock_set_access_ok(0, 0);
     param_store_save(&p);
     param_store_flush_now();
 
@@ -66,7 +66,7 @@ int test_param_store_run(void)
     TEST_ASSERT_EQ_INT(q.schedule_start_min, 60U);
     TEST_ASSERT_EQ_INT(q.schedule_end_min, 120U);
     TEST_ASSERT_EQ_INT(q.log_period_s, 9U);
-    bsp_eeprom_mock_set_access_ok(1, 1);
+    bsp_spiflash_mock_set_access_ok(1, 1);
 
     return 0;
 }

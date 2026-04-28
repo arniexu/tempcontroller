@@ -4,7 +4,7 @@ solution:
   compiler: AC6
   target-types:
     - type: Target_1
-      device: STM32F103C8
+      device: STM32F103R8
       optimize: debug
   projects:
     - project: WaterTempControl.cproject.yml
