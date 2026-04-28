@@ -39,4 +39,6 @@
 #define APP_TASK_UI_PERIOD_MS           (200U)
 #define APP_TASK_CONTROL_PERIOD_MS      (1000U)
 
+#define APP_LOG_CAPACITY                (256U)
+
 #endif

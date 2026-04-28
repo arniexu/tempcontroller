@@ -82,35 +82,40 @@
 
 ### GPIO 与外设映射
 
-- PA0：KEY_SET 输入，EXTI0（上拉，低电平按下）。
-- PA1：KEY_UP 输入，EXTI1（上拉，低电平按下）。
-- PA2：KEY_DOWN 输入，EXTI2（上拉，低电平按下）。
-- PA3：KEY_BACK 输入，EXTI3（上拉，低电平按下）。
-- PA4：DS18B20 #1 OneWire 数据线（含 EXTI4 下降沿检测）。
-- PA5：DS18B20 #2 OneWire 数据线（含 EXTI5 下降沿检测）。
-- PA6：DS18B20 #3 OneWire 数据线（含 EXTI6 下降沿检测）。
+- PC5：KEY_SET 输入，对应板载 KEY0（上拉，低电平按下）。
+- PA0：KEY_UP 输入，对应板载 WK_UP/KEY_UP（上拉，低电平按下）；该脚同时是 MiniSTM32 V3 唯一板载 DS18B20 跳线口，当前固件保留给按键使用。
+- PA15：KEY_DOWN 输入，对应板载 KEY1（上拉，低电平按下，需关闭 JTAG 保留 SWD）。
+- KEY_BACK：当前 MiniSTM32 V3 板载未单独引出，固件以长按 KEY_DOWN 复用返回/退出编辑动作。
+- PA1：DS18B20 #1 OneWire 数据线（含 EXTI1 下降沿检测）。
+- PA3：DS18B20 #2 OneWire 数据线（含 EXTI3 下降沿检测）。
+- PA4：DS18B20 #3 OneWire 数据线（含 EXTI4 下降沿检测）。
 - PA9：USART1_TX（协议/调试输出）。
 - PA10：USART1_RX（协议命令输入）。
-- PB8：I2C1_SCL（OLED，I2C1 Remap）。
-- PB9：I2C1_SDA（OLED，I2C1 Remap）。
-- PB10：I2C2_SCL（EEPROM）。
-- PB11：I2C2_SDA（EEPROM）。
-- PB5：继电器控制输出。
-- PB13：蜂鸣器控制输出。
+- PB0..PB15：ALIENTEK TFTLCD 数据总线 D0..D15。
+- PC6：TFTLCD_RD。
+- PC7：TFTLCD_WR。
+- PC8：TFTLCD_RS。
+- PC9：TFTLCD_CS。
+- PC10：TFTLCD_BL。
+- PC0/PC1/PC2/PC3/PC13：TFT 触摸接口 T_SCK/T_PEN/T_MISO/T_MOSI/T_CS。
+- PD2：继电器控制输出（同时联动板载 LED1）。
+- PA8：蜂鸣器控制输出。
 
 ### 逻辑外设摘要
 
-- 温度传感器：3 路 DS18B20，接 PA4/PA5/PA6。
-- EEPROM：I2C2，7 位地址由 APP_EEPROM_I2C_ADDR_7BIT 配置（默认 0x50）。
-- OLED：I2C1（Remap 至 PB8/PB9），设备地址固定 0x3C（7 位）。
+- 温度传感器：系统逻辑仍按 3 路 DS18B20 设计，当前固件接 3 路外接探头到 PA1/PA3/PA4；开发板板载仅提供 1 路 DS18B20 跳线口（PA0），当前未启用。
+- 参数主存储：板载 SPI Flash，片内 Flash 为兜底。
+- 显示：ALIENTEK 8080 并口 TFTLCD。
 - 协议串口：USART1，波特率由 APP_UART_BAUDRATE 配置（默认 115200）。
 - RTC：后备域 RTC（优先 LSE，回退 LSI），驱动 API 不暴露专用 GPIO。
 
 ### 引脚冲突说明
 
-- 当前 DS18B20 使用 PA4/PA5/PA6。
-- 当前 EEPROM 使用 PB10/PB11，OLED 使用 PB8/PB9。
-- 该映射避免了 DS18B20 与 I2C 总线引脚重叠，并与当前 BSP 驱动一致。
+- 当前三键使用 `PC5/PA0/PA15`。
+- MiniSTM32 V3 板载仅有 1 路 DS18B20 跳线口，在 `PA0`，与 `KEY_UP` 复用。
+- 当前 SPI Flash 使用 `PA2/PA5/PA6/PA7`。
+- 当前 TFTLCD 使用 `PB0..PB15` 与 `PC6..PC10`。
+- 当前 DS18B20、继电器、蜂鸣器已重分配到 `PA1/PA3/PA4`、`PD2`、`PA8`，不再与三键、SPI Flash、TFTLCD 冲突。
 
 ## 集成说明
 

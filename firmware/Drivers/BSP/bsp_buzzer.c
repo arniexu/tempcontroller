@@ -12,13 +12,13 @@ void bsp_buzzer_init(void)
 #if defined(USE_STDPERIPH_DRIVER)
     GPIO_InitTypeDef gpio;
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 
-    gpio.GPIO_Pin = GPIO_Pin_13;
+    gpio.GPIO_Pin = GPIO_Pin_8;
     gpio.GPIO_Speed = GPIO_Speed_2MHz;
     gpio.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_Init(GPIOB, &gpio);
-    GPIO_ResetBits(GPIOB, GPIO_Pin_13);
+    GPIO_Init(GPIOA, &gpio);
+    GPIO_ResetBits(GPIOA, GPIO_Pin_8);
 #endif
 
     g_buzzer_on = false;
@@ -31,11 +31,11 @@ void bsp_buzzer_set(bool on)
 #if defined(USE_STDPERIPH_DRIVER)
     if (on)
     {
-        GPIO_SetBits(GPIOB, GPIO_Pin_13);
+        GPIO_SetBits(GPIOA, GPIO_Pin_8);
     }
     else
     {
-        GPIO_ResetBits(GPIOB, GPIO_Pin_13);
+        GPIO_ResetBits(GPIOA, GPIO_Pin_8);
     }
 #endif
 }

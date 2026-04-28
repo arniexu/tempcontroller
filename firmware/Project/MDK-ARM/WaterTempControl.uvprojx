@@ -133,12 +133,12 @@
             <UseExternalTool>0</UseExternalTool>
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
-            <Capability>0</Capability>
-            <DriverSelection>-1</DriverSelection>
+            <Capability>1</Capability>
+            <DriverSelection>4096</DriverSelection>
           </Flash1>
           <bUseTDR>1</bUseTDR>
           <Flash2>BIN\UL2CM3.DLL</Flash2>
-          <Flash3></Flash3>
+          <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -410,6 +410,11 @@
               <FileName>bsp_oled.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Drivers\BSP\bsp_oled.c</FilePath>
+            </File>
+            <File>
+              <FileName>tiny_graphics.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\tiny_graphics.c</FilePath>
             </File>
             <File>
               <FileName>bsp_buzzer.c</FileName>

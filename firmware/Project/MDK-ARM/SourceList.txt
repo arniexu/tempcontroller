@@ -19,6 +19,7 @@
 ..\..\Drivers\BSP\bsp_eeprom.c
 ..\..\Drivers\BSP\bsp_key.c
 ..\..\Drivers\BSP\bsp_oled.c
+..\..\Drivers\BSP\tiny_graphics.c
 ..\..\Drivers\BSP\bsp_relay.c
 ..\..\Drivers\BSP\bsp_rtc.c
 ..\..\Drivers\BSP\bsp_uart.c

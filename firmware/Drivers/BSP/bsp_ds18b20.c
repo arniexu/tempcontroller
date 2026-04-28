@@ -18,8 +18,10 @@ static bsp_ds18b20_diag_t g_diag = {0};
 #define DS18B20_CONVERT_TIMEOUT_MS (750U)
 #define DS18B20_READ_RETRY         (2U)
 
+#if (APP_USE_MOCK_TEMP_SOURCE == 0U)
 static GPIO_TypeDef *const g_sensor_port[BSP_DS18B20_SENSOR_COUNT] = {GPIOA, GPIOA, GPIOA};
-static const uint16_t g_sensor_pin[BSP_DS18B20_SENSOR_COUNT] = {GPIO_Pin_4, GPIO_Pin_5, GPIO_Pin_6};
+static const uint16_t g_sensor_pin[BSP_DS18B20_SENSOR_COUNT] = {GPIO_Pin_1, GPIO_Pin_3, GPIO_Pin_4};
+static const uint8_t g_sensor_pin_source[BSP_DS18B20_SENSOR_COUNT] = {GPIO_PinSource1, GPIO_PinSource3, GPIO_PinSource4};
 static volatile uint8_t g_presence_fall_seen[BSP_DS18B20_SENSOR_COUNT] = {0U, 0U, 0U};
 
 typedef enum
@@ -45,7 +47,9 @@ typedef struct
 static volatile ow_irq_ctx_t g_ow_irq = {0U, 0U, 0U, 0U, 0U, 0U, 0U, OW_IRQ_OP_NONE};
 
 static uint8_t ow_read_pin(uint8_t index);
+#endif
 
+#if (APP_USE_MOCK_TEMP_SOURCE == 0U)
 static void ds18b20_diag_inc(uint32_t *counter)
 {
     if (*counter < 0xFFFFFFFFUL)
@@ -59,11 +63,11 @@ static uint32_t ds18b20_exti_line_for_index(uint8_t index)
     switch (index)
     {
     case 0U:
-        return EXTI_Line4;
+        return EXTI_Line1;
     case 1U:
-        return EXTI_Line5;
+        return EXTI_Line3;
     case 2U:
-        return EXTI_Line6;
+        return EXTI_Line4;
     default:
         return 0U;
     }
@@ -340,7 +344,6 @@ static bool ds18b20_wait_convert_done(uint8_t index)
     return done;
 }
 
-#if (APP_USE_MOCK_TEMP_SOURCE == 0U)
 static bool ds18b20_read_once(uint8_t index, float *temp_c)
 {
     uint8_t scratch[9];
@@ -392,6 +395,7 @@ static bool g_mock_valid[BSP_DS18B20_SENSOR_COUNT] = {true, true, true};
 void bsp_ds18b20_init(void)
 {
 #if defined(USE_STDPERIPH_DRIVER)
+#if (APP_USE_MOCK_TEMP_SOURCE == 0U)
     GPIO_InitTypeDef gpio;
     TIM_TimeBaseInitTypeDef tim;
     EXTI_InitTypeDef exti;
@@ -400,24 +404,24 @@ void bsp_ds18b20_init(void)
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 | RCC_APB1Periph_TIM4, ENABLE);
 
-    gpio.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6;
+    gpio.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_3 | GPIO_Pin_4;
     gpio.GPIO_Mode = GPIO_Mode_IPU;
     gpio.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOA, &gpio);
 
-    GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, GPIO_PinSource4);
-    GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, GPIO_PinSource5);
-    GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, GPIO_PinSource6);
+    GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, g_sensor_pin_source[0]);
+    GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, g_sensor_pin_source[1]);
+    GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, g_sensor_pin_source[2]);
 
     EXTI_StructInit(&exti);
     exti.EXTI_Mode = EXTI_Mode_Interrupt;
     exti.EXTI_Trigger = EXTI_Trigger_Falling;
     exti.EXTI_LineCmd = DISABLE;
+    exti.EXTI_Line = EXTI_Line1;
+    EXTI_Init(&exti);
+    exti.EXTI_Line = EXTI_Line3;
+    EXTI_Init(&exti);
     exti.EXTI_Line = EXTI_Line4;
-    EXTI_Init(&exti);
-    exti.EXTI_Line = EXTI_Line5;
-    EXTI_Init(&exti);
-    exti.EXTI_Line = EXTI_Line6;
     EXTI_Init(&exti);
 
     TIM_TimeBaseStructInit(&tim);
@@ -443,47 +447,57 @@ void bsp_ds18b20_init(void)
     nvic.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&nvic);
 
-    nvic.NVIC_IRQChannel = EXTI4_IRQn;
+    nvic.NVIC_IRQChannel = EXTI1_IRQn;
     nvic.NVIC_IRQChannelPreemptionPriority = 2U;
     nvic.NVIC_IRQChannelSubPriority = 2U;
     nvic.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&nvic);
 
-    nvic.NVIC_IRQChannel = EXTI9_5_IRQn;
+    nvic.NVIC_IRQChannel = EXTI3_IRQn;
     nvic.NVIC_IRQChannelPreemptionPriority = 2U;
     nvic.NVIC_IRQChannelSubPriority = 3U;
     nvic.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&nvic);
 
+    nvic.NVIC_IRQChannel = EXTI4_IRQn;
+    nvic.NVIC_IRQChannelPreemptionPriority = 2U;
+    nvic.NVIC_IRQChannelSubPriority = 4U;
+    nvic.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&nvic);
+
     TIM_Cmd(TIM4, ENABLE);
+#endif
 #endif
 
     g_presence_mode = BSP_DS18B20_PRESENCE_IRQ_ONLY;
     bsp_ds18b20_reset_diag();
 }
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_STDPERIPH_DRIVER) && (APP_USE_MOCK_TEMP_SOURCE == 0U)
+void EXTI1_IRQHandler(void)
+{
+    if (EXTI_GetITStatus(EXTI_Line1) != RESET)
+    {
+        g_presence_fall_seen[0] = 1U;
+        EXTI_ClearITPendingBit(EXTI_Line1);
+    }
+}
+
+void EXTI3_IRQHandler(void)
+{
+    if (EXTI_GetITStatus(EXTI_Line3) != RESET)
+    {
+        g_presence_fall_seen[1] = 1U;
+        EXTI_ClearITPendingBit(EXTI_Line3);
+    }
+}
+
 void EXTI4_IRQHandler(void)
 {
     if (EXTI_GetITStatus(EXTI_Line4) != RESET)
     {
-        g_presence_fall_seen[0] = 1U;
-        EXTI_ClearITPendingBit(EXTI_Line4);
-    }
-}
-
-void EXTI9_5_IRQHandler(void)
-{
-    if (EXTI_GetITStatus(EXTI_Line5) != RESET)
-    {
-        g_presence_fall_seen[1] = 1U;
-        EXTI_ClearITPendingBit(EXTI_Line5);
-    }
-
-    if (EXTI_GetITStatus(EXTI_Line6) != RESET)
-    {
         g_presence_fall_seen[2] = 1U;
-        EXTI_ClearITPendingBit(EXTI_Line6);
+        EXTI_ClearITPendingBit(EXTI_Line4);
     }
 }
 
@@ -615,7 +629,7 @@ void bsp_ds18b20_set_presence_mode(bsp_ds18b20_presence_mode_t mode)
 {
     if (mode == BSP_DS18B20_PRESENCE_IRQ_DMA)
     {
-        /* PA4/PA5/PA6 remap uses EXTI presence detection only. */
+        /* PA1/PA3/PA4 remap uses EXTI presence detection only. */
         g_presence_mode = BSP_DS18B20_PRESENCE_IRQ_ONLY;
         g_diag.presence_mode = BSP_DS18B20_PRESENCE_IRQ_ONLY;
         return;

@@ -1,6 +1,12 @@
 #include "log_service.h"
 
-#define LOG_CAPACITY    (512U)
+#include "app_config.h"
+
+#ifndef APP_LOG_CAPACITY
+#define APP_LOG_CAPACITY    (256U)
+#endif
+
+#define LOG_CAPACITY    (APP_LOG_CAPACITY)
 
 static log_record_t g_logs[LOG_CAPACITY];
 static unsigned int g_head = 0U;

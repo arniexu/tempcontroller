@@ -106,6 +106,36 @@ static inline void hw_oled_draw_text(uint8_t line, const char *text)
     bsp_oled_draw_text(line, text);
 }
 
+static inline void hw_oled_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
+{
+    bsp_oled_fill_rect(x, y, w, h, color);
+}
+
+static inline void hw_oled_draw_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
+{
+    bsp_oled_draw_rect(x, y, w, h, color);
+}
+
+static inline void hw_oled_fill_round_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t radius, uint16_t color)
+{
+    bsp_oled_fill_round_rect(x, y, w, h, radius, color);
+}
+
+static inline void hw_oled_draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color)
+{
+    bsp_oled_draw_line(x0, y0, x1, y1, color);
+}
+
+static inline void hw_oled_draw_circle(uint16_t cx, uint16_t cy, uint16_t radius, uint16_t color)
+{
+    bsp_oled_draw_circle(cx, cy, radius, color);
+}
+
+static inline void hw_oled_draw_text_xy(uint16_t x, uint16_t y, const char *text, uint8_t scale, uint16_t color)
+{
+    bsp_oled_draw_text_xy(x, y, text, scale, color);
+}
+
 static inline void hw_oled_refresh(void)
 {
     bsp_oled_refresh();
@@ -168,6 +198,12 @@ void hw_spiflash_process(void);
 void hw_oled_init(void);
 void hw_oled_clear(void);
 void hw_oled_draw_text(uint8_t line, const char *text);
+void hw_oled_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+void hw_oled_draw_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+void hw_oled_fill_round_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t radius, uint16_t color);
+void hw_oled_draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color);
+void hw_oled_draw_circle(uint16_t cx, uint16_t cy, uint16_t radius, uint16_t color);
+void hw_oled_draw_text_xy(uint16_t x, uint16_t y, const char *text, uint8_t scale, uint16_t color);
 void hw_oled_refresh(void);
 int hw_oled_process(void);
 

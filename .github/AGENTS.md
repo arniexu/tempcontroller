@@ -35,3 +35,13 @@ When a business module currently calls BSP directly, introduce or extend a hardw
 
 ## Pull Request Acceptance Rule
 Any new feature or fix that crosses business/hardware boundaries must preserve this separator contract.
+
+## LCD UI Design Authority
+Treat [docs/issue/lcd-ui-preview.html](docs/issue/lcd-ui-preview.html) as the authoritative LCD visual design document for all TFT/LCD UI work.
+
+1. Any task that changes LCD page layout, spacing, typography, color, or visual hierarchy must follow that HTML preview first, then implement firmware drawing code to match it.
+2. The HTML preview defines the target 240x320 visible area. Use LCD pixel coordinates with `(0,0)` at the visible top-left corner, `x` increasing to the right, and `y` increasing downward.
+3. Do not improvise new UI structure in firmware before updating the HTML design document.
+4. If a UI change request conflicts with the current HTML preview, update the HTML preview first and treat that update as the design review artifact.
+5. When implementing LCD UI code, preserve the design's information density, alignment, spacing, and page intent unless the HTML document is revised.
+6. Decorative device chrome in the HTML preview is not part of the firmware coordinate system; only the 240x320 `.screen` region maps to LCD drawing coordinates.

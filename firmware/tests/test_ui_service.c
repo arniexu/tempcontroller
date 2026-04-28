@@ -90,6 +90,36 @@ int test_ui_service_run(void)
     ui_service_inject_key_event(UI_KEY_SET_LONG);
     ui_service_tick_100ms(&p);
 
+    ui_service_inject_key_event(UI_KEY_SET);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT(ui_service_is_editing(), 1);
+
+    bsp_key_mock_set_state(BSP_KEY_DOWN, true);
+    for (i = 0U; i < 10U; ++i)
+    {
+        ui_service_tick_100ms(&p);
+    }
+    bsp_key_mock_set_state(BSP_KEY_DOWN, false);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT(ui_service_is_editing(), 0);
+
+    ui_service_inject_key_event(UI_KEY_UP);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT((int)ui_service_get_page(), (int)UI_PAGE_ALARM);
+
+    bsp_key_mock_set_state(BSP_KEY_DOWN, true);
+    for (i = 0U; i < 10U; ++i)
+    {
+        ui_service_tick_100ms(&p);
+    }
+    bsp_key_mock_set_state(BSP_KEY_DOWN, false);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT((int)ui_service_get_page(), (int)UI_PAGE_HOME);
+
+    ui_service_inject_key_event(UI_KEY_UP);
+    ui_service_tick_100ms(&p);
+    ui_service_inject_key_event(UI_KEY_UP);
+    ui_service_tick_100ms(&p);
     ui_service_inject_key_event(UI_KEY_UP);
     ui_service_tick_100ms(&p);
     ui_service_inject_key_event(UI_KEY_UP);

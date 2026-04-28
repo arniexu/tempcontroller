@@ -22,6 +22,7 @@ try {
       ../Drivers/BSP/bsp_spiflash.c `
       ../Drivers/BSP/bsp_key.c `
       ../Drivers/BSP/bsp_oled.c `
+      ../Drivers/BSP/tiny_graphics.c `
       ../Drivers/BSP/bsp_rtc.c `
       ../Drivers/BSP/bsp_relay.c `
       stubs/bsp_uart_test_stub.c `
