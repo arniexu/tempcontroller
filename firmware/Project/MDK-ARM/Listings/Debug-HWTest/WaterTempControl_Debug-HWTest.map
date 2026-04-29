@@ -2363,235 +2363,235 @@ Image Symbol Table
     i.lcd_delay                              0x080051ec   Section        0  bsp_oled.o(i.lcd_delay)
     lcd_delay                                0x080051ed   Thumb Code    28  bsp_oled.o(i.lcd_delay)
     i.lcd_draw_text_line                     0x08005208   Section        0  bsp_oled.o(i.lcd_draw_text_line)
-    lcd_draw_text_line                       0x08005209   Thumb Code    92  bsp_oled.o(i.lcd_draw_text_line)
-    i.lcd_fill_rect                          0x08005270   Section        0  bsp_oled.o(i.lcd_fill_rect)
-    lcd_fill_rect                            0x08005271   Thumb Code   114  bsp_oled.o(i.lcd_fill_rect)
-    i.lcd_init_5408                          0x080052e2   Section        0  bsp_oled.o(i.lcd_init_5408)
-    lcd_init_5408                            0x080052e3   Thumb Code   538  bsp_oled.o(i.lcd_init_5408)
-    i.lcd_init_932x                          0x080054fc   Section        0  bsp_oled.o(i.lcd_init_932x)
-    lcd_init_932x                            0x080054fd   Thumb Code   502  bsp_oled.o(i.lcd_init_932x)
-    i.lcd_read_strobe                        0x080056f4   Section        0  bsp_oled.o(i.lcd_read_strobe)
-    lcd_read_strobe                          0x080056f5   Thumb Code    28  bsp_oled.o(i.lcd_read_strobe)
-    i.lcd_write_bus                          0x08005714   Section        0  bsp_oled.o(i.lcd_write_bus)
-    lcd_write_bus                            0x08005715   Thumb Code    10  bsp_oled.o(i.lcd_write_bus)
-    i.lcd_write_data                         0x08005724   Section        0  bsp_oled.o(i.lcd_write_data)
-    lcd_write_data                           0x08005725   Thumb Code    26  bsp_oled.o(i.lcd_write_data)
-    i.lcd_write_index                        0x0800573e   Section        0  bsp_oled.o(i.lcd_write_index)
-    lcd_write_index                          0x0800573f   Thumb Code    28  bsp_oled.o(i.lcd_write_index)
-    i.lcd_write_reg                          0x0800575a   Section        0  bsp_oled.o(i.lcd_write_reg)
-    lcd_write_reg                            0x0800575b   Thumb Code    18  bsp_oled.o(i.lcd_write_reg)
-    i.lcd_write_strobe                       0x0800576c   Section        0  bsp_oled.o(i.lcd_write_strobe)
-    lcd_write_strobe                         0x0800576d   Thumb Code    34  bsp_oled.o(i.lcd_write_strobe)
-    i.lcd_write_timing_delay                 0x0800578e   Section        0  bsp_oled.o(i.lcd_write_timing_delay)
-    lcd_write_timing_delay                   0x0800578f   Thumb Code    10  bsp_oled.o(i.lcd_write_timing_delay)
-    i.ldexp                                  0x08005798   Section        0  ldexp.o(i.ldexp)
-    i.log_service_clear                      0x0800580c   Section        0  log_service.o(i.log_service_clear)
-    i.log_service_count                      0x0800581c   Section        0  log_service.o(i.log_service_count)
-    i.log_service_get                        0x08005828   Section        0  log_service.o(i.log_service_get)
-    i.log_service_push                       0x08005860   Section        0  log_service.o(i.log_service_push)
-    i.main                                   0x080058b0   Section        0  main.o(i.main)
-    i.mode_text                              0x080058bc   Section        0  ui_service.o(i.mode_text)
-    mode_text                                0x080058bd   Thumb Code    38  ui_service.o(i.mode_text)
-    i.mode_to_str                            0x08005914   Section        0  app_main.o(i.mode_to_str)
-    mode_to_str                              0x08005915   Thumb Code    38  app_main.o(i.mode_to_str)
-    i.page_editable                          0x08005970   Section        0  ui_service.o(i.page_editable)
-    page_editable                            0x08005971   Thumb Code    20  ui_service.o(i.page_editable)
-    i.page_text                              0x08005984   Section        0  ui_service.o(i.page_text)
-    page_text                                0x08005985   Thumb Code    48  ui_service.o(i.page_text)
-    i.param_record_crc_hw                    0x080059e0   Section        0  param_store.o(i.param_record_crc_hw)
-    param_record_crc_hw                      0x080059e1   Thumb Code    38  param_store.o(i.param_record_crc_hw)
-    i.param_record_crc_sw                    0x08005a0c   Section        0  param_store.o(i.param_record_crc_sw)
-    param_record_crc_sw                      0x08005a0d   Thumb Code    46  param_store.o(i.param_record_crc_sw)
-    i.param_record_valid                     0x08005a40   Section        0  param_store.o(i.param_record_valid)
-    param_record_valid                       0x08005a41   Thumb Code    60  param_store.o(i.param_record_valid)
-    i.param_store_get                        0x08005a80   Section        0  param_store.o(i.param_store_get)
-    i.param_store_get_mutable                0x08005a88   Section        0  param_store.o(i.param_store_get_mutable)
-    i.param_store_load_defaults              0x08005a90   Section        0  param_store.o(i.param_store_load_defaults)
-    i.param_store_save                       0x08005ad0   Section        0  param_store.o(i.param_store_save)
-    i.param_store_tick_1s                    0x08005b20   Section        0  param_store.o(i.param_store_tick_1s)
-    i.parse_float3_exact                     0x08005b48   Section        0  protocol_export.o(i.parse_float3_exact)
-    parse_float3_exact                       0x08005b49   Thumb Code   104  protocol_export.o(i.parse_float3_exact)
-    i.parse_float_exact                      0x08005bc8   Section        0  protocol_export.o(i.parse_float_exact)
-    parse_float_exact                        0x08005bc9   Thumb Code    60  protocol_export.o(i.parse_float_exact)
-    i.parse_u32_3_exact                      0x08005c08   Section        0  protocol_export.o(i.parse_u32_3_exact)
-    parse_u32_3_exact                        0x08005c09   Thumb Code   104  protocol_export.o(i.parse_u32_3_exact)
-    i.parse_u32_exact                        0x08005c88   Section        0  protocol_export.o(i.parse_u32_exact)
-    parse_u32_exact                          0x08005c89   Thumb Code    48  protocol_export.o(i.parse_u32_exact)
-    i.pid_init                               0x08005cb8   Section        0  pid_ctrl.o(i.pid_init)
-    i.pid_step                               0x08005ce0   Section        0  pid_ctrl.o(i.pid_step)
-    i.poll_keys_to_events                    0x08005dc4   Section        0  ui_service.o(i.poll_keys_to_events)
-    poll_keys_to_events                      0x08005dc5   Thumb Code   256  ui_service.o(i.poll_keys_to_events)
-    i.process_key_event                      0x08005ec8   Section        0  ui_service.o(i.process_key_event)
-    process_key_event                        0x08005ec9   Thumb Code   204  ui_service.o(i.process_key_event)
-    i.program_record_to_flash                0x08005f98   Section        0  param_store.o(i.program_record_to_flash)
-    program_record_to_flash                  0x08005f99   Thumb Code    66  param_store.o(i.program_record_to_flash)
-    i.protocol_export_process                0x08005fdc   Section        0  protocol_export.o(i.protocol_export_process)
-    i.queue_push                             0x080063c4   Section        0  ui_service.o(i.queue_push)
-    queue_push                               0x080063c5   Thumb Code    38  ui_service.o(i.queue_push)
-    i.read_record_from_fallback              0x080063f0   Section        0  param_store.o(i.read_record_from_fallback)
-    read_record_from_fallback                0x080063f1   Thumb Code    12  param_store.o(i.read_record_from_fallback)
-    i.read_record_from_flash                 0x08006404   Section        0  param_store.o(i.read_record_from_flash)
-    read_record_from_flash                   0x08006405   Thumb Code    14  param_store.o(i.read_record_from_flash)
-    i.read_record_from_spiflash              0x08006412   Section        0  param_store.o(i.read_record_from_spiflash)
-    read_record_from_spiflash                0x08006413   Thumb Code     6  param_store.o(i.read_record_from_spiflash)
-    i.render_centered_text                   0x08006418   Section        0  ui_service.o(i.render_centered_text)
-    render_centered_text                     0x08006419   Thumb Code    50  ui_service.o(i.render_centered_text)
-    i.render_export_page                     0x0800644c   Section        0  ui_service.o(i.render_export_page)
-    render_export_page                       0x0800644d   Thumb Code   100  ui_service.o(i.render_export_page)
-    i.render_home_dashboard                  0x080064f8   Section        0  ui_service.o(i.render_home_dashboard)
-    render_home_dashboard                    0x080064f9   Thumb Code   370  ui_service.o(i.render_home_dashboard)
-    i.render_info_page                       0x080066c4   Section        0  ui_service.o(i.render_info_page)
-    render_info_page                         0x080066c5   Thumb Code   100  ui_service.o(i.render_info_page)
-    i.render_page                            0x080067a4   Section        0  ui_service.o(i.render_page)
-    render_page                              0x080067a5   Thumb Code   672  ui_service.o(i.render_page)
-    i.render_page_shell                      0x08006b3c   Section        0  ui_service.o(i.render_page_shell)
-    render_page_shell                        0x08006b3d   Thumb Code    84  ui_service.o(i.render_page_shell)
-    i.render_schedule_page                   0x08006b90   Section        0  ui_service.o(i.render_schedule_page)
-    render_schedule_page                     0x08006b91   Thumb Code   206  ui_service.o(i.render_schedule_page)
-    i.render_settings_page                   0x08006cd8   Section        0  ui_service.o(i.render_settings_page)
-    render_settings_page                     0x08006cd9   Thumb Code   454  ui_service.o(i.render_settings_page)
-    i.render_settings_value_card             0x08006f78   Section        0  ui_service.o(i.render_settings_value_card)
-    render_settings_value_card               0x08006f79   Thumb Code   204  ui_service.o(i.render_settings_value_card)
-    i.render_startup_splash                  0x0800708c   Section        0  ui_service.o(i.render_startup_splash)
-    render_startup_splash                    0x0800708d   Thumb Code    98  ui_service.o(i.render_startup_splash)
-    i.render_status_line                     0x08007114   Section        0  ui_service.o(i.render_status_line)
-    render_status_line                       0x08007115   Thumb Code    18  ui_service.o(i.render_status_line)
-    i.render_value_card                      0x08007126   Section        0  ui_service.o(i.render_value_card)
-    render_value_card                        0x08007127   Thumb Code    96  ui_service.o(i.render_value_card)
-    i.run_display_driver_api_test            0x08007188   Section        0  app_main.o(i.run_display_driver_api_test)
-    run_display_driver_api_test              0x08007189   Thumb Code   288  app_main.o(i.run_display_driver_api_test)
-    i.run_display_driver_hw_test_loop        0x0800731c   Section        0  app_main.o(i.run_display_driver_hw_test_loop)
-    run_display_driver_hw_test_loop          0x0800731d   Thumb Code   172  app_main.o(i.run_display_driver_hw_test_loop)
-    i.run_display_driver_moving_block_step   0x08007408   Section        0  app_main.o(i.run_display_driver_moving_block_step)
-    run_display_driver_moving_block_step     0x08007409   Thumb Code   288  app_main.o(i.run_display_driver_moving_block_step)
-    i.run_display_driver_solid_color_step    0x0800752c   Section        0  app_main.o(i.run_display_driver_solid_color_step)
-    run_display_driver_solid_color_step      0x0800752d   Thumb Code    92  app_main.o(i.run_display_driver_solid_color_step)
-    i.save_to_nv                             0x080075c0   Section        0  param_store.o(i.save_to_nv)
-    save_to_nv                               0x080075c1   Thumb Code   204  param_store.o(i.save_to_nv)
-    i.schedule_next_boundary                 0x08007690   Section        0  ui_service.o(i.schedule_next_boundary)
-    schedule_next_boundary                   0x08007691   Thumb Code    58  ui_service.o(i.schedule_next_boundary)
-    i.schedule_service_heating_allowed       0x080076cc   Section        0  schedule_service.o(i.schedule_service_heating_allowed)
-    i.schedule_service_set_config            0x080076d8   Section        0  schedule_service.o(i.schedule_service_set_config)
-    i.schedule_service_update                0x0800770c   Section        0  schedule_service.o(i.schedule_service_update)
-    i.scheduler_init                         0x08007764   Section        0  scheduler.o(i.scheduler_init)
-    i.scheduler_now_ms                       0x080077ac   Section        0  scheduler.o(i.scheduler_now_ms)
-    i.scheduler_poll                         0x080077b8   Section        0  scheduler.o(i.scheduler_poll)
-    i.scheduler_tick_1ms                     0x080077f8   Section        0  scheduler.o(i.scheduler_tick_1ms)
-    i.send_err                               0x08007808   Section        0  protocol_export.o(i.send_err)
-    send_err                                 0x08007809   Thumb Code    40  protocol_export.o(i.send_err)
-    i.send_ok                                0x08007840   Section        0  protocol_export.o(i.send_ok)
-    send_ok                                  0x08007841   Thumb Code    40  protocol_export.o(i.send_ok)
-    i.sensor_filtered_value                  0x08007874   Section        0  temp_manager.o(i.sensor_filtered_value)
-    sensor_filtered_value                    0x08007875   Thumb Code    58  temp_manager.o(i.sensor_filtered_value)
-    i.spiflash_cs_high                       0x080078b0   Section        0  bsp_spiflash.o(i.spiflash_cs_high)
-    spiflash_cs_high                         0x080078b1   Thumb Code     8  bsp_spiflash.o(i.spiflash_cs_high)
-    i.spiflash_cs_low                        0x080078bc   Section        0  bsp_spiflash.o(i.spiflash_cs_low)
-    spiflash_cs_low                          0x080078bd   Thumb Code     8  bsp_spiflash.o(i.spiflash_cs_low)
-    i.spiflash_send_addr                     0x080078c8   Section        0  bsp_spiflash.o(i.spiflash_send_addr)
-    spiflash_send_addr                       0x080078c9   Thumb Code    30  bsp_spiflash.o(i.spiflash_send_addr)
-    i.spiflash_wait_ready                    0x080078e8   Section        0  bsp_spiflash.o(i.spiflash_wait_ready)
-    spiflash_wait_ready                      0x080078e9   Thumb Code    42  bsp_spiflash.o(i.spiflash_wait_ready)
-    i.spiflash_write_enable                  0x08007918   Section        0  bsp_spiflash.o(i.spiflash_write_enable)
-    spiflash_write_enable                    0x08007919   Thumb Code    20  bsp_spiflash.o(i.spiflash_write_enable)
-    i.spiflash_xfer                          0x0800792c   Section        0  bsp_spiflash.o(i.spiflash_xfer)
-    spiflash_xfer                            0x0800792d   Thumb Code    78  bsp_spiflash.o(i.spiflash_xfer)
-    i.strtod                                 0x08007984   Section        0  strtod.o(i.strtod)
-    i.sync_runtime_params_if_changed         0x080079a0   Section        0  app_main.o(i.sync_runtime_params_if_changed)
-    sync_runtime_params_if_changed           0x080079a1   Thumb Code   128  app_main.o(i.sync_runtime_params_if_changed)
-    i.temp_manager_get_snapshot              0x08007a24   Section        0  temp_manager.o(i.temp_manager_get_snapshot)
-    i.temp_manager_update                    0x08007a2c   Section        0  temp_manager.o(i.temp_manager_update)
-    i.tg_clip_span                           0x08007c98   Section        0  tiny_graphics.o(i.tg_clip_span)
-    tg_clip_span                             0x08007c99   Thumb Code    50  tiny_graphics.o(i.tg_clip_span)
-    i.tg_draw_circle                         0x08007cca   Section        0  tiny_graphics.o(i.tg_draw_circle)
-    i.tg_draw_line                           0x08007d7a   Section        0  tiny_graphics.o(i.tg_draw_line)
-    i.tg_draw_pixel                          0x08007df4   Section        0  tiny_graphics.o(i.tg_draw_pixel)
-    i.tg_draw_rect                           0x08007e04   Section        0  tiny_graphics.o(i.tg_draw_rect)
-    i.tg_draw_text                           0x08007e62   Section        0  tiny_graphics.o(i.tg_draw_text)
-    i.tg_fill_rect                           0x08007f2e   Section        0  tiny_graphics.o(i.tg_fill_rect)
-    i.tg_fill_round_rect                     0x08007f8c   Section        0  tiny_graphics.o(i.tg_fill_round_rect)
-    i.tg_glyph_5x7                           0x08008048   Section        0  bsp_oled.o(i.tg_glyph_5x7)
-    tg_glyph_5x7                             0x08008049   Thumb Code    20  bsp_oled.o(i.tg_glyph_5x7)
-    i.tg_lcd_fill_rect                       0x0800805c   Section        0  bsp_oled.o(i.tg_lcd_fill_rect)
-    tg_lcd_fill_rect                         0x0800805d   Thumb Code    24  bsp_oled.o(i.tg_lcd_fill_rect)
-    i.ui_service_tick_100ms                  0x08008074   Section        0  ui_service.o(i.ui_service_tick_100ms)
-    i.ui_service_tick_200ms                  0x080080f8   Section        0  ui_service.o(i.ui_service_tick_200ms)
-    i.ui_text_width                          0x0800814c   Section        0  ui_service.o(i.ui_text_width)
-    ui_text_width                            0x0800814d   Thumb Code    34  ui_service.o(i.ui_text_width)
-    i.write_record_to_fallback               0x08008170   Section        0  param_store.o(i.write_record_to_fallback)
-    write_record_to_fallback                 0x08008171   Thumb Code    42  param_store.o(i.write_record_to_fallback)
-    i.write_record_to_spiflash               0x080081a4   Section        0  param_store.o(i.write_record_to_spiflash)
-    write_record_to_spiflash                 0x080081a5   Thumb Code     6  param_store.o(i.write_record_to_spiflash)
-    locale$$code                             0x080081ac   Section       44  lc_ctype_c.o(locale$$code)
-    locale$$code                             0x080081d8   Section       44  lc_numeric_c.o(locale$$code)
-    x$fpl$d2f                                0x08008204   Section       98  d2f.o(x$fpl$d2f)
-    x$fpl$dcheck1                            0x08008268   Section       16  dcheck1.o(x$fpl$dcheck1)
-    x$fpl$dcmpinf                            0x08008278   Section       24  dcmpi.o(x$fpl$dcmpinf)
-    x$fpl$deqf                               0x08008290   Section      120  deqf.o(x$fpl$deqf)
-    x$fpl$dleqf                              0x08008308   Section      120  dleqf.o(x$fpl$dleqf)
-    x$fpl$dnaninf                            0x08008380   Section      156  dnaninf.o(x$fpl$dnaninf)
-    x$fpl$dretinf                            0x0800841c   Section       12  dretinf.o(x$fpl$dretinf)
-    x$fpl$drleqf                             0x08008428   Section      108  drleqf.o(x$fpl$drleqf)
-    x$fpl$f2d                                0x08008494   Section       86  f2d.o(x$fpl$f2d)
-    x$fpl$fadd                               0x080084ec   Section      196  faddsub_clz.o(x$fpl$fadd)
-    _fadd1                                   0x080084fb   Thumb Code     0  faddsub_clz.o(x$fpl$fadd)
-    x$fpl$fcheck1                            0x080085b0   Section       12  fcheck1.o(x$fpl$fcheck1)
-    x$fpl$fcmpinf                            0x080085bc   Section       24  fcmpi.o(x$fpl$fcmpinf)
-    x$fpl$fdiv                               0x080085d4   Section      388  fdiv.o(x$fpl$fdiv)
-    _fdiv1                                   0x080085d5   Thumb Code     0  fdiv.o(x$fpl$fdiv)
-    x$fpl$feqf                               0x08008758   Section      104  feqf.o(x$fpl$feqf)
-    x$fpl$ffixu                              0x080087c0   Section       62  ffixu.o(x$fpl$ffixu)
-    x$fpl$fflt                               0x08008800   Section       48  fflt_clz.o(x$fpl$fflt)
-    x$fpl$ffltu                              0x08008830   Section       38  fflt_clz.o(x$fpl$ffltu)
-    x$fpl$fleqf                              0x08008858   Section      104  fleqf.o(x$fpl$fleqf)
-    x$fpl$fmul                               0x080088c0   Section      258  fmul.o(x$fpl$fmul)
-    x$fpl$fnaninf                            0x080089c2   Section      140  fnaninf.o(x$fpl$fnaninf)
-    x$fpl$fretinf                            0x08008a4e   Section       10  fretinf.o(x$fpl$fretinf)
-    x$fpl$frleqf                             0x08008a58   Section       98  frleqf.o(x$fpl$frleqf)
-    x$fpl$fsub                               0x08008abc   Section      234  faddsub_clz.o(x$fpl$fsub)
-    _fsub1                                   0x08008acb   Thumb Code     0  faddsub_clz.o(x$fpl$fsub)
-    x$fpl$ieeestatus                         0x08008ba6   Section        6  istatus.o(x$fpl$ieeestatus)
-    x$fpl$printf1                            0x08008bac   Section        4  printf1.o(x$fpl$printf1)
-    x$fpl$printf2                            0x08008bb0   Section        4  printf2.o(x$fpl$printf2)
-    x$fpl$retnan                             0x08008bb4   Section      100  retnan.o(x$fpl$retnan)
-    x$fpl$scalbn                             0x08008c18   Section       92  scalbn.o(x$fpl$scalbn)
-    x$fpl$scalbnf                            0x08008c74   Section       76  scalbnf.o(x$fpl$scalbnf)
-    x$fpl$scanf1                             0x08008cc0   Section        4  scanf1.o(x$fpl$scanf1)
-    x$fpl$scanf2                             0x08008cc4   Section        8  scanf2.o(x$fpl$scanf2)
-    x$fpl$trapveneer                         0x08008ccc   Section       48  trapv.o(x$fpl$trapveneer)
-    .constdata                               0x08008cfc   Section       58  bsp_oled.o(.constdata)
-    x$fpl$usenofp                            0x08008cfc   Section        0  usenofp.o(x$fpl$usenofp)
-    y_pos                                    0x08008cfc   Data           8  bsp_oled.o(.constdata)
-    digit                                    0x08008d04   Data          50  bsp_oled.o(.constdata)
-    .constdata                               0x08008d36   Section       16  app_main.o(.constdata)
-    k_colors                                 0x08008d36   Data          16  app_main.o(.constdata)
-    .constdata                               0x08008d46   Section       17  __printf_flags_ss_wp.o(.constdata)
-    maptable                                 0x08008d46   Data          17  __printf_flags_ss_wp.o(.constdata)
-    .constdata                               0x08008d58   Section        8  _printf_wctomb.o(.constdata)
-    initial_mbstate                          0x08008d58   Data           8  _printf_wctomb.o(.constdata)
-    .constdata                               0x08008d60   Section       40  _printf_hex_int_ll_ptr.o(.constdata)
-    uc_hextab                                0x08008d60   Data          20  _printf_hex_int_ll_ptr.o(.constdata)
-    lc_hextab                                0x08008d74   Data          20  _printf_hex_int_ll_ptr.o(.constdata)
-    .constdata                               0x08008d88   Section       38  _printf_fp_hex.o(.constdata)
-    lc_hextab                                0x08008d88   Data          19  _printf_fp_hex.o(.constdata)
-    uc_hextab                                0x08008d9b   Data          19  _printf_fp_hex.o(.constdata)
-    .constdata                               0x08008db0   Section      148  bigflt0.o(.constdata)
-    tenpwrs_x                                0x08008db0   Data          60  bigflt0.o(.constdata)
-    tenpwrs_i                                0x08008dec   Data          64  bigflt0.o(.constdata)
-    .conststring                             0x08008e44   Section       59  app_main.o(.conststring)
-    .conststring                             0x08008e80   Section       93  protocol_export.o(.conststring)
-    c$$dinf                                  0x08008f00   Section        8  fpconst.o(c$$dinf)
-    c$$dmax                                  0x08008f08   Section        8  fpconst.o(c$$dmax)
-    locale$$data                             0x08008f10   Section      272  lc_ctype_c.o(locale$$data)
-    __lcctype_c_name                         0x08008f14   Data           2  lc_ctype_c.o(locale$$data)
-    __lcctype_c_start                        0x08008f1c   Data           0  lc_ctype_c.o(locale$$data)
-    locale$$data                             0x08009020   Section       28  lc_numeric_c.o(locale$$data)
-    __lcctype_c_end                          0x08009020   Data           0  lc_ctype_c.o(locale$$data)
-    __lcnum_c_name                           0x08009024   Data           2  lc_numeric_c.o(locale$$data)
-    __lcnum_c_start                          0x0800902c   Data           0  lc_numeric_c.o(locale$$data)
-    __lcnum_c_point                          0x08009038   Data           0  lc_numeric_c.o(locale$$data)
-    __lcnum_c_thousands                      0x0800903a   Data           0  lc_numeric_c.o(locale$$data)
-    __lcnum_c_grouping                       0x0800903b   Data           0  lc_numeric_c.o(locale$$data)
-    __lcnum_c_end                            0x0800903c   Data           0  lc_numeric_c.o(locale$$data)
+    lcd_draw_text_line                       0x08005209   Thumb Code   140  bsp_oled.o(i.lcd_draw_text_line)
+    i.lcd_fill_rect                          0x080052a0   Section        0  bsp_oled.o(i.lcd_fill_rect)
+    lcd_fill_rect                            0x080052a1   Thumb Code   110  bsp_oled.o(i.lcd_fill_rect)
+    i.lcd_init_5408                          0x0800530e   Section        0  bsp_oled.o(i.lcd_init_5408)
+    lcd_init_5408                            0x0800530f   Thumb Code   538  bsp_oled.o(i.lcd_init_5408)
+    i.lcd_init_932x                          0x08005528   Section        0  bsp_oled.o(i.lcd_init_932x)
+    lcd_init_932x                            0x08005529   Thumb Code   502  bsp_oled.o(i.lcd_init_932x)
+    i.lcd_read_strobe                        0x08005720   Section        0  bsp_oled.o(i.lcd_read_strobe)
+    lcd_read_strobe                          0x08005721   Thumb Code    28  bsp_oled.o(i.lcd_read_strobe)
+    i.lcd_write_bus                          0x08005740   Section        0  bsp_oled.o(i.lcd_write_bus)
+    lcd_write_bus                            0x08005741   Thumb Code    10  bsp_oled.o(i.lcd_write_bus)
+    i.lcd_write_data                         0x08005750   Section        0  bsp_oled.o(i.lcd_write_data)
+    lcd_write_data                           0x08005751   Thumb Code    26  bsp_oled.o(i.lcd_write_data)
+    i.lcd_write_index                        0x0800576a   Section        0  bsp_oled.o(i.lcd_write_index)
+    lcd_write_index                          0x0800576b   Thumb Code    28  bsp_oled.o(i.lcd_write_index)
+    i.lcd_write_reg                          0x08005786   Section        0  bsp_oled.o(i.lcd_write_reg)
+    lcd_write_reg                            0x08005787   Thumb Code    18  bsp_oled.o(i.lcd_write_reg)
+    i.lcd_write_strobe                       0x08005798   Section        0  bsp_oled.o(i.lcd_write_strobe)
+    lcd_write_strobe                         0x08005799   Thumb Code    34  bsp_oled.o(i.lcd_write_strobe)
+    i.lcd_write_timing_delay                 0x080057ba   Section        0  bsp_oled.o(i.lcd_write_timing_delay)
+    lcd_write_timing_delay                   0x080057bb   Thumb Code    10  bsp_oled.o(i.lcd_write_timing_delay)
+    i.ldexp                                  0x080057c4   Section        0  ldexp.o(i.ldexp)
+    i.log_service_clear                      0x08005838   Section        0  log_service.o(i.log_service_clear)
+    i.log_service_count                      0x08005848   Section        0  log_service.o(i.log_service_count)
+    i.log_service_get                        0x08005854   Section        0  log_service.o(i.log_service_get)
+    i.log_service_push                       0x0800588c   Section        0  log_service.o(i.log_service_push)
+    i.main                                   0x080058dc   Section        0  main.o(i.main)
+    i.mode_text                              0x080058e8   Section        0  ui_service.o(i.mode_text)
+    mode_text                                0x080058e9   Thumb Code    38  ui_service.o(i.mode_text)
+    i.mode_to_str                            0x08005940   Section        0  app_main.o(i.mode_to_str)
+    mode_to_str                              0x08005941   Thumb Code    38  app_main.o(i.mode_to_str)
+    i.page_editable                          0x0800599c   Section        0  ui_service.o(i.page_editable)
+    page_editable                            0x0800599d   Thumb Code    20  ui_service.o(i.page_editable)
+    i.page_text                              0x080059b0   Section        0  ui_service.o(i.page_text)
+    page_text                                0x080059b1   Thumb Code    48  ui_service.o(i.page_text)
+    i.param_record_crc_hw                    0x08005a0c   Section        0  param_store.o(i.param_record_crc_hw)
+    param_record_crc_hw                      0x08005a0d   Thumb Code    38  param_store.o(i.param_record_crc_hw)
+    i.param_record_crc_sw                    0x08005a38   Section        0  param_store.o(i.param_record_crc_sw)
+    param_record_crc_sw                      0x08005a39   Thumb Code    46  param_store.o(i.param_record_crc_sw)
+    i.param_record_valid                     0x08005a6c   Section        0  param_store.o(i.param_record_valid)
+    param_record_valid                       0x08005a6d   Thumb Code    60  param_store.o(i.param_record_valid)
+    i.param_store_get                        0x08005aac   Section        0  param_store.o(i.param_store_get)
+    i.param_store_get_mutable                0x08005ab4   Section        0  param_store.o(i.param_store_get_mutable)
+    i.param_store_load_defaults              0x08005abc   Section        0  param_store.o(i.param_store_load_defaults)
+    i.param_store_save                       0x08005afc   Section        0  param_store.o(i.param_store_save)
+    i.param_store_tick_1s                    0x08005b4c   Section        0  param_store.o(i.param_store_tick_1s)
+    i.parse_float3_exact                     0x08005b74   Section        0  protocol_export.o(i.parse_float3_exact)
+    parse_float3_exact                       0x08005b75   Thumb Code   104  protocol_export.o(i.parse_float3_exact)
+    i.parse_float_exact                      0x08005bf4   Section        0  protocol_export.o(i.parse_float_exact)
+    parse_float_exact                        0x08005bf5   Thumb Code    60  protocol_export.o(i.parse_float_exact)
+    i.parse_u32_3_exact                      0x08005c34   Section        0  protocol_export.o(i.parse_u32_3_exact)
+    parse_u32_3_exact                        0x08005c35   Thumb Code   104  protocol_export.o(i.parse_u32_3_exact)
+    i.parse_u32_exact                        0x08005cb4   Section        0  protocol_export.o(i.parse_u32_exact)
+    parse_u32_exact                          0x08005cb5   Thumb Code    48  protocol_export.o(i.parse_u32_exact)
+    i.pid_init                               0x08005ce4   Section        0  pid_ctrl.o(i.pid_init)
+    i.pid_step                               0x08005d0c   Section        0  pid_ctrl.o(i.pid_step)
+    i.poll_keys_to_events                    0x08005df0   Section        0  ui_service.o(i.poll_keys_to_events)
+    poll_keys_to_events                      0x08005df1   Thumb Code   256  ui_service.o(i.poll_keys_to_events)
+    i.process_key_event                      0x08005ef4   Section        0  ui_service.o(i.process_key_event)
+    process_key_event                        0x08005ef5   Thumb Code   204  ui_service.o(i.process_key_event)
+    i.program_record_to_flash                0x08005fc4   Section        0  param_store.o(i.program_record_to_flash)
+    program_record_to_flash                  0x08005fc5   Thumb Code    66  param_store.o(i.program_record_to_flash)
+    i.protocol_export_process                0x08006008   Section        0  protocol_export.o(i.protocol_export_process)
+    i.queue_push                             0x080063f0   Section        0  ui_service.o(i.queue_push)
+    queue_push                               0x080063f1   Thumb Code    38  ui_service.o(i.queue_push)
+    i.read_record_from_fallback              0x0800641c   Section        0  param_store.o(i.read_record_from_fallback)
+    read_record_from_fallback                0x0800641d   Thumb Code    12  param_store.o(i.read_record_from_fallback)
+    i.read_record_from_flash                 0x08006430   Section        0  param_store.o(i.read_record_from_flash)
+    read_record_from_flash                   0x08006431   Thumb Code    14  param_store.o(i.read_record_from_flash)
+    i.read_record_from_spiflash              0x0800643e   Section        0  param_store.o(i.read_record_from_spiflash)
+    read_record_from_spiflash                0x0800643f   Thumb Code     6  param_store.o(i.read_record_from_spiflash)
+    i.render_centered_text                   0x08006444   Section        0  ui_service.o(i.render_centered_text)
+    render_centered_text                     0x08006445   Thumb Code    50  ui_service.o(i.render_centered_text)
+    i.render_export_page                     0x08006478   Section        0  ui_service.o(i.render_export_page)
+    render_export_page                       0x08006479   Thumb Code   100  ui_service.o(i.render_export_page)
+    i.render_home_dashboard                  0x08006524   Section        0  ui_service.o(i.render_home_dashboard)
+    render_home_dashboard                    0x08006525   Thumb Code   370  ui_service.o(i.render_home_dashboard)
+    i.render_info_page                       0x080066f0   Section        0  ui_service.o(i.render_info_page)
+    render_info_page                         0x080066f1   Thumb Code   100  ui_service.o(i.render_info_page)
+    i.render_page                            0x080067d0   Section        0  ui_service.o(i.render_page)
+    render_page                              0x080067d1   Thumb Code   672  ui_service.o(i.render_page)
+    i.render_page_shell                      0x08006b68   Section        0  ui_service.o(i.render_page_shell)
+    render_page_shell                        0x08006b69   Thumb Code    84  ui_service.o(i.render_page_shell)
+    i.render_schedule_page                   0x08006bbc   Section        0  ui_service.o(i.render_schedule_page)
+    render_schedule_page                     0x08006bbd   Thumb Code   206  ui_service.o(i.render_schedule_page)
+    i.render_settings_page                   0x08006d04   Section        0  ui_service.o(i.render_settings_page)
+    render_settings_page                     0x08006d05   Thumb Code   454  ui_service.o(i.render_settings_page)
+    i.render_settings_value_card             0x08006fa4   Section        0  ui_service.o(i.render_settings_value_card)
+    render_settings_value_card               0x08006fa5   Thumb Code   204  ui_service.o(i.render_settings_value_card)
+    i.render_startup_splash                  0x080070b8   Section        0  ui_service.o(i.render_startup_splash)
+    render_startup_splash                    0x080070b9   Thumb Code    98  ui_service.o(i.render_startup_splash)
+    i.render_status_line                     0x08007140   Section        0  ui_service.o(i.render_status_line)
+    render_status_line                       0x08007141   Thumb Code    18  ui_service.o(i.render_status_line)
+    i.render_value_card                      0x08007152   Section        0  ui_service.o(i.render_value_card)
+    render_value_card                        0x08007153   Thumb Code    96  ui_service.o(i.render_value_card)
+    i.run_display_driver_api_test            0x080071b4   Section        0  app_main.o(i.run_display_driver_api_test)
+    run_display_driver_api_test              0x080071b5   Thumb Code   288  app_main.o(i.run_display_driver_api_test)
+    i.run_display_driver_hw_test_loop        0x08007348   Section        0  app_main.o(i.run_display_driver_hw_test_loop)
+    run_display_driver_hw_test_loop          0x08007349   Thumb Code   172  app_main.o(i.run_display_driver_hw_test_loop)
+    i.run_display_driver_moving_block_step   0x08007434   Section        0  app_main.o(i.run_display_driver_moving_block_step)
+    run_display_driver_moving_block_step     0x08007435   Thumb Code   288  app_main.o(i.run_display_driver_moving_block_step)
+    i.run_display_driver_solid_color_step    0x08007558   Section        0  app_main.o(i.run_display_driver_solid_color_step)
+    run_display_driver_solid_color_step      0x08007559   Thumb Code    92  app_main.o(i.run_display_driver_solid_color_step)
+    i.save_to_nv                             0x080075ec   Section        0  param_store.o(i.save_to_nv)
+    save_to_nv                               0x080075ed   Thumb Code   204  param_store.o(i.save_to_nv)
+    i.schedule_next_boundary                 0x080076bc   Section        0  ui_service.o(i.schedule_next_boundary)
+    schedule_next_boundary                   0x080076bd   Thumb Code    58  ui_service.o(i.schedule_next_boundary)
+    i.schedule_service_heating_allowed       0x080076f8   Section        0  schedule_service.o(i.schedule_service_heating_allowed)
+    i.schedule_service_set_config            0x08007704   Section        0  schedule_service.o(i.schedule_service_set_config)
+    i.schedule_service_update                0x08007738   Section        0  schedule_service.o(i.schedule_service_update)
+    i.scheduler_init                         0x08007790   Section        0  scheduler.o(i.scheduler_init)
+    i.scheduler_now_ms                       0x080077d8   Section        0  scheduler.o(i.scheduler_now_ms)
+    i.scheduler_poll                         0x080077e4   Section        0  scheduler.o(i.scheduler_poll)
+    i.scheduler_tick_1ms                     0x08007824   Section        0  scheduler.o(i.scheduler_tick_1ms)
+    i.send_err                               0x08007834   Section        0  protocol_export.o(i.send_err)
+    send_err                                 0x08007835   Thumb Code    40  protocol_export.o(i.send_err)
+    i.send_ok                                0x0800786c   Section        0  protocol_export.o(i.send_ok)
+    send_ok                                  0x0800786d   Thumb Code    40  protocol_export.o(i.send_ok)
+    i.sensor_filtered_value                  0x080078a0   Section        0  temp_manager.o(i.sensor_filtered_value)
+    sensor_filtered_value                    0x080078a1   Thumb Code    58  temp_manager.o(i.sensor_filtered_value)
+    i.spiflash_cs_high                       0x080078dc   Section        0  bsp_spiflash.o(i.spiflash_cs_high)
+    spiflash_cs_high                         0x080078dd   Thumb Code     8  bsp_spiflash.o(i.spiflash_cs_high)
+    i.spiflash_cs_low                        0x080078e8   Section        0  bsp_spiflash.o(i.spiflash_cs_low)
+    spiflash_cs_low                          0x080078e9   Thumb Code     8  bsp_spiflash.o(i.spiflash_cs_low)
+    i.spiflash_send_addr                     0x080078f4   Section        0  bsp_spiflash.o(i.spiflash_send_addr)
+    spiflash_send_addr                       0x080078f5   Thumb Code    30  bsp_spiflash.o(i.spiflash_send_addr)
+    i.spiflash_wait_ready                    0x08007914   Section        0  bsp_spiflash.o(i.spiflash_wait_ready)
+    spiflash_wait_ready                      0x08007915   Thumb Code    42  bsp_spiflash.o(i.spiflash_wait_ready)
+    i.spiflash_write_enable                  0x08007944   Section        0  bsp_spiflash.o(i.spiflash_write_enable)
+    spiflash_write_enable                    0x08007945   Thumb Code    20  bsp_spiflash.o(i.spiflash_write_enable)
+    i.spiflash_xfer                          0x08007958   Section        0  bsp_spiflash.o(i.spiflash_xfer)
+    spiflash_xfer                            0x08007959   Thumb Code    78  bsp_spiflash.o(i.spiflash_xfer)
+    i.strtod                                 0x080079b0   Section        0  strtod.o(i.strtod)
+    i.sync_runtime_params_if_changed         0x080079cc   Section        0  app_main.o(i.sync_runtime_params_if_changed)
+    sync_runtime_params_if_changed           0x080079cd   Thumb Code   128  app_main.o(i.sync_runtime_params_if_changed)
+    i.temp_manager_get_snapshot              0x08007a50   Section        0  temp_manager.o(i.temp_manager_get_snapshot)
+    i.temp_manager_update                    0x08007a58   Section        0  temp_manager.o(i.temp_manager_update)
+    i.tg_clip_span                           0x08007cc4   Section        0  tiny_graphics.o(i.tg_clip_span)
+    tg_clip_span                             0x08007cc5   Thumb Code    50  tiny_graphics.o(i.tg_clip_span)
+    i.tg_draw_circle                         0x08007cf6   Section        0  tiny_graphics.o(i.tg_draw_circle)
+    i.tg_draw_line                           0x08007da6   Section        0  tiny_graphics.o(i.tg_draw_line)
+    i.tg_draw_pixel                          0x08007e20   Section        0  tiny_graphics.o(i.tg_draw_pixel)
+    i.tg_draw_rect                           0x08007e30   Section        0  tiny_graphics.o(i.tg_draw_rect)
+    i.tg_draw_text                           0x08007e8e   Section        0  tiny_graphics.o(i.tg_draw_text)
+    i.tg_fill_rect                           0x08007f5a   Section        0  tiny_graphics.o(i.tg_fill_rect)
+    i.tg_fill_round_rect                     0x08007fb8   Section        0  tiny_graphics.o(i.tg_fill_round_rect)
+    i.tg_glyph_5x7                           0x08008074   Section        0  bsp_oled.o(i.tg_glyph_5x7)
+    tg_glyph_5x7                             0x08008075   Thumb Code    20  bsp_oled.o(i.tg_glyph_5x7)
+    i.tg_lcd_fill_rect                       0x08008088   Section        0  bsp_oled.o(i.tg_lcd_fill_rect)
+    tg_lcd_fill_rect                         0x08008089   Thumb Code    24  bsp_oled.o(i.tg_lcd_fill_rect)
+    i.ui_service_tick_100ms                  0x080080a0   Section        0  ui_service.o(i.ui_service_tick_100ms)
+    i.ui_service_tick_200ms                  0x08008124   Section        0  ui_service.o(i.ui_service_tick_200ms)
+    i.ui_text_width                          0x08008178   Section        0  ui_service.o(i.ui_text_width)
+    ui_text_width                            0x08008179   Thumb Code    34  ui_service.o(i.ui_text_width)
+    i.write_record_to_fallback               0x0800819c   Section        0  param_store.o(i.write_record_to_fallback)
+    write_record_to_fallback                 0x0800819d   Thumb Code    42  param_store.o(i.write_record_to_fallback)
+    i.write_record_to_spiflash               0x080081d0   Section        0  param_store.o(i.write_record_to_spiflash)
+    write_record_to_spiflash                 0x080081d1   Thumb Code     6  param_store.o(i.write_record_to_spiflash)
+    locale$$code                             0x080081d8   Section       44  lc_ctype_c.o(locale$$code)
+    locale$$code                             0x08008204   Section       44  lc_numeric_c.o(locale$$code)
+    x$fpl$d2f                                0x08008230   Section       98  d2f.o(x$fpl$d2f)
+    x$fpl$dcheck1                            0x08008294   Section       16  dcheck1.o(x$fpl$dcheck1)
+    x$fpl$dcmpinf                            0x080082a4   Section       24  dcmpi.o(x$fpl$dcmpinf)
+    x$fpl$deqf                               0x080082bc   Section      120  deqf.o(x$fpl$deqf)
+    x$fpl$dleqf                              0x08008334   Section      120  dleqf.o(x$fpl$dleqf)
+    x$fpl$dnaninf                            0x080083ac   Section      156  dnaninf.o(x$fpl$dnaninf)
+    x$fpl$dretinf                            0x08008448   Section       12  dretinf.o(x$fpl$dretinf)
+    x$fpl$drleqf                             0x08008454   Section      108  drleqf.o(x$fpl$drleqf)
+    x$fpl$f2d                                0x080084c0   Section       86  f2d.o(x$fpl$f2d)
+    x$fpl$fadd                               0x08008518   Section      196  faddsub_clz.o(x$fpl$fadd)
+    _fadd1                                   0x08008527   Thumb Code     0  faddsub_clz.o(x$fpl$fadd)
+    x$fpl$fcheck1                            0x080085dc   Section       12  fcheck1.o(x$fpl$fcheck1)
+    x$fpl$fcmpinf                            0x080085e8   Section       24  fcmpi.o(x$fpl$fcmpinf)
+    x$fpl$fdiv                               0x08008600   Section      388  fdiv.o(x$fpl$fdiv)
+    _fdiv1                                   0x08008601   Thumb Code     0  fdiv.o(x$fpl$fdiv)
+    x$fpl$feqf                               0x08008784   Section      104  feqf.o(x$fpl$feqf)
+    x$fpl$ffixu                              0x080087ec   Section       62  ffixu.o(x$fpl$ffixu)
+    x$fpl$fflt                               0x0800882c   Section       48  fflt_clz.o(x$fpl$fflt)
+    x$fpl$ffltu                              0x0800885c   Section       38  fflt_clz.o(x$fpl$ffltu)
+    x$fpl$fleqf                              0x08008884   Section      104  fleqf.o(x$fpl$fleqf)
+    x$fpl$fmul                               0x080088ec   Section      258  fmul.o(x$fpl$fmul)
+    x$fpl$fnaninf                            0x080089ee   Section      140  fnaninf.o(x$fpl$fnaninf)
+    x$fpl$fretinf                            0x08008a7a   Section       10  fretinf.o(x$fpl$fretinf)
+    x$fpl$frleqf                             0x08008a84   Section       98  frleqf.o(x$fpl$frleqf)
+    x$fpl$fsub                               0x08008ae8   Section      234  faddsub_clz.o(x$fpl$fsub)
+    _fsub1                                   0x08008af7   Thumb Code     0  faddsub_clz.o(x$fpl$fsub)
+    x$fpl$ieeestatus                         0x08008bd2   Section        6  istatus.o(x$fpl$ieeestatus)
+    x$fpl$printf1                            0x08008bd8   Section        4  printf1.o(x$fpl$printf1)
+    x$fpl$printf2                            0x08008bdc   Section        4  printf2.o(x$fpl$printf2)
+    x$fpl$retnan                             0x08008be0   Section      100  retnan.o(x$fpl$retnan)
+    x$fpl$scalbn                             0x08008c44   Section       92  scalbn.o(x$fpl$scalbn)
+    x$fpl$scalbnf                            0x08008ca0   Section       76  scalbnf.o(x$fpl$scalbnf)
+    x$fpl$scanf1                             0x08008cec   Section        4  scanf1.o(x$fpl$scanf1)
+    x$fpl$scanf2                             0x08008cf0   Section        8  scanf2.o(x$fpl$scanf2)
+    x$fpl$trapveneer                         0x08008cf8   Section       48  trapv.o(x$fpl$trapveneer)
+    .constdata                               0x08008d28   Section       58  bsp_oled.o(.constdata)
+    x$fpl$usenofp                            0x08008d28   Section        0  usenofp.o(x$fpl$usenofp)
+    y_pos                                    0x08008d28   Data           8  bsp_oled.o(.constdata)
+    digit                                    0x08008d30   Data          50  bsp_oled.o(.constdata)
+    .constdata                               0x08008d62   Section       16  app_main.o(.constdata)
+    k_colors                                 0x08008d62   Data          16  app_main.o(.constdata)
+    .constdata                               0x08008d72   Section       17  __printf_flags_ss_wp.o(.constdata)
+    maptable                                 0x08008d72   Data          17  __printf_flags_ss_wp.o(.constdata)
+    .constdata                               0x08008d84   Section        8  _printf_wctomb.o(.constdata)
+    initial_mbstate                          0x08008d84   Data           8  _printf_wctomb.o(.constdata)
+    .constdata                               0x08008d8c   Section       40  _printf_hex_int_ll_ptr.o(.constdata)
+    uc_hextab                                0x08008d8c   Data          20  _printf_hex_int_ll_ptr.o(.constdata)
+    lc_hextab                                0x08008da0   Data          20  _printf_hex_int_ll_ptr.o(.constdata)
+    .constdata                               0x08008db4   Section       38  _printf_fp_hex.o(.constdata)
+    lc_hextab                                0x08008db4   Data          19  _printf_fp_hex.o(.constdata)
+    uc_hextab                                0x08008dc7   Data          19  _printf_fp_hex.o(.constdata)
+    .constdata                               0x08008ddc   Section      148  bigflt0.o(.constdata)
+    tenpwrs_x                                0x08008ddc   Data          60  bigflt0.o(.constdata)
+    tenpwrs_i                                0x08008e18   Data          64  bigflt0.o(.constdata)
+    .conststring                             0x08008e70   Section       59  app_main.o(.conststring)
+    .conststring                             0x08008eac   Section       93  protocol_export.o(.conststring)
+    c$$dinf                                  0x08008f2c   Section        8  fpconst.o(c$$dinf)
+    c$$dmax                                  0x08008f34   Section        8  fpconst.o(c$$dmax)
+    locale$$data                             0x08008f3c   Section      272  lc_ctype_c.o(locale$$data)
+    __lcctype_c_name                         0x08008f40   Data           2  lc_ctype_c.o(locale$$data)
+    __lcctype_c_start                        0x08008f48   Data           0  lc_ctype_c.o(locale$$data)
+    locale$$data                             0x0800904c   Section       28  lc_numeric_c.o(locale$$data)
+    __lcctype_c_end                          0x0800904c   Data           0  lc_ctype_c.o(locale$$data)
+    __lcnum_c_name                           0x08009050   Data           2  lc_numeric_c.o(locale$$data)
+    __lcnum_c_start                          0x08009058   Data           0  lc_numeric_c.o(locale$$data)
+    __lcnum_c_point                          0x08009064   Data           0  lc_numeric_c.o(locale$$data)
+    __lcnum_c_thousands                      0x08009066   Data           0  lc_numeric_c.o(locale$$data)
+    __lcnum_c_grouping                       0x08009067   Data           0  lc_numeric_c.o(locale$$data)
+    __lcnum_c_end                            0x08009068   Data           0  lc_numeric_c.o(locale$$data)
     .data                                    0x20000000   Section       16  bsp_ds18b20.o(.data)
     g_presence_mode                          0x20000000   Data           1  bsp_ds18b20.o(.data)
     g_mock_valid                             0x20000001   Data           3  bsp_ds18b20.o(.data)
@@ -3057,101 +3057,101 @@ Image Symbol Table
     heater_ctrl_get_state                    0x0800502d   Thumb Code     6  heater_ctrl.o(i.heater_ctrl_get_state)
     heater_ctrl_set_output_percent           0x08005039   Thumb Code    24  heater_ctrl.o(i.heater_ctrl_set_output_percent)
     heater_ctrl_update_1ms                   0x08005059   Thumb Code    94  heater_ctrl.o(i.heater_ctrl_update_1ms)
-    ldexp                                    0x08005799   Thumb Code   116  ldexp.o(i.ldexp)
-    log_service_clear                        0x0800580d   Thumb Code    10  log_service.o(i.log_service_clear)
-    log_service_count                        0x0800581d   Thumb Code     6  log_service.o(i.log_service_count)
-    log_service_get                          0x08005829   Thumb Code    48  log_service.o(i.log_service_get)
-    log_service_push                         0x08005861   Thumb Code    72  log_service.o(i.log_service_push)
-    main                                     0x080058b1   Thumb Code    10  main.o(i.main)
-    param_store_get                          0x08005a81   Thumb Code     4  param_store.o(i.param_store_get)
-    param_store_get_mutable                  0x08005a89   Thumb Code     4  param_store.o(i.param_store_get_mutable)
-    param_store_load_defaults                0x08005a91   Thumb Code    48  param_store.o(i.param_store_load_defaults)
-    param_store_save                         0x08005ad1   Thumb Code    72  param_store.o(i.param_store_save)
-    param_store_tick_1s                      0x08005b21   Thumb Code    32  param_store.o(i.param_store_tick_1s)
-    pid_init                                 0x08005cb9   Thumb Code    36  pid_ctrl.o(i.pid_init)
-    pid_step                                 0x08005ce1   Thumb Code   228  pid_ctrl.o(i.pid_step)
-    protocol_export_process                  0x08005fdd   Thumb Code   584  protocol_export.o(i.protocol_export_process)
-    schedule_service_heating_allowed         0x080076cd   Thumb Code     6  schedule_service.o(i.schedule_service_heating_allowed)
-    schedule_service_set_config              0x080076d9   Thumb Code    48  schedule_service.o(i.schedule_service_set_config)
-    schedule_service_update                  0x0800770d   Thumb Code    84  schedule_service.o(i.schedule_service_update)
-    scheduler_init                           0x08007765   Thumb Code    58  scheduler.o(i.scheduler_init)
-    scheduler_now_ms                         0x080077ad   Thumb Code     6  scheduler.o(i.scheduler_now_ms)
-    scheduler_poll                           0x080077b9   Thumb Code    60  scheduler.o(i.scheduler_poll)
-    scheduler_tick_1ms                       0x080077f9   Thumb Code    10  scheduler.o(i.scheduler_tick_1ms)
-    strtod                                   0x08007985   Thumb Code    28  strtod.o(i.strtod)
-    temp_manager_get_snapshot                0x08007a25   Thumb Code     4  temp_manager.o(i.temp_manager_get_snapshot)
-    temp_manager_update                      0x08007a2d   Thumb Code   456  temp_manager.o(i.temp_manager_update)
-    tg_draw_circle                           0x08007ccb   Thumb Code   176  tiny_graphics.o(i.tg_draw_circle)
-    tg_draw_line                             0x08007d7b   Thumb Code   122  tiny_graphics.o(i.tg_draw_line)
-    tg_draw_pixel                            0x08007df5   Thumb Code    16  tiny_graphics.o(i.tg_draw_pixel)
-    tg_draw_rect                             0x08007e05   Thumb Code    94  tiny_graphics.o(i.tg_draw_rect)
-    tg_draw_text                             0x08007e63   Thumb Code   204  tiny_graphics.o(i.tg_draw_text)
-    tg_fill_rect                             0x08007f2f   Thumb Code    94  tiny_graphics.o(i.tg_fill_rect)
-    tg_fill_round_rect                       0x08007f8d   Thumb Code   188  tiny_graphics.o(i.tg_fill_round_rect)
-    ui_service_tick_100ms                    0x08008075   Thumb Code   128  ui_service.o(i.ui_service_tick_100ms)
-    ui_service_tick_200ms                    0x080080f9   Thumb Code    78  ui_service.o(i.ui_service_tick_200ms)
-    _get_lc_ctype                            0x080081ad   Thumb Code    44  lc_ctype_c.o(locale$$code)
-    _get_lc_numeric                          0x080081d9   Thumb Code    44  lc_numeric_c.o(locale$$code)
-    __aeabi_d2f                              0x08008205   Thumb Code     0  d2f.o(x$fpl$d2f)
-    _d2f                                     0x08008205   Thumb Code    98  d2f.o(x$fpl$d2f)
-    __fpl_dcheck_NaN1                        0x08008269   Thumb Code    10  dcheck1.o(x$fpl$dcheck1)
-    __fpl_dcmp_Inf                           0x08008279   Thumb Code    24  dcmpi.o(x$fpl$dcmpinf)
-    __aeabi_cdcmpeq                          0x08008291   Thumb Code     0  deqf.o(x$fpl$deqf)
-    _dcmpeq                                  0x08008291   Thumb Code   120  deqf.o(x$fpl$deqf)
-    __aeabi_cdcmple                          0x08008309   Thumb Code     0  dleqf.o(x$fpl$dleqf)
-    _dcmple                                  0x08008309   Thumb Code   120  dleqf.o(x$fpl$dleqf)
-    __fpl_dcmple_InfNaN                      0x0800836b   Thumb Code     0  dleqf.o(x$fpl$dleqf)
-    __fpl_dnaninf                            0x08008381   Thumb Code   156  dnaninf.o(x$fpl$dnaninf)
-    __fpl_dretinf                            0x0800841d   Thumb Code    12  dretinf.o(x$fpl$dretinf)
-    __aeabi_cdrcmple                         0x08008429   Thumb Code     0  drleqf.o(x$fpl$drleqf)
-    _drcmple                                 0x08008429   Thumb Code   108  drleqf.o(x$fpl$drleqf)
-    __aeabi_f2d                              0x08008495   Thumb Code     0  f2d.o(x$fpl$f2d)
-    _f2d                                     0x08008495   Thumb Code    86  f2d.o(x$fpl$f2d)
-    __aeabi_fadd                             0x080084ed   Thumb Code     0  faddsub_clz.o(x$fpl$fadd)
-    _fadd                                    0x080084ed   Thumb Code   196  faddsub_clz.o(x$fpl$fadd)
-    __fpl_fcheck_NaN1                        0x080085b1   Thumb Code     6  fcheck1.o(x$fpl$fcheck1)
-    __fpl_fcmp_Inf                           0x080085bd   Thumb Code    24  fcmpi.o(x$fpl$fcmpinf)
-    __aeabi_fdiv                             0x080085d5   Thumb Code     0  fdiv.o(x$fpl$fdiv)
-    _fdiv                                    0x080085d5   Thumb Code   384  fdiv.o(x$fpl$fdiv)
-    __aeabi_cfcmpeq                          0x08008759   Thumb Code     0  feqf.o(x$fpl$feqf)
-    _fcmpeq                                  0x08008759   Thumb Code   104  feqf.o(x$fpl$feqf)
-    __aeabi_f2uiz                            0x080087c1   Thumb Code     0  ffixu.o(x$fpl$ffixu)
-    _ffixu                                   0x080087c1   Thumb Code    62  ffixu.o(x$fpl$ffixu)
-    __aeabi_i2f                              0x08008801   Thumb Code     0  fflt_clz.o(x$fpl$fflt)
-    _fflt                                    0x08008801   Thumb Code    48  fflt_clz.o(x$fpl$fflt)
-    __aeabi_ui2f                             0x08008831   Thumb Code     0  fflt_clz.o(x$fpl$ffltu)
-    _ffltu                                   0x08008831   Thumb Code    38  fflt_clz.o(x$fpl$ffltu)
-    __aeabi_cfcmple                          0x08008859   Thumb Code     0  fleqf.o(x$fpl$fleqf)
-    _fcmple                                  0x08008859   Thumb Code   104  fleqf.o(x$fpl$fleqf)
-    __fpl_fcmple_InfNaN                      0x080088ab   Thumb Code     0  fleqf.o(x$fpl$fleqf)
-    __aeabi_fmul                             0x080088c1   Thumb Code     0  fmul.o(x$fpl$fmul)
-    _fmul                                    0x080088c1   Thumb Code   258  fmul.o(x$fpl$fmul)
-    __fpl_fnaninf                            0x080089c3   Thumb Code   140  fnaninf.o(x$fpl$fnaninf)
-    __fpl_fretinf                            0x08008a4f   Thumb Code    10  fretinf.o(x$fpl$fretinf)
-    __aeabi_cfrcmple                         0x08008a59   Thumb Code     0  frleqf.o(x$fpl$frleqf)
-    _frcmple                                 0x08008a59   Thumb Code    98  frleqf.o(x$fpl$frleqf)
-    __aeabi_fsub                             0x08008abd   Thumb Code     0  faddsub_clz.o(x$fpl$fsub)
-    _fsub                                    0x08008abd   Thumb Code   234  faddsub_clz.o(x$fpl$fsub)
-    __ieee_status                            0x08008ba7   Thumb Code     6  istatus.o(x$fpl$ieeestatus)
-    _printf_fp_dec                           0x08008bad   Thumb Code     4  printf1.o(x$fpl$printf1)
-    _printf_fp_hex                           0x08008bb1   Thumb Code     4  printf2.o(x$fpl$printf2)
-    __fpl_return_NaN                         0x08008bb5   Thumb Code   100  retnan.o(x$fpl$retnan)
-    __ARM_scalbn                             0x08008c19   Thumb Code    92  scalbn.o(x$fpl$scalbn)
-    __ARM_scalbnf                            0x08008c75   Thumb Code    76  scalbnf.o(x$fpl$scalbnf)
-    _scanf_real                              0x08008cc1   Thumb Code     4  scanf1.o(x$fpl$scanf1)
-    _scanf_hex_real                          0x08008cc5   Thumb Code     4  scanf2.o(x$fpl$scanf2)
-    _scanf_infnan                            0x08008cc9   Thumb Code     4  scanf2.o(x$fpl$scanf2)
-    __fpl_cmpreturn                          0x08008ccd   Thumb Code    48  trapv.o(x$fpl$trapveneer)
-    __I$use$fp                               0x08008cfc   Number         0  usenofp.o(x$fpl$usenofp)
-    Region$$Table$$Base                      0x08008ee0   Number         0  anon$$obj.o(Region$$Table)
-    Region$$Table$$Limit                     0x08008f00   Number         0  anon$$obj.o(Region$$Table)
-    __aeabi_HUGE_VAL                         0x08008f00   Data           0  fpconst.o(c$$dinf)
-    __aeabi_HUGE_VALL                        0x08008f00   Data           0  fpconst.o(c$$dinf)
-    __aeabi_INFINITY                         0x08008f00   Data           0  fpconst.o(c$$dinf)
-    __dInf                                   0x08008f00   Data           0  fpconst.o(c$$dinf)
-    __huge_val                               0x08008f00   Data           0  fpconst.o(c$$dinf)
-    __dbl_max                                0x08008f08   Data           0  fpconst.o(c$$dmax)
-    __ctype                                  0x08008f1d   Data           0  lc_ctype_c.o(locale$$data)
+    ldexp                                    0x080057c5   Thumb Code   116  ldexp.o(i.ldexp)
+    log_service_clear                        0x08005839   Thumb Code    10  log_service.o(i.log_service_clear)
+    log_service_count                        0x08005849   Thumb Code     6  log_service.o(i.log_service_count)
+    log_service_get                          0x08005855   Thumb Code    48  log_service.o(i.log_service_get)
+    log_service_push                         0x0800588d   Thumb Code    72  log_service.o(i.log_service_push)
+    main                                     0x080058dd   Thumb Code    10  main.o(i.main)
+    param_store_get                          0x08005aad   Thumb Code     4  param_store.o(i.param_store_get)
+    param_store_get_mutable                  0x08005ab5   Thumb Code     4  param_store.o(i.param_store_get_mutable)
+    param_store_load_defaults                0x08005abd   Thumb Code    48  param_store.o(i.param_store_load_defaults)
+    param_store_save                         0x08005afd   Thumb Code    72  param_store.o(i.param_store_save)
+    param_store_tick_1s                      0x08005b4d   Thumb Code    32  param_store.o(i.param_store_tick_1s)
+    pid_init                                 0x08005ce5   Thumb Code    36  pid_ctrl.o(i.pid_init)
+    pid_step                                 0x08005d0d   Thumb Code   228  pid_ctrl.o(i.pid_step)
+    protocol_export_process                  0x08006009   Thumb Code   584  protocol_export.o(i.protocol_export_process)
+    schedule_service_heating_allowed         0x080076f9   Thumb Code     6  schedule_service.o(i.schedule_service_heating_allowed)
+    schedule_service_set_config              0x08007705   Thumb Code    48  schedule_service.o(i.schedule_service_set_config)
+    schedule_service_update                  0x08007739   Thumb Code    84  schedule_service.o(i.schedule_service_update)
+    scheduler_init                           0x08007791   Thumb Code    58  scheduler.o(i.scheduler_init)
+    scheduler_now_ms                         0x080077d9   Thumb Code     6  scheduler.o(i.scheduler_now_ms)
+    scheduler_poll                           0x080077e5   Thumb Code    60  scheduler.o(i.scheduler_poll)
+    scheduler_tick_1ms                       0x08007825   Thumb Code    10  scheduler.o(i.scheduler_tick_1ms)
+    strtod                                   0x080079b1   Thumb Code    28  strtod.o(i.strtod)
+    temp_manager_get_snapshot                0x08007a51   Thumb Code     4  temp_manager.o(i.temp_manager_get_snapshot)
+    temp_manager_update                      0x08007a59   Thumb Code   456  temp_manager.o(i.temp_manager_update)
+    tg_draw_circle                           0x08007cf7   Thumb Code   176  tiny_graphics.o(i.tg_draw_circle)
+    tg_draw_line                             0x08007da7   Thumb Code   122  tiny_graphics.o(i.tg_draw_line)
+    tg_draw_pixel                            0x08007e21   Thumb Code    16  tiny_graphics.o(i.tg_draw_pixel)
+    tg_draw_rect                             0x08007e31   Thumb Code    94  tiny_graphics.o(i.tg_draw_rect)
+    tg_draw_text                             0x08007e8f   Thumb Code   204  tiny_graphics.o(i.tg_draw_text)
+    tg_fill_rect                             0x08007f5b   Thumb Code    94  tiny_graphics.o(i.tg_fill_rect)
+    tg_fill_round_rect                       0x08007fb9   Thumb Code   188  tiny_graphics.o(i.tg_fill_round_rect)
+    ui_service_tick_100ms                    0x080080a1   Thumb Code   128  ui_service.o(i.ui_service_tick_100ms)
+    ui_service_tick_200ms                    0x08008125   Thumb Code    78  ui_service.o(i.ui_service_tick_200ms)
+    _get_lc_ctype                            0x080081d9   Thumb Code    44  lc_ctype_c.o(locale$$code)
+    _get_lc_numeric                          0x08008205   Thumb Code    44  lc_numeric_c.o(locale$$code)
+    __aeabi_d2f                              0x08008231   Thumb Code     0  d2f.o(x$fpl$d2f)
+    _d2f                                     0x08008231   Thumb Code    98  d2f.o(x$fpl$d2f)
+    __fpl_dcheck_NaN1                        0x08008295   Thumb Code    10  dcheck1.o(x$fpl$dcheck1)
+    __fpl_dcmp_Inf                           0x080082a5   Thumb Code    24  dcmpi.o(x$fpl$dcmpinf)
+    __aeabi_cdcmpeq                          0x080082bd   Thumb Code     0  deqf.o(x$fpl$deqf)
+    _dcmpeq                                  0x080082bd   Thumb Code   120  deqf.o(x$fpl$deqf)
+    __aeabi_cdcmple                          0x08008335   Thumb Code     0  dleqf.o(x$fpl$dleqf)
+    _dcmple                                  0x08008335   Thumb Code   120  dleqf.o(x$fpl$dleqf)
+    __fpl_dcmple_InfNaN                      0x08008397   Thumb Code     0  dleqf.o(x$fpl$dleqf)
+    __fpl_dnaninf                            0x080083ad   Thumb Code   156  dnaninf.o(x$fpl$dnaninf)
+    __fpl_dretinf                            0x08008449   Thumb Code    12  dretinf.o(x$fpl$dretinf)
+    __aeabi_cdrcmple                         0x08008455   Thumb Code     0  drleqf.o(x$fpl$drleqf)
+    _drcmple                                 0x08008455   Thumb Code   108  drleqf.o(x$fpl$drleqf)
+    __aeabi_f2d                              0x080084c1   Thumb Code     0  f2d.o(x$fpl$f2d)
+    _f2d                                     0x080084c1   Thumb Code    86  f2d.o(x$fpl$f2d)
+    __aeabi_fadd                             0x08008519   Thumb Code     0  faddsub_clz.o(x$fpl$fadd)
+    _fadd                                    0x08008519   Thumb Code   196  faddsub_clz.o(x$fpl$fadd)
+    __fpl_fcheck_NaN1                        0x080085dd   Thumb Code     6  fcheck1.o(x$fpl$fcheck1)
+    __fpl_fcmp_Inf                           0x080085e9   Thumb Code    24  fcmpi.o(x$fpl$fcmpinf)
+    __aeabi_fdiv                             0x08008601   Thumb Code     0  fdiv.o(x$fpl$fdiv)
+    _fdiv                                    0x08008601   Thumb Code   384  fdiv.o(x$fpl$fdiv)
+    __aeabi_cfcmpeq                          0x08008785   Thumb Code     0  feqf.o(x$fpl$feqf)
+    _fcmpeq                                  0x08008785   Thumb Code   104  feqf.o(x$fpl$feqf)
+    __aeabi_f2uiz                            0x080087ed   Thumb Code     0  ffixu.o(x$fpl$ffixu)
+    _ffixu                                   0x080087ed   Thumb Code    62  ffixu.o(x$fpl$ffixu)
+    __aeabi_i2f                              0x0800882d   Thumb Code     0  fflt_clz.o(x$fpl$fflt)
+    _fflt                                    0x0800882d   Thumb Code    48  fflt_clz.o(x$fpl$fflt)
+    __aeabi_ui2f                             0x0800885d   Thumb Code     0  fflt_clz.o(x$fpl$ffltu)
+    _ffltu                                   0x0800885d   Thumb Code    38  fflt_clz.o(x$fpl$ffltu)
+    __aeabi_cfcmple                          0x08008885   Thumb Code     0  fleqf.o(x$fpl$fleqf)
+    _fcmple                                  0x08008885   Thumb Code   104  fleqf.o(x$fpl$fleqf)
+    __fpl_fcmple_InfNaN                      0x080088d7   Thumb Code     0  fleqf.o(x$fpl$fleqf)
+    __aeabi_fmul                             0x080088ed   Thumb Code     0  fmul.o(x$fpl$fmul)
+    _fmul                                    0x080088ed   Thumb Code   258  fmul.o(x$fpl$fmul)
+    __fpl_fnaninf                            0x080089ef   Thumb Code   140  fnaninf.o(x$fpl$fnaninf)
+    __fpl_fretinf                            0x08008a7b   Thumb Code    10  fretinf.o(x$fpl$fretinf)
+    __aeabi_cfrcmple                         0x08008a85   Thumb Code     0  frleqf.o(x$fpl$frleqf)
+    _frcmple                                 0x08008a85   Thumb Code    98  frleqf.o(x$fpl$frleqf)
+    __aeabi_fsub                             0x08008ae9   Thumb Code     0  faddsub_clz.o(x$fpl$fsub)
+    _fsub                                    0x08008ae9   Thumb Code   234  faddsub_clz.o(x$fpl$fsub)
+    __ieee_status                            0x08008bd3   Thumb Code     6  istatus.o(x$fpl$ieeestatus)
+    _printf_fp_dec                           0x08008bd9   Thumb Code     4  printf1.o(x$fpl$printf1)
+    _printf_fp_hex                           0x08008bdd   Thumb Code     4  printf2.o(x$fpl$printf2)
+    __fpl_return_NaN                         0x08008be1   Thumb Code   100  retnan.o(x$fpl$retnan)
+    __ARM_scalbn                             0x08008c45   Thumb Code    92  scalbn.o(x$fpl$scalbn)
+    __ARM_scalbnf                            0x08008ca1   Thumb Code    76  scalbnf.o(x$fpl$scalbnf)
+    _scanf_real                              0x08008ced   Thumb Code     4  scanf1.o(x$fpl$scanf1)
+    _scanf_hex_real                          0x08008cf1   Thumb Code     4  scanf2.o(x$fpl$scanf2)
+    _scanf_infnan                            0x08008cf5   Thumb Code     4  scanf2.o(x$fpl$scanf2)
+    __fpl_cmpreturn                          0x08008cf9   Thumb Code    48  trapv.o(x$fpl$trapveneer)
+    __I$use$fp                               0x08008d28   Number         0  usenofp.o(x$fpl$usenofp)
+    Region$$Table$$Base                      0x08008f0c   Number         0  anon$$obj.o(Region$$Table)
+    Region$$Table$$Limit                     0x08008f2c   Number         0  anon$$obj.o(Region$$Table)
+    __aeabi_HUGE_VAL                         0x08008f2c   Data           0  fpconst.o(c$$dinf)
+    __aeabi_HUGE_VALL                        0x08008f2c   Data           0  fpconst.o(c$$dinf)
+    __aeabi_INFINITY                         0x08008f2c   Data           0  fpconst.o(c$$dinf)
+    __dInf                                   0x08008f2c   Data           0  fpconst.o(c$$dinf)
+    __huge_val                               0x08008f2c   Data           0  fpconst.o(c$$dinf)
+    __dbl_max                                0x08008f34   Data           0  fpconst.o(c$$dmax)
+    __ctype                                  0x08008f49   Data           0  lc_ctype_c.o(locale$$data)
     SystemCoreClock                          0x200000ec   Data           4  system_stm32f10x.o(.data)
     AHBPrescTable                            0x200000f0   Data          16  system_stm32f10x.o(.data)
     __libspace_start                         0x20002974   Data          96  libspace.o(.bss)
@@ -3165,9 +3165,9 @@ Memory Map of the image
 
   Image Entry point : 0x08000235
 
-  Load Region LR_1 (Base: 0x08000000, Size: 0x0000913c, Max: 0xffffffff, ABSOLUTE)
+  Load Region LR_1 (Base: 0x08000000, Size: 0x00009168, Max: 0xffffffff, ABSOLUTE)
 
-    Execution Region ER_RO (Exec base: 0x08000000, Load base: 0x08000000, Size: 0x0000903c, Max: 0xffffffff, ABSOLUTE)
+    Execution Region ER_RO (Exec base: 0x08000000, Load base: 0x08000000, Size: 0x00009068, Max: 0xffffffff, ABSOLUTE)
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
@@ -3451,199 +3451,199 @@ Memory Map of the image
     0x080051b0   0x080051b0   0x00000018   Code   RO          269    i.lcd_ctrl_write    bsp_oled.o
     0x080051c8   0x080051c8   0x00000024   Code   RO          270    i.lcd_data_mode     bsp_oled.o
     0x080051ec   0x080051ec   0x0000001c   Code   RO          271    i.lcd_delay         bsp_oled.o
-    0x08005208   0x08005208   0x00000068   Code   RO          272    i.lcd_draw_text_line  bsp_oled.o
-    0x08005270   0x08005270   0x00000072   Code   RO          273    i.lcd_fill_rect     bsp_oled.o
-    0x080052e2   0x080052e2   0x0000021a   Code   RO          274    i.lcd_init_5408     bsp_oled.o
-    0x080054fc   0x080054fc   0x000001f6   Code   RO          275    i.lcd_init_932x     bsp_oled.o
-    0x080056f2   0x080056f2   0x00000002   PAD
-    0x080056f4   0x080056f4   0x00000020   Code   RO          276    i.lcd_read_strobe   bsp_oled.o
-    0x08005714   0x08005714   0x00000010   Code   RO          277    i.lcd_write_bus     bsp_oled.o
-    0x08005724   0x08005724   0x0000001a   Code   RO          278    i.lcd_write_data    bsp_oled.o
-    0x0800573e   0x0800573e   0x0000001c   Code   RO          279    i.lcd_write_index   bsp_oled.o
-    0x0800575a   0x0800575a   0x00000012   Code   RO          280    i.lcd_write_reg     bsp_oled.o
-    0x0800576c   0x0800576c   0x00000022   Code   RO          281    i.lcd_write_strobe  bsp_oled.o
-    0x0800578e   0x0800578e   0x0000000a   Code   RO          282    i.lcd_write_timing_delay  bsp_oled.o
-    0x08005798   0x08005798   0x00000074   Code   RO         5035    i.ldexp             m_ws.l(ldexp.o)
-    0x0800580c   0x0800580c   0x00000010   Code   RO          966    i.log_service_clear  log_service.o
-    0x0800581c   0x0800581c   0x0000000c   Code   RO          967    i.log_service_count  log_service.o
-    0x08005828   0x08005828   0x00000038   Code   RO          968    i.log_service_get   log_service.o
-    0x08005860   0x08005860   0x00000050   Code   RO          970    i.log_service_push  log_service.o
-    0x080058b0   0x080058b0   0x0000000a   Code   RO         1005    i.main              main.o
-    0x080058ba   0x080058ba   0x00000002   PAD
-    0x080058bc   0x080058bc   0x00000058   Code   RO         1410    i.mode_text         ui_service.o
-    0x08005914   0x08005914   0x0000005c   Code   RO          758    i.mode_to_str       app_main.o
-    0x08005970   0x08005970   0x00000014   Code   RO         1411    i.page_editable     ui_service.o
-    0x08005984   0x08005984   0x0000005c   Code   RO         1412    i.page_text         ui_service.o
-    0x080059e0   0x080059e0   0x0000002c   Code   RO         1019    i.param_record_crc_hw  param_store.o
-    0x08005a0c   0x08005a0c   0x00000034   Code   RO         1020    i.param_record_crc_sw  param_store.o
-    0x08005a40   0x08005a40   0x00000040   Code   RO         1021    i.param_record_valid  param_store.o
-    0x08005a80   0x08005a80   0x00000008   Code   RO         1023    i.param_store_get   param_store.o
-    0x08005a88   0x08005a88   0x00000008   Code   RO         1024    i.param_store_get_mutable  param_store.o
-    0x08005a90   0x08005a90   0x00000040   Code   RO         1027    i.param_store_load_defaults  param_store.o
-    0x08005ad0   0x08005ad0   0x00000050   Code   RO         1028    i.param_store_save  param_store.o
-    0x08005b20   0x08005b20   0x00000028   Code   RO         1029    i.param_store_tick_1s  param_store.o
-    0x08005b48   0x08005b48   0x00000080   Code   RO         1174    i.parse_float3_exact  protocol_export.o
-    0x08005bc8   0x08005bc8   0x00000040   Code   RO         1175    i.parse_float_exact  protocol_export.o
-    0x08005c08   0x08005c08   0x00000080   Code   RO         1176    i.parse_u32_3_exact  protocol_export.o
-    0x08005c88   0x08005c88   0x00000030   Code   RO         1177    i.parse_u32_exact   protocol_export.o
-    0x08005cb8   0x08005cb8   0x00000028   Code   RO         1141    i.pid_init          pid_ctrl.o
-    0x08005ce0   0x08005ce0   0x000000e4   Code   RO         1142    i.pid_step          pid_ctrl.o
-    0x08005dc4   0x08005dc4   0x00000104   Code   RO         1413    i.poll_keys_to_events  ui_service.o
-    0x08005ec8   0x08005ec8   0x000000d0   Code   RO         1414    i.process_key_event  ui_service.o
-    0x08005f98   0x08005f98   0x00000042   Code   RO         1030    i.program_record_to_flash  param_store.o
-    0x08005fda   0x08005fda   0x00000002   PAD
-    0x08005fdc   0x08005fdc   0x000003e8   Code   RO         1179    i.protocol_export_process  protocol_export.o
-    0x080063c4   0x080063c4   0x0000002c   Code   RO         1415    i.queue_push        ui_service.o
-    0x080063f0   0x080063f0   0x00000014   Code   RO         1031    i.read_record_from_fallback  param_store.o
-    0x08006404   0x08006404   0x0000000e   Code   RO         1032    i.read_record_from_flash  param_store.o
-    0x08006412   0x08006412   0x00000006   Code   RO         1033    i.read_record_from_spiflash  param_store.o
-    0x08006418   0x08006418   0x00000032   Code   RO         1416    i.render_centered_text  ui_service.o
-    0x0800644a   0x0800644a   0x00000002   PAD
-    0x0800644c   0x0800644c   0x000000ac   Code   RO         1417    i.render_export_page  ui_service.o
-    0x080064f8   0x080064f8   0x000001cc   Code   RO         1418    i.render_home_dashboard  ui_service.o
-    0x080066c4   0x080066c4   0x000000e0   Code   RO         1419    i.render_info_page  ui_service.o
-    0x080067a4   0x080067a4   0x00000398   Code   RO         1420    i.render_page       ui_service.o
-    0x08006b3c   0x08006b3c   0x00000054   Code   RO         1421    i.render_page_shell  ui_service.o
-    0x08006b90   0x08006b90   0x00000148   Code   RO         1422    i.render_schedule_page  ui_service.o
-    0x08006cd8   0x08006cd8   0x000002a0   Code   RO         1423    i.render_settings_page  ui_service.o
-    0x08006f78   0x08006f78   0x00000114   Code   RO         1424    i.render_settings_value_card  ui_service.o
-    0x0800708c   0x0800708c   0x00000088   Code   RO         1425    i.render_startup_splash  ui_service.o
-    0x08007114   0x08007114   0x00000012   Code   RO         1426    i.render_status_line  ui_service.o
-    0x08007126   0x08007126   0x00000060   Code   RO         1427    i.render_value_card  ui_service.o
-    0x08007186   0x08007186   0x00000002   PAD
-    0x08007188   0x08007188   0x00000194   Code   RO          759    i.run_display_driver_api_test  app_main.o
-    0x0800731c   0x0800731c   0x000000ec   Code   RO          760    i.run_display_driver_hw_test_loop  app_main.o
-    0x08007408   0x08007408   0x00000124   Code   RO          761    i.run_display_driver_moving_block_step  app_main.o
-    0x0800752c   0x0800752c   0x00000094   Code   RO          762    i.run_display_driver_solid_color_step  app_main.o
-    0x080075c0   0x080075c0   0x000000d0   Code   RO         1034    i.save_to_nv        param_store.o
-    0x08007690   0x08007690   0x0000003a   Code   RO         1428    i.schedule_next_boundary  ui_service.o
-    0x080076ca   0x080076ca   0x00000002   PAD
-    0x080076cc   0x080076cc   0x0000000c   Code   RO         1285    i.schedule_service_heating_allowed  schedule_service.o
-    0x080076d8   0x080076d8   0x00000034   Code   RO         1287    i.schedule_service_set_config  schedule_service.o
-    0x0800770c   0x0800770c   0x00000058   Code   RO         1288    i.schedule_service_update  schedule_service.o
-    0x08007764   0x08007764   0x00000048   Code   RO         1326    i.scheduler_init    scheduler.o
-    0x080077ac   0x080077ac   0x0000000c   Code   RO         1327    i.scheduler_now_ms  scheduler.o
-    0x080077b8   0x080077b8   0x00000040   Code   RO         1328    i.scheduler_poll    scheduler.o
-    0x080077f8   0x080077f8   0x00000010   Code   RO         1329    i.scheduler_tick_1ms  scheduler.o
-    0x08007808   0x08007808   0x00000038   Code   RO         1180    i.send_err          protocol_export.o
-    0x08007840   0x08007840   0x00000034   Code   RO         1181    i.send_ok           protocol_export.o
-    0x08007874   0x08007874   0x0000003a   Code   RO         1367    i.sensor_filtered_value  temp_manager.o
-    0x080078ae   0x080078ae   0x00000002   PAD
-    0x080078b0   0x080078b0   0x0000000c   Code   RO          634    i.spiflash_cs_high  bsp_spiflash.o
-    0x080078bc   0x080078bc   0x0000000c   Code   RO          635    i.spiflash_cs_low   bsp_spiflash.o
-    0x080078c8   0x080078c8   0x0000001e   Code   RO          636    i.spiflash_send_addr  bsp_spiflash.o
-    0x080078e6   0x080078e6   0x00000002   PAD
-    0x080078e8   0x080078e8   0x00000030   Code   RO          637    i.spiflash_wait_ready  bsp_spiflash.o
-    0x08007918   0x08007918   0x00000014   Code   RO          638    i.spiflash_write_enable  bsp_spiflash.o
-    0x0800792c   0x0800792c   0x00000058   Code   RO          639    i.spiflash_xfer     bsp_spiflash.o
-    0x08007984   0x08007984   0x0000001c   Code   RO         4718    i.strtod            m_ws.l(strtod.o)
-    0x080079a0   0x080079a0   0x00000084   Code   RO          763    i.sync_runtime_params_if_changed  app_main.o
-    0x08007a24   0x08007a24   0x00000008   Code   RO         1368    i.temp_manager_get_snapshot  temp_manager.o
-    0x08007a2c   0x08007a2c   0x0000026c   Code   RO         1370    i.temp_manager_update  temp_manager.o
-    0x08007c98   0x08007c98   0x00000032   Code   RO          437    i.tg_clip_span      tiny_graphics.o
-    0x08007cca   0x08007cca   0x000000b0   Code   RO          438    i.tg_draw_circle    tiny_graphics.o
-    0x08007d7a   0x08007d7a   0x0000007a   Code   RO          439    i.tg_draw_line      tiny_graphics.o
-    0x08007df4   0x08007df4   0x00000010   Code   RO          440    i.tg_draw_pixel     tiny_graphics.o
-    0x08007e04   0x08007e04   0x0000005e   Code   RO          441    i.tg_draw_rect      tiny_graphics.o
-    0x08007e62   0x08007e62   0x000000cc   Code   RO          442    i.tg_draw_text      tiny_graphics.o
-    0x08007f2e   0x08007f2e   0x0000005e   Code   RO          443    i.tg_fill_rect      tiny_graphics.o
-    0x08007f8c   0x08007f8c   0x000000bc   Code   RO          444    i.tg_fill_round_rect  tiny_graphics.o
-    0x08008048   0x08008048   0x00000014   Code   RO          283    i.tg_glyph_5x7      bsp_oled.o
-    0x0800805c   0x0800805c   0x00000018   Code   RO          284    i.tg_lcd_fill_rect  bsp_oled.o
-    0x08008074   0x08008074   0x00000084   Code   RO         1434    i.ui_service_tick_100ms  ui_service.o
-    0x080080f8   0x080080f8   0x00000054   Code   RO         1435    i.ui_service_tick_200ms  ui_service.o
-    0x0800814c   0x0800814c   0x00000022   Code   RO         1436    i.ui_text_width     ui_service.o
-    0x0800816e   0x0800816e   0x00000002   PAD
-    0x08008170   0x08008170   0x00000034   Code   RO         1035    i.write_record_to_fallback  param_store.o
-    0x080081a4   0x080081a4   0x00000006   Code   RO         1036    i.write_record_to_spiflash  param_store.o
-    0x080081aa   0x080081aa   0x00000002   PAD
-    0x080081ac   0x080081ac   0x0000002c   Code   RO         4893    locale$$code        c_w.l(lc_ctype_c.o)
-    0x080081d8   0x080081d8   0x0000002c   Code   RO         4896    locale$$code        c_w.l(lc_numeric_c.o)
-    0x08008204   0x08008204   0x00000062   Code   RO         4681    x$fpl$d2f           fz_ws.l(d2f.o)
-    0x08008266   0x08008266   0x00000002   PAD
-    0x08008268   0x08008268   0x00000010   Code   RO         5070    x$fpl$dcheck1       fz_ws.l(dcheck1.o)
-    0x08008278   0x08008278   0x00000018   Code   RO         5027    x$fpl$dcmpinf       fz_ws.l(dcmpi.o)
-    0x08008290   0x08008290   0x00000078   Code   RO         5004    x$fpl$deqf          fz_ws.l(deqf.o)
-    0x08008308   0x08008308   0x00000078   Code   RO         5029    x$fpl$dleqf         fz_ws.l(dleqf.o)
-    0x08008380   0x08008380   0x0000009c   Code   RO         4806    x$fpl$dnaninf       fz_ws.l(dnaninf.o)
-    0x0800841c   0x0800841c   0x0000000c   Code   RO         4808    x$fpl$dretinf       fz_ws.l(dretinf.o)
-    0x08008428   0x08008428   0x0000006c   Code   RO         5006    x$fpl$drleqf        fz_ws.l(drleqf.o)
-    0x08008494   0x08008494   0x00000056   Code   RO         4683    x$fpl$f2d           fz_ws.l(f2d.o)
-    0x080084ea   0x080084ea   0x00000002   PAD
-    0x080084ec   0x080084ec   0x000000c4   Code   RO         4685    x$fpl$fadd          fz_ws.l(faddsub_clz.o)
-    0x080085b0   0x080085b0   0x0000000c   Code   RO         4810    x$fpl$fcheck1       fz_ws.l(fcheck1.o)
-    0x080085bc   0x080085bc   0x00000018   Code   RO         4812    x$fpl$fcmpinf       fz_ws.l(fcmpi.o)
-    0x080085d4   0x080085d4   0x00000184   Code   RO         4692    x$fpl$fdiv          fz_ws.l(fdiv.o)
-    0x08008758   0x08008758   0x00000068   Code   RO         4695    x$fpl$feqf          fz_ws.l(feqf.o)
-    0x080087c0   0x080087c0   0x0000003e   Code   RO         4697    x$fpl$ffixu         fz_ws.l(ffixu.o)
-    0x080087fe   0x080087fe   0x00000002   PAD
-    0x08008800   0x08008800   0x00000030   Code   RO         4702    x$fpl$fflt          fz_ws.l(fflt_clz.o)
-    0x08008830   0x08008830   0x00000026   Code   RO         4701    x$fpl$ffltu         fz_ws.l(fflt_clz.o)
-    0x08008856   0x08008856   0x00000002   PAD
-    0x08008858   0x08008858   0x00000068   Code   RO         4707    x$fpl$fleqf         fz_ws.l(fleqf.o)
-    0x080088c0   0x080088c0   0x00000102   Code   RO         4709    x$fpl$fmul          fz_ws.l(fmul.o)
-    0x080089c2   0x080089c2   0x0000008c   Code   RO         4814    x$fpl$fnaninf       fz_ws.l(fnaninf.o)
-    0x08008a4e   0x08008a4e   0x0000000a   Code   RO         4816    x$fpl$fretinf       fz_ws.l(fretinf.o)
-    0x08008a58   0x08008a58   0x00000062   Code   RO         4711    x$fpl$frleqf        fz_ws.l(frleqf.o)
-    0x08008aba   0x08008aba   0x00000002   PAD
-    0x08008abc   0x08008abc   0x000000ea   Code   RO         4687    x$fpl$fsub          fz_ws.l(faddsub_clz.o)
-    0x08008ba6   0x08008ba6   0x00000006   Code   RO         4898    x$fpl$ieeestatus    fz_ws.l(istatus.o)
-    0x08008bac   0x08008bac   0x00000004   Code   RO         4713    x$fpl$printf1       fz_ws.l(printf1.o)
-    0x08008bb0   0x08008bb0   0x00000004   Code   RO         4818    x$fpl$printf2       fz_ws.l(printf2.o)
-    0x08008bb4   0x08008bb4   0x00000064   Code   RO         4900    x$fpl$retnan        fz_ws.l(retnan.o)
-    0x08008c18   0x08008c18   0x0000005c   Code   RO         5031    x$fpl$scalbn        fz_ws.l(scalbn.o)
-    0x08008c74   0x08008c74   0x0000004c   Code   RO         4715    x$fpl$scalbnf       fz_ws.l(scalbnf.o)
-    0x08008cc0   0x08008cc0   0x00000004   Code   RO         4902    x$fpl$scanf1        fz_ws.l(scanf1.o)
-    0x08008cc4   0x08008cc4   0x00000008   Code   RO         4975    x$fpl$scanf2        fz_ws.l(scanf2.o)
-    0x08008ccc   0x08008ccc   0x00000030   Code   RO         4963    x$fpl$trapveneer    fz_ws.l(trapv.o)
-    0x08008cfc   0x08008cfc   0x00000000   Code   RO         4824    x$fpl$usenofp       fz_ws.l(usenofp.o)
-    0x08008cfc   0x08008cfc   0x0000003a   Data   RO          286    .constdata          bsp_oled.o
-    0x08008d36   0x08008d36   0x00000010   Data   RO          765    .constdata          app_main.o
-    0x08008d46   0x08008d46   0x00000011   Data   RO         4646    .constdata          c_w.l(__printf_flags_ss_wp.o)
-    0x08008d57   0x08008d57   0x00000001   PAD
-    0x08008d58   0x08008d58   0x00000008   Data   RO         4746    .constdata          c_w.l(_printf_wctomb.o)
-    0x08008d60   0x08008d60   0x00000028   Data   RO         4775    .constdata          c_w.l(_printf_hex_int_ll_ptr.o)
-    0x08008d88   0x08008d88   0x00000026   Data   RO         4853    .constdata          c_w.l(_printf_fp_hex.o)
-    0x08008dae   0x08008dae   0x00000002   PAD
-    0x08008db0   0x08008db0   0x00000094   Data   RO         4866    .constdata          c_w.l(bigflt0.o)
-    0x08008e44   0x08008e44   0x0000003b   Data   RO          766    .conststring        app_main.o
-    0x08008e7f   0x08008e7f   0x00000001   PAD
-    0x08008e80   0x08008e80   0x0000005d   Data   RO         1182    .conststring        protocol_export.o
-    0x08008edd   0x08008edd   0x00000003   PAD
-    0x08008ee0   0x08008ee0   0x00000020   Data   RO         5123    Region$$Table       anon$$obj.o
-    0x08008f00   0x08008f00   0x00000008   Data   RO         4969    c$$dinf             fz_ws.l(fpconst.o)
-    0x08008f08   0x08008f08   0x00000008   Data   RO         4972    c$$dmax             fz_ws.l(fpconst.o)
-    0x08008f10   0x08008f10   0x00000110   Data   RO         4892    locale$$data        c_w.l(lc_ctype_c.o)
-    0x08009020   0x08009020   0x0000001c   Data   RO         4895    locale$$data        c_w.l(lc_numeric_c.o)
+    0x08005208   0x08005208   0x00000098   Code   RO          272    i.lcd_draw_text_line  bsp_oled.o
+    0x080052a0   0x080052a0   0x0000006e   Code   RO          273    i.lcd_fill_rect     bsp_oled.o
+    0x0800530e   0x0800530e   0x0000021a   Code   RO          274    i.lcd_init_5408     bsp_oled.o
+    0x08005528   0x08005528   0x000001f6   Code   RO          275    i.lcd_init_932x     bsp_oled.o
+    0x0800571e   0x0800571e   0x00000002   PAD
+    0x08005720   0x08005720   0x00000020   Code   RO          276    i.lcd_read_strobe   bsp_oled.o
+    0x08005740   0x08005740   0x00000010   Code   RO          277    i.lcd_write_bus     bsp_oled.o
+    0x08005750   0x08005750   0x0000001a   Code   RO          278    i.lcd_write_data    bsp_oled.o
+    0x0800576a   0x0800576a   0x0000001c   Code   RO          279    i.lcd_write_index   bsp_oled.o
+    0x08005786   0x08005786   0x00000012   Code   RO          280    i.lcd_write_reg     bsp_oled.o
+    0x08005798   0x08005798   0x00000022   Code   RO          281    i.lcd_write_strobe  bsp_oled.o
+    0x080057ba   0x080057ba   0x0000000a   Code   RO          282    i.lcd_write_timing_delay  bsp_oled.o
+    0x080057c4   0x080057c4   0x00000074   Code   RO         5035    i.ldexp             m_ws.l(ldexp.o)
+    0x08005838   0x08005838   0x00000010   Code   RO          966    i.log_service_clear  log_service.o
+    0x08005848   0x08005848   0x0000000c   Code   RO          967    i.log_service_count  log_service.o
+    0x08005854   0x08005854   0x00000038   Code   RO          968    i.log_service_get   log_service.o
+    0x0800588c   0x0800588c   0x00000050   Code   RO          970    i.log_service_push  log_service.o
+    0x080058dc   0x080058dc   0x0000000a   Code   RO         1005    i.main              main.o
+    0x080058e6   0x080058e6   0x00000002   PAD
+    0x080058e8   0x080058e8   0x00000058   Code   RO         1410    i.mode_text         ui_service.o
+    0x08005940   0x08005940   0x0000005c   Code   RO          758    i.mode_to_str       app_main.o
+    0x0800599c   0x0800599c   0x00000014   Code   RO         1411    i.page_editable     ui_service.o
+    0x080059b0   0x080059b0   0x0000005c   Code   RO         1412    i.page_text         ui_service.o
+    0x08005a0c   0x08005a0c   0x0000002c   Code   RO         1019    i.param_record_crc_hw  param_store.o
+    0x08005a38   0x08005a38   0x00000034   Code   RO         1020    i.param_record_crc_sw  param_store.o
+    0x08005a6c   0x08005a6c   0x00000040   Code   RO         1021    i.param_record_valid  param_store.o
+    0x08005aac   0x08005aac   0x00000008   Code   RO         1023    i.param_store_get   param_store.o
+    0x08005ab4   0x08005ab4   0x00000008   Code   RO         1024    i.param_store_get_mutable  param_store.o
+    0x08005abc   0x08005abc   0x00000040   Code   RO         1027    i.param_store_load_defaults  param_store.o
+    0x08005afc   0x08005afc   0x00000050   Code   RO         1028    i.param_store_save  param_store.o
+    0x08005b4c   0x08005b4c   0x00000028   Code   RO         1029    i.param_store_tick_1s  param_store.o
+    0x08005b74   0x08005b74   0x00000080   Code   RO         1174    i.parse_float3_exact  protocol_export.o
+    0x08005bf4   0x08005bf4   0x00000040   Code   RO         1175    i.parse_float_exact  protocol_export.o
+    0x08005c34   0x08005c34   0x00000080   Code   RO         1176    i.parse_u32_3_exact  protocol_export.o
+    0x08005cb4   0x08005cb4   0x00000030   Code   RO         1177    i.parse_u32_exact   protocol_export.o
+    0x08005ce4   0x08005ce4   0x00000028   Code   RO         1141    i.pid_init          pid_ctrl.o
+    0x08005d0c   0x08005d0c   0x000000e4   Code   RO         1142    i.pid_step          pid_ctrl.o
+    0x08005df0   0x08005df0   0x00000104   Code   RO         1413    i.poll_keys_to_events  ui_service.o
+    0x08005ef4   0x08005ef4   0x000000d0   Code   RO         1414    i.process_key_event  ui_service.o
+    0x08005fc4   0x08005fc4   0x00000042   Code   RO         1030    i.program_record_to_flash  param_store.o
+    0x08006006   0x08006006   0x00000002   PAD
+    0x08006008   0x08006008   0x000003e8   Code   RO         1179    i.protocol_export_process  protocol_export.o
+    0x080063f0   0x080063f0   0x0000002c   Code   RO         1415    i.queue_push        ui_service.o
+    0x0800641c   0x0800641c   0x00000014   Code   RO         1031    i.read_record_from_fallback  param_store.o
+    0x08006430   0x08006430   0x0000000e   Code   RO         1032    i.read_record_from_flash  param_store.o
+    0x0800643e   0x0800643e   0x00000006   Code   RO         1033    i.read_record_from_spiflash  param_store.o
+    0x08006444   0x08006444   0x00000032   Code   RO         1416    i.render_centered_text  ui_service.o
+    0x08006476   0x08006476   0x00000002   PAD
+    0x08006478   0x08006478   0x000000ac   Code   RO         1417    i.render_export_page  ui_service.o
+    0x08006524   0x08006524   0x000001cc   Code   RO         1418    i.render_home_dashboard  ui_service.o
+    0x080066f0   0x080066f0   0x000000e0   Code   RO         1419    i.render_info_page  ui_service.o
+    0x080067d0   0x080067d0   0x00000398   Code   RO         1420    i.render_page       ui_service.o
+    0x08006b68   0x08006b68   0x00000054   Code   RO         1421    i.render_page_shell  ui_service.o
+    0x08006bbc   0x08006bbc   0x00000148   Code   RO         1422    i.render_schedule_page  ui_service.o
+    0x08006d04   0x08006d04   0x000002a0   Code   RO         1423    i.render_settings_page  ui_service.o
+    0x08006fa4   0x08006fa4   0x00000114   Code   RO         1424    i.render_settings_value_card  ui_service.o
+    0x080070b8   0x080070b8   0x00000088   Code   RO         1425    i.render_startup_splash  ui_service.o
+    0x08007140   0x08007140   0x00000012   Code   RO         1426    i.render_status_line  ui_service.o
+    0x08007152   0x08007152   0x00000060   Code   RO         1427    i.render_value_card  ui_service.o
+    0x080071b2   0x080071b2   0x00000002   PAD
+    0x080071b4   0x080071b4   0x00000194   Code   RO          759    i.run_display_driver_api_test  app_main.o
+    0x08007348   0x08007348   0x000000ec   Code   RO          760    i.run_display_driver_hw_test_loop  app_main.o
+    0x08007434   0x08007434   0x00000124   Code   RO          761    i.run_display_driver_moving_block_step  app_main.o
+    0x08007558   0x08007558   0x00000094   Code   RO          762    i.run_display_driver_solid_color_step  app_main.o
+    0x080075ec   0x080075ec   0x000000d0   Code   RO         1034    i.save_to_nv        param_store.o
+    0x080076bc   0x080076bc   0x0000003a   Code   RO         1428    i.schedule_next_boundary  ui_service.o
+    0x080076f6   0x080076f6   0x00000002   PAD
+    0x080076f8   0x080076f8   0x0000000c   Code   RO         1285    i.schedule_service_heating_allowed  schedule_service.o
+    0x08007704   0x08007704   0x00000034   Code   RO         1287    i.schedule_service_set_config  schedule_service.o
+    0x08007738   0x08007738   0x00000058   Code   RO         1288    i.schedule_service_update  schedule_service.o
+    0x08007790   0x08007790   0x00000048   Code   RO         1326    i.scheduler_init    scheduler.o
+    0x080077d8   0x080077d8   0x0000000c   Code   RO         1327    i.scheduler_now_ms  scheduler.o
+    0x080077e4   0x080077e4   0x00000040   Code   RO         1328    i.scheduler_poll    scheduler.o
+    0x08007824   0x08007824   0x00000010   Code   RO         1329    i.scheduler_tick_1ms  scheduler.o
+    0x08007834   0x08007834   0x00000038   Code   RO         1180    i.send_err          protocol_export.o
+    0x0800786c   0x0800786c   0x00000034   Code   RO         1181    i.send_ok           protocol_export.o
+    0x080078a0   0x080078a0   0x0000003a   Code   RO         1367    i.sensor_filtered_value  temp_manager.o
+    0x080078da   0x080078da   0x00000002   PAD
+    0x080078dc   0x080078dc   0x0000000c   Code   RO          634    i.spiflash_cs_high  bsp_spiflash.o
+    0x080078e8   0x080078e8   0x0000000c   Code   RO          635    i.spiflash_cs_low   bsp_spiflash.o
+    0x080078f4   0x080078f4   0x0000001e   Code   RO          636    i.spiflash_send_addr  bsp_spiflash.o
+    0x08007912   0x08007912   0x00000002   PAD
+    0x08007914   0x08007914   0x00000030   Code   RO          637    i.spiflash_wait_ready  bsp_spiflash.o
+    0x08007944   0x08007944   0x00000014   Code   RO          638    i.spiflash_write_enable  bsp_spiflash.o
+    0x08007958   0x08007958   0x00000058   Code   RO          639    i.spiflash_xfer     bsp_spiflash.o
+    0x080079b0   0x080079b0   0x0000001c   Code   RO         4718    i.strtod            m_ws.l(strtod.o)
+    0x080079cc   0x080079cc   0x00000084   Code   RO          763    i.sync_runtime_params_if_changed  app_main.o
+    0x08007a50   0x08007a50   0x00000008   Code   RO         1368    i.temp_manager_get_snapshot  temp_manager.o
+    0x08007a58   0x08007a58   0x0000026c   Code   RO         1370    i.temp_manager_update  temp_manager.o
+    0x08007cc4   0x08007cc4   0x00000032   Code   RO          437    i.tg_clip_span      tiny_graphics.o
+    0x08007cf6   0x08007cf6   0x000000b0   Code   RO          438    i.tg_draw_circle    tiny_graphics.o
+    0x08007da6   0x08007da6   0x0000007a   Code   RO          439    i.tg_draw_line      tiny_graphics.o
+    0x08007e20   0x08007e20   0x00000010   Code   RO          440    i.tg_draw_pixel     tiny_graphics.o
+    0x08007e30   0x08007e30   0x0000005e   Code   RO          441    i.tg_draw_rect      tiny_graphics.o
+    0x08007e8e   0x08007e8e   0x000000cc   Code   RO          442    i.tg_draw_text      tiny_graphics.o
+    0x08007f5a   0x08007f5a   0x0000005e   Code   RO          443    i.tg_fill_rect      tiny_graphics.o
+    0x08007fb8   0x08007fb8   0x000000bc   Code   RO          444    i.tg_fill_round_rect  tiny_graphics.o
+    0x08008074   0x08008074   0x00000014   Code   RO          283    i.tg_glyph_5x7      bsp_oled.o
+    0x08008088   0x08008088   0x00000018   Code   RO          284    i.tg_lcd_fill_rect  bsp_oled.o
+    0x080080a0   0x080080a0   0x00000084   Code   RO         1434    i.ui_service_tick_100ms  ui_service.o
+    0x08008124   0x08008124   0x00000054   Code   RO         1435    i.ui_service_tick_200ms  ui_service.o
+    0x08008178   0x08008178   0x00000022   Code   RO         1436    i.ui_text_width     ui_service.o
+    0x0800819a   0x0800819a   0x00000002   PAD
+    0x0800819c   0x0800819c   0x00000034   Code   RO         1035    i.write_record_to_fallback  param_store.o
+    0x080081d0   0x080081d0   0x00000006   Code   RO         1036    i.write_record_to_spiflash  param_store.o
+    0x080081d6   0x080081d6   0x00000002   PAD
+    0x080081d8   0x080081d8   0x0000002c   Code   RO         4893    locale$$code        c_w.l(lc_ctype_c.o)
+    0x08008204   0x08008204   0x0000002c   Code   RO         4896    locale$$code        c_w.l(lc_numeric_c.o)
+    0x08008230   0x08008230   0x00000062   Code   RO         4681    x$fpl$d2f           fz_ws.l(d2f.o)
+    0x08008292   0x08008292   0x00000002   PAD
+    0x08008294   0x08008294   0x00000010   Code   RO         5070    x$fpl$dcheck1       fz_ws.l(dcheck1.o)
+    0x080082a4   0x080082a4   0x00000018   Code   RO         5027    x$fpl$dcmpinf       fz_ws.l(dcmpi.o)
+    0x080082bc   0x080082bc   0x00000078   Code   RO         5004    x$fpl$deqf          fz_ws.l(deqf.o)
+    0x08008334   0x08008334   0x00000078   Code   RO         5029    x$fpl$dleqf         fz_ws.l(dleqf.o)
+    0x080083ac   0x080083ac   0x0000009c   Code   RO         4806    x$fpl$dnaninf       fz_ws.l(dnaninf.o)
+    0x08008448   0x08008448   0x0000000c   Code   RO         4808    x$fpl$dretinf       fz_ws.l(dretinf.o)
+    0x08008454   0x08008454   0x0000006c   Code   RO         5006    x$fpl$drleqf        fz_ws.l(drleqf.o)
+    0x080084c0   0x080084c0   0x00000056   Code   RO         4683    x$fpl$f2d           fz_ws.l(f2d.o)
+    0x08008516   0x08008516   0x00000002   PAD
+    0x08008518   0x08008518   0x000000c4   Code   RO         4685    x$fpl$fadd          fz_ws.l(faddsub_clz.o)
+    0x080085dc   0x080085dc   0x0000000c   Code   RO         4810    x$fpl$fcheck1       fz_ws.l(fcheck1.o)
+    0x080085e8   0x080085e8   0x00000018   Code   RO         4812    x$fpl$fcmpinf       fz_ws.l(fcmpi.o)
+    0x08008600   0x08008600   0x00000184   Code   RO         4692    x$fpl$fdiv          fz_ws.l(fdiv.o)
+    0x08008784   0x08008784   0x00000068   Code   RO         4695    x$fpl$feqf          fz_ws.l(feqf.o)
+    0x080087ec   0x080087ec   0x0000003e   Code   RO         4697    x$fpl$ffixu         fz_ws.l(ffixu.o)
+    0x0800882a   0x0800882a   0x00000002   PAD
+    0x0800882c   0x0800882c   0x00000030   Code   RO         4702    x$fpl$fflt          fz_ws.l(fflt_clz.o)
+    0x0800885c   0x0800885c   0x00000026   Code   RO         4701    x$fpl$ffltu         fz_ws.l(fflt_clz.o)
+    0x08008882   0x08008882   0x00000002   PAD
+    0x08008884   0x08008884   0x00000068   Code   RO         4707    x$fpl$fleqf         fz_ws.l(fleqf.o)
+    0x080088ec   0x080088ec   0x00000102   Code   RO         4709    x$fpl$fmul          fz_ws.l(fmul.o)
+    0x080089ee   0x080089ee   0x0000008c   Code   RO         4814    x$fpl$fnaninf       fz_ws.l(fnaninf.o)
+    0x08008a7a   0x08008a7a   0x0000000a   Code   RO         4816    x$fpl$fretinf       fz_ws.l(fretinf.o)
+    0x08008a84   0x08008a84   0x00000062   Code   RO         4711    x$fpl$frleqf        fz_ws.l(frleqf.o)
+    0x08008ae6   0x08008ae6   0x00000002   PAD
+    0x08008ae8   0x08008ae8   0x000000ea   Code   RO         4687    x$fpl$fsub          fz_ws.l(faddsub_clz.o)
+    0x08008bd2   0x08008bd2   0x00000006   Code   RO         4898    x$fpl$ieeestatus    fz_ws.l(istatus.o)
+    0x08008bd8   0x08008bd8   0x00000004   Code   RO         4713    x$fpl$printf1       fz_ws.l(printf1.o)
+    0x08008bdc   0x08008bdc   0x00000004   Code   RO         4818    x$fpl$printf2       fz_ws.l(printf2.o)
+    0x08008be0   0x08008be0   0x00000064   Code   RO         4900    x$fpl$retnan        fz_ws.l(retnan.o)
+    0x08008c44   0x08008c44   0x0000005c   Code   RO         5031    x$fpl$scalbn        fz_ws.l(scalbn.o)
+    0x08008ca0   0x08008ca0   0x0000004c   Code   RO         4715    x$fpl$scalbnf       fz_ws.l(scalbnf.o)
+    0x08008cec   0x08008cec   0x00000004   Code   RO         4902    x$fpl$scanf1        fz_ws.l(scanf1.o)
+    0x08008cf0   0x08008cf0   0x00000008   Code   RO         4975    x$fpl$scanf2        fz_ws.l(scanf2.o)
+    0x08008cf8   0x08008cf8   0x00000030   Code   RO         4963    x$fpl$trapveneer    fz_ws.l(trapv.o)
+    0x08008d28   0x08008d28   0x00000000   Code   RO         4824    x$fpl$usenofp       fz_ws.l(usenofp.o)
+    0x08008d28   0x08008d28   0x0000003a   Data   RO          286    .constdata          bsp_oled.o
+    0x08008d62   0x08008d62   0x00000010   Data   RO          765    .constdata          app_main.o
+    0x08008d72   0x08008d72   0x00000011   Data   RO         4646    .constdata          c_w.l(__printf_flags_ss_wp.o)
+    0x08008d83   0x08008d83   0x00000001   PAD
+    0x08008d84   0x08008d84   0x00000008   Data   RO         4746    .constdata          c_w.l(_printf_wctomb.o)
+    0x08008d8c   0x08008d8c   0x00000028   Data   RO         4775    .constdata          c_w.l(_printf_hex_int_ll_ptr.o)
+    0x08008db4   0x08008db4   0x00000026   Data   RO         4853    .constdata          c_w.l(_printf_fp_hex.o)
+    0x08008dda   0x08008dda   0x00000002   PAD
+    0x08008ddc   0x08008ddc   0x00000094   Data   RO         4866    .constdata          c_w.l(bigflt0.o)
+    0x08008e70   0x08008e70   0x0000003b   Data   RO          766    .conststring        app_main.o
+    0x08008eab   0x08008eab   0x00000001   PAD
+    0x08008eac   0x08008eac   0x0000005d   Data   RO         1182    .conststring        protocol_export.o
+    0x08008f09   0x08008f09   0x00000003   PAD
+    0x08008f0c   0x08008f0c   0x00000020   Data   RO         5123    Region$$Table       anon$$obj.o
+    0x08008f2c   0x08008f2c   0x00000008   Data   RO         4969    c$$dinf             fz_ws.l(fpconst.o)
+    0x08008f34   0x08008f34   0x00000008   Data   RO         4972    c$$dmax             fz_ws.l(fpconst.o)
+    0x08008f3c   0x08008f3c   0x00000110   Data   RO         4892    locale$$data        c_w.l(lc_ctype_c.o)
+    0x0800904c   0x0800904c   0x0000001c   Data   RO         4895    locale$$data        c_w.l(lc_numeric_c.o)
 
 
-    Execution Region ER_RW (Exec base: 0x20000000, Load base: 0x0800903c, Size: 0x00000100, Max: 0xffffffff, ABSOLUTE)
+    Execution Region ER_RW (Exec base: 0x20000000, Load base: 0x08009068, Size: 0x00000100, Max: 0xffffffff, ABSOLUTE)
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
-    0x20000000   0x0800903c   0x00000010   Data   RW           10    .data               bsp_ds18b20.o
-    0x20000010   0x0800904c   0x00000001   Data   RW          125    .data               bsp_relay.o
-    0x20000011   0x0800904d   0x00000003   PAD
-    0x20000014   0x08009050   0x00000010   Data   RW          194    .data               bsp_uart.o
-    0x20000024   0x08009060   0x00000006   Data   RW          287    .data               bsp_oled.o
-    0x2000002a   0x08009066   0x00000001   Data   RW          496    .data               bsp_buzzer.o
-    0x2000002b   0x08009067   0x00000001   PAD
-    0x2000002c   0x08009068   0x00000020   Data   RW          538    .data               bsp_eeprom.o
-    0x2000004c   0x08009088   0x00000008   Data   RW          640    .data               bsp_spiflash.o
-    0x20000054   0x08009090   0x00000002   Data   RW          714    .data               alarm_service.o
-    0x20000056   0x08009092   0x00000002   PAD
-    0x20000058   0x08009094   0x00000048   Data   RW          767    .data               app_main.o
-    0x200000a0   0x080090dc   0x00000018   Data   RW          930    .data               heater_ctrl.o
-    0x200000b8   0x080090f4   0x0000000c   Data   RW          972    .data               log_service.o
-    0x200000c4   0x08009100   0x0000000c   Data   RW         1038    .data               param_store.o
-    0x200000d0   0x0800910c   0x00000008   Data   RW         1289    .data               schedule_service.o
-    0x200000d8   0x08009114   0x00000010   Data   RW         1330    .data               scheduler.o
-    0x200000e8   0x08009124   0x00000003   Data   RW         1372    .data               temp_manager.o
-    0x200000eb   0x08009127   0x00000001   PAD
-    0x200000ec   0x08009128   0x00000014   Data   RW         1602    .data               system_stm32f10x.o
+    0x20000000   0x08009068   0x00000010   Data   RW           10    .data               bsp_ds18b20.o
+    0x20000010   0x08009078   0x00000001   Data   RW          125    .data               bsp_relay.o
+    0x20000011   0x08009079   0x00000003   PAD
+    0x20000014   0x0800907c   0x00000010   Data   RW          194    .data               bsp_uart.o
+    0x20000024   0x0800908c   0x00000006   Data   RW          287    .data               bsp_oled.o
+    0x2000002a   0x08009092   0x00000001   Data   RW          496    .data               bsp_buzzer.o
+    0x2000002b   0x08009093   0x00000001   PAD
+    0x2000002c   0x08009094   0x00000020   Data   RW          538    .data               bsp_eeprom.o
+    0x2000004c   0x080090b4   0x00000008   Data   RW          640    .data               bsp_spiflash.o
+    0x20000054   0x080090bc   0x00000002   Data   RW          714    .data               alarm_service.o
+    0x20000056   0x080090be   0x00000002   PAD
+    0x20000058   0x080090c0   0x00000048   Data   RW          767    .data               app_main.o
+    0x200000a0   0x08009108   0x00000018   Data   RW          930    .data               heater_ctrl.o
+    0x200000b8   0x08009120   0x0000000c   Data   RW          972    .data               log_service.o
+    0x200000c4   0x0800912c   0x0000000c   Data   RW         1038    .data               param_store.o
+    0x200000d0   0x08009138   0x00000008   Data   RW         1289    .data               schedule_service.o
+    0x200000d8   0x08009140   0x00000010   Data   RW         1330    .data               scheduler.o
+    0x200000e8   0x08009150   0x00000003   Data   RW         1372    .data               temp_manager.o
+    0x200000eb   0x08009153   0x00000001   PAD
+    0x200000ec   0x08009154   0x00000014   Data   RW         1602    .data               system_stm32f10x.o
 
 
-    Execution Region ER_ZI (Exec base: 0x20000100, Load base: 0x0800913c, Size: 0x00002ed8, Max: 0xffffffff, ABSOLUTE)
+    Execution Region ER_ZI (Exec base: 0x20000100, Load base: 0x08009168, Size: 0x00002ed8, Max: 0xffffffff, ABSOLUTE)
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
@@ -3656,7 +3656,7 @@ Memory Map of the image
     0x200027d8        -       0x0000008c   Zero   RW         1371    .bss                temp_manager.o
     0x20002864        -       0x00000110   Zero   RW         1437    .bss                ui_service.o
     0x20002974        -       0x00000060   Zero   RW         4826    .bss                c_w.l(libspace.o)
-    0x200029d4   0x0800913c   0x00000004   PAD
+    0x200029d4   0x08009168   0x00000004   PAD
     0x200029d8        -       0x00000200   Zero   RW         1629    HEAP                startup_stm32f10x_md.o
     0x20002bd8        -       0x00000400   Zero   RW         1628    STACK               startup_stm32f10x_md.o
 
@@ -3674,7 +3674,7 @@ Image component sizes
         36          6          0         16          0     245525   bsp_ds18b20.o
        884        100          0         32        128      32093   bsp_eeprom.o
         76         10          0          0          0       1880   bsp_key.o
-      2798        166         58          6        100      20773   bsp_oled.o
+      2842        166         58          6        100      21057   bsp_oled.o
         32          8          0          1          0        676   bsp_relay.o
         40          4          0          0          0       1437   bsp_rtc.o
        518         32          0          8          0       6765   bsp_spiflash.o
@@ -3704,7 +3704,7 @@ Image component sizes
       4840       1192          0          0        272      25344   ui_service.o
 
     ----------------------------------------------------------------------
-     20522       4016        498        256      11892     491661   Object Totals
+     20566       4016        498        256      11892     491945   Object Totals
          0          0         32          0          0          0   (incl. Generated)
         34          0          4          7          0          0   (incl. Padding)
 
@@ -3873,15 +3873,15 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-     35856       4532       1068        256      11992     484985   Grand Totals
-     35856       4532       1068        256      11992     484985   ELF Image Totals
-     35856       4532       1068        256          0          0   ROM Totals
+     35900       4532       1068        256      11992     485269   Grand Totals
+     35900       4532       1068        256      11992     485269   ELF Image Totals
+     35900       4532       1068        256          0          0   ROM Totals
 
 ==============================================================================
 
-    Total RO  Size (Code + RO Data)                36924 (  36.06kB)
+    Total RO  Size (Code + RO Data)                36968 (  36.10kB)
     Total RW  Size (RW Data + ZI Data)             12248 (  11.96kB)
-    Total ROM Size (Code + RO Data + RW Data)      37180 (  36.31kB)
+    Total ROM Size (Code + RO Data + RW Data)      37224 (  36.35kB)
 
 ==============================================================================
 

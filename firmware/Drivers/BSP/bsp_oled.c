@@ -25,6 +25,7 @@
 #define TFT_WR_HIGH_NOP             (6U)
 #define TFT_MIRROR_X_AROUND_CENTER  (0U)
 #define TFT_LCD_ENTRY_MODE          (0x1018U)
+#define TFT_DRAW_ROW_FROM_END       (1U)
 
 #define TFT_COLOR_BG                (0x0000U)
 #define TFT_COLOR_FG                (0xFFFFU)
@@ -311,7 +312,11 @@ static void lcd_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
     lcd_write_reg(LCD_REG_81, x1);
     lcd_write_reg(LCD_REG_82, y0);
     lcd_write_reg(LCD_REG_83, y1);
+#if (TFT_DRAW_ROW_FROM_END == 1U)
+    lcd_set_cursor(x1, y0);
+#else
     lcd_set_cursor(x0, y0);
+#endif
 }
 
 static void lcd_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
@@ -386,6 +391,31 @@ static void lcd_draw_text_line(uint8_t line)
                   TFT_COLOR_BG);
     strncpy(line_buf, g_lines[line], BSP_OLED_LINE_CHARS);
     line_buf[BSP_OLED_LINE_CHARS] = '\0';
+#if (TFT_DRAW_ROW_FROM_END == 1U)
+    {
+        uint16_t cursor_x = (uint16_t)(BSP_LCD_WIDTH - LCD_TEXT_START_X - LCD_CHAR_WIDTH);
+        uint16_t i;
+        char ch[2];
+
+        ch[1] = '\0';
+        for (i = 0U; line_buf[i] != '\0'; ++i)
+        {
+            ch[0] = line_buf[i];
+            tg_draw_text(&g_tg_canvas,
+                         cursor_x,
+                         y_pos[line],
+                         ch,
+                         LCD_TEXT_SCALE,
+                         TFT_COLOR_FG,
+                         tg_glyph_5x7);
+            if (cursor_x < LCD_CHAR_WIDTH)
+            {
+                break;
+            }
+            cursor_x = (uint16_t)(cursor_x - LCD_CHAR_WIDTH);
+        }
+    }
+#else
     tg_draw_text(&g_tg_canvas,
                  LCD_TEXT_START_X,
                  y_pos[line],
@@ -393,6 +423,7 @@ static void lcd_draw_text_line(uint8_t line)
                  LCD_TEXT_SCALE,
                  TFT_COLOR_FG,
                  tg_glyph_5x7);
+#endif
 }
 
 static void lcd_init_932x(void)
