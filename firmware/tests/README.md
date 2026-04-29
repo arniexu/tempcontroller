@@ -2,13 +2,35 @@
 
 This folder contains per-module self-tests for the firmware architecture.
 
+## Hardware dependency rule
+
+- Any test that depends on real hardware behavior must run through a separate Keil `debug` build on physical hardware.
+- Such hardware-dependent tests must not be treated as release-build code paths.
+- Host runners in this folder are prechecks only; they do not replace Keil-based hardware driver validation.
+
+## Mandatory layering rule
+
+Use this required test order whenever a stable boundary exists:
+
+1. `driver API test`
+2. `service/function test`
+3. `app/integration test`
+
+Rules:
+
+- Do not use app/integration tests as the first or only validation when a narrower driver/API or service/function test is feasible.
+- When a module changes at a hardware or port boundary, update the driver/API test first.
+- When a module changes in business logic or state handling, update the service/function test next.
+- Keep app/integration tests focused on cross-module behavior after lower layers are already validated.
+
 ## Full test plan
 
 - Overall plan: ../../docs/整体测试计划.md
 - Recommended order:
-  1. Unit self-tests: run_tests.ps1
-  2. Stress checks: run_stress_tests.ps1
-  3. Performance checks: run_perf_checks.ps1
+  1. Keil debug hardware driver tests on physical device
+  2. Driver API and service/function host prechecks: run_tests.ps1
+  3. App-level stress checks: run_stress_tests.ps1
+  4. Performance checks: run_perf_checks.ps1
 
 ## Covered modules
 

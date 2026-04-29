@@ -36,6 +36,50 @@ When a business module currently calls BSP directly, introduce or extend a hardw
 ## Pull Request Acceptance Rule
 Any new feature or fix that crosses business/hardware boundaries must preserve this separator contract.
 
+## Build Variant Rule
+Treat this as a mandatory delivery rule for every code module.
+
+1. Every code module must support both `debug` and `production` builds.
+2. New modules are not considered complete unless both build variants are defined and kept buildable.
+3. Changes to an existing module must preserve both build variants; do not add code that only works in one variant unless the other variant is updated in the same task.
+4. Debug builds may include diagnostics, assertions, tracing, and verification hooks, but they must not change the module's intended business behavior.
+5. Production builds must keep the same functional behavior while disabling or minimizing debug-only overhead.
+6. Any module-level build/test/release workflow must explicitly state which steps validate `debug` and which validate `production`.
+7. Hardware-dependent tests must live only in a separate Keil-driven debug build and must not be compiled into release builds.
+8. Release builds must exclude hardware test scaffolding, diagnostic scenes, and driver-test entry flows unless a dedicated production requirement explicitly says otherwise.
+
+## Debug Workflow Rule
+Treat this as a mandatory debugging order for all investigation and bug-fix tasks.
+
+1. In debug work, focus on the driver/API entry point first before inspecting higher-level functions.
+2. After the driver/API entry point is verified, continue to the owning function-level logic that consumes or controls that API.
+3. API tests are mandatory for debug work when a stable API boundary exists; use them to confirm the driver/API behavior before widening the investigation scope.
+4. Do not start debugging from broad business logic when a narrower driver/API breakpoint, call site, or API test can discriminate the fault faster.
+
+## Test Layering Rule
+Treat this as a mandatory test design and execution order for firmware modules.
+
+1. Tests must be layered in this order whenever a stable boundary exists: `driver API test` -> `service/function test` -> `app/integration test`.
+2. Driver API tests must verify the narrowest hardware-facing or port-facing contract before service-level tests depend on that behavior.
+3. Function/service tests must validate module policy and state transitions only after the underlying driver/API contract is covered.
+4. App/integration tests must compose validated lower layers; they must not be the first or only evidence for a defect or feature when narrower API or service tests are feasible.
+5. New modules and significant refactors must add or update tests at the narrowest applicable layer first, then preserve consistency upward through service and app coverage.
+6. CI and local test documentation must state which scripts or targets validate the driver/API layer, the service/function layer, and the app/integration layer.
+
+## Hardware Validation Rule
+Treat this as a mandatory, highest-priority hardware debugging and validation rule.
+
+1. Driver API tests must be run on physical hardware whenever the target hardware exists and the task concerns real device behavior, timing, GPIO, buses, display, sensors, relays, buzzer, UART, RTC, or any other hardware-facing effect.
+2. Host tests, mocks, and simulations are useful prechecks, but they do not replace physical-hardware validation for driver API behavior.
+3. For hardware work, the agent must prefer operating on the real device first through the available hardware workflow, then use host tests only as supporting evidence.
+4. If a hardware step requires user assistance such as power, cabling, probe hookup, button presses, serial connection, flash/download confirmation, or observing physical output, the agent must stop at that point and explicitly ask the user to help complete that step before continuing.
+5. Do not declare a hardware-facing driver/API task complete until the relevant driver API test has been executed against physical hardware or the user has explicitly accepted that hardware validation is blocked.
+6. Hardware-dependent tests must rely on the Keil debug target, not on host-only runners, and must be kept separate from release build entry paths.
+7. When the task requires flashing firmware to hardware, prefer flash-only programming and do not enter debugger mode unless the user explicitly asks for a debug session.
+8. If a debug session is explicitly required for download or investigation, treat exiting debug mode as a required cleanup step before considering the operation complete.
+9. Firmware flashing is mandatory via Keil MDK tooling (`D:\keil MDK\UV4\UV4.exe`) and must not be replaced by non-Keil flashing flows (such as pyOCD, J-Link Commander, ST-LINK Utility, OpenOCD, or custom programmers) unless the user explicitly overrides this rule.
+10. For flash operations, the default required path is Keil flash-only download; entering Keil debug mode is allowed only when explicitly requested by the user and must be exited as a required cleanup step.
+
 ## LCD UI Design Authority
 Treat [docs/issue/lcd-ui-preview.html](docs/issue/lcd-ui-preview.html) as the authoritative LCD visual design document for all TFT/LCD UI work.
 

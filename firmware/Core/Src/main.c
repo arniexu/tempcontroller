@@ -2,7 +2,8 @@
 
 int main(void)
 {
-    app_main_init();
+
+	app_main_init();
 
     while (1)
     {

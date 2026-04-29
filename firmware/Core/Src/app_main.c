@@ -25,6 +25,39 @@ static bool g_prev_alarm = false;
 static unsigned int g_log_tick_count = 0U;
 static app_params_t g_runtime_params;
 static uint32_t g_last_1ms_tick = 0U;
+static bool g_hw_driver_test_active = false;
+
+typedef enum
+{
+    HW_DISPLAY_TEST_SOLID = 0,
+    HW_DISPLAY_TEST_MOVING_BLOCK,
+    HW_DISPLAY_TEST_API_PATTERN
+} hw_display_test_phase_t;
+
+static hw_display_test_phase_t g_hw_test_phase = HW_DISPLAY_TEST_SOLID;
+static uint32_t g_hw_test_phase_started_ms = 0U;
+static uint32_t g_hw_test_last_step_ms = 0U;
+static uint8_t g_hw_test_solid_idx = 0U;
+static uint16_t g_hw_test_block_x = 12U;
+static uint16_t g_hw_test_block_y = 56U;
+static uint16_t g_hw_test_prev_block_x = 12U;
+static uint16_t g_hw_test_prev_block_y = 56U;
+static int16_t g_hw_test_block_dx = 4;
+static int16_t g_hw_test_block_dy = 3;
+static bool g_hw_test_block_inited = false;
+
+#define HW_TEST_SOLID_STEP_MS        (800U)
+#define HW_TEST_SOLID_TOTAL_MS       (6400U)
+#define HW_TEST_BLOCK_STEP_MS        (33U)
+#define HW_TEST_BLOCK_TOTAL_MS       (12000U)
+#define HW_TEST_API_TOTAL_MS         (4000U)
+#define HW_TEST_BLOCK_W              (44U)
+#define HW_TEST_BLOCK_H              (44U)
+#define HW_TEST_DIRTY_MARGIN         (2U)
+#define HW_TEST_BLOCK_MIN_X          (4U)
+#define HW_TEST_BLOCK_MIN_Y          (44U)
+#define HW_TEST_BLOCK_MAX_X          (BSP_LCD_WIDTH - HW_TEST_BLOCK_W - 4U)
+#define HW_TEST_BLOCK_MAX_Y          (BSP_LCD_HEIGHT - HW_TEST_BLOCK_H - 4U)
 
 static void apply_schedule_params(const app_params_t *params)
 {
@@ -100,8 +133,298 @@ static const char *mode_to_str(app_mode_t mode)
     }
 }
 
+static void run_display_driver_api_test(void)
+{
+    const uint16_t x0 = 4U;
+    const uint16_t y0 = 4U;
+    const uint16_t x1 = (uint16_t)(BSP_LCD_WIDTH - 5U);
+    const uint16_t y1 = (uint16_t)(BSP_LCD_HEIGHT - 5U);
+
+    hw_oled_init();
+    hw_oled_clear();
+    hw_oled_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, BSP_LCD_COLOR_BLACK);
+    hw_oled_draw_rect(x0, y0, (uint16_t)(BSP_LCD_WIDTH - 8U), (uint16_t)(BSP_LCD_HEIGHT - 8U), BSP_LCD_COLOR_WHITE);
+    hw_oled_draw_line(x0, y0, x1, y0, 0xF800U);
+    hw_oled_draw_line(x1, y0, x1, y1, 0x07E0U);
+    hw_oled_draw_line(x0, y1, x1, y1, 0x001FU);
+    hw_oled_draw_line(x0, y0, x0, y1, 0xFFE0U);
+    hw_oled_fill_round_rect(12U, 16U, 96U, 48U, 10U, 0x0596U);
+    hw_oled_draw_line(0U, 0U, (uint16_t)(BSP_LCD_WIDTH - 1U), (uint16_t)(BSP_LCD_HEIGHT - 1U), BSP_LCD_COLOR_WHITE);
+    hw_oled_draw_line((uint16_t)(BSP_LCD_WIDTH - 1U), 0U, 0U, (uint16_t)(BSP_LCD_HEIGHT - 1U), 0xFD20U);
+    hw_oled_draw_circle(180U, 72U, 28U, 0x3666U);
+    hw_oled_draw_text_xy(20U, 96U, "DISPLAY", 3U, BSP_LCD_COLOR_WHITE);
+    hw_oled_draw_text_xy(20U, 128U, "DRIVER TEST", 3U, 0xFD20U);
+    hw_oled_draw_text_xy(20U, 176U, "API BORDER LINE", 2U, 0xC638U);
+    hw_oled_draw_text_xy(20U, 202U, "TEXT REFRESH", 2U, 0xC638U);
+    hw_oled_draw_text(0U, "DRV API TEST");
+    hw_oled_draw_text(1U, "BORDER 4 COLORS");
+    hw_oled_draw_text(2U, "TEXT+REFRESH");
+    hw_oled_draw_text(3U, "EXPECT PATTERN");
+    hw_oled_refresh();
+}
+
+static void run_display_driver_solid_color_step(uint8_t index)
+{
+    static const uint16_t k_colors[8] = {
+        0x0000U,
+        0xFFFFU,
+        0xF800U,
+        0x07E0U,
+        0x001FU,
+        0xFFE0U,
+        0x07FFU,
+        0xF81FU
+    };
+    static const char *k_names[8] = {
+        "BLACK",
+        "WHITE",
+        "RED",
+        "GREEN",
+        "BLUE",
+        "YELLOW",
+        "CYAN",
+        "MAGENTA"
+    };
+    uint8_t idx = (uint8_t)(index % 8U);
+
+    hw_oled_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, k_colors[idx]);
+    hw_oled_draw_rect(2U, 2U, (uint16_t)(BSP_LCD_WIDTH - 4U), (uint16_t)(BSP_LCD_HEIGHT - 4U), BSP_LCD_COLOR_WHITE);
+
+    hw_oled_draw_text(0U, "SOLID SCREEN");
+    hw_oled_draw_text(1U, k_names[idx]);
+    hw_oled_draw_text(2U, "COLOR FILL TEST");
+    hw_oled_draw_text(3U, "CHECK FULL AREA");
+    hw_oled_refresh();
+}
+
+static void run_display_driver_moving_block_step(void)
+{
+    uint16_t x;
+    uint16_t y;
+    uint16_t block_color;
+    uint16_t dirty_x;
+    uint16_t dirty_y;
+    uint16_t dirty_w;
+    uint16_t dirty_h;
+    uint16_t prev_x0;
+    uint16_t prev_y0;
+    uint16_t prev_x1;
+    uint16_t prev_y1;
+    uint16_t curr_x0;
+    uint16_t curr_y0;
+    uint16_t curr_x1;
+    uint16_t curr_y1;
+    uint16_t union_x0;
+    uint16_t union_y0;
+    uint16_t union_x1;
+    uint16_t union_y1;
+
+    x = g_hw_test_block_x;
+    y = g_hw_test_block_y;
+
+    if (g_hw_test_block_dx > 0)
+    {
+        x = (uint16_t)(x + (uint16_t)g_hw_test_block_dx);
+    }
+    else
+    {
+        x = (uint16_t)(x - (uint16_t)(-g_hw_test_block_dx));
+    }
+
+    if (g_hw_test_block_dy > 0)
+    {
+        y = (uint16_t)(y + (uint16_t)g_hw_test_block_dy);
+    }
+    else
+    {
+        y = (uint16_t)(y - (uint16_t)(-g_hw_test_block_dy));
+    }
+
+    if (x >= HW_TEST_BLOCK_MAX_X)
+    {
+        x = HW_TEST_BLOCK_MAX_X;
+        g_hw_test_block_dx = -g_hw_test_block_dx;
+    }
+    else if (x <= HW_TEST_BLOCK_MIN_X)
+    {
+        x = HW_TEST_BLOCK_MIN_X;
+        g_hw_test_block_dx = -g_hw_test_block_dx;
+    }
+
+    if (y >= HW_TEST_BLOCK_MAX_Y)
+    {
+        y = HW_TEST_BLOCK_MAX_Y;
+        g_hw_test_block_dy = -g_hw_test_block_dy;
+    }
+    else if (y <= HW_TEST_BLOCK_MIN_Y)
+    {
+        y = HW_TEST_BLOCK_MIN_Y;
+        g_hw_test_block_dy = -g_hw_test_block_dy;
+    }
+
+    g_hw_test_block_x = x;
+    g_hw_test_block_y = y;
+
+    block_color = (g_hw_test_block_dx > 0) ? 0xFFE0U : 0x07FFU;
+
+    if (g_hw_test_block_inited)
+    {
+        /* Dirty-rectangle union avoids missed pixels and reduces per-frame write area. */
+        prev_x0 = g_hw_test_prev_block_x;
+        prev_y0 = g_hw_test_prev_block_y;
+        prev_x1 = (uint16_t)(g_hw_test_prev_block_x + HW_TEST_BLOCK_W - 1U);
+        prev_y1 = (uint16_t)(g_hw_test_prev_block_y + HW_TEST_BLOCK_H - 1U);
+
+        curr_x0 = g_hw_test_block_x;
+        curr_y0 = g_hw_test_block_y;
+        curr_x1 = (uint16_t)(g_hw_test_block_x + HW_TEST_BLOCK_W - 1U);
+        curr_y1 = (uint16_t)(g_hw_test_block_y + HW_TEST_BLOCK_H - 1U);
+
+        union_x0 = (prev_x0 < curr_x0) ? prev_x0 : curr_x0;
+        union_y0 = (prev_y0 < curr_y0) ? prev_y0 : curr_y0;
+        union_x1 = (prev_x1 > curr_x1) ? prev_x1 : curr_x1;
+        union_y1 = (prev_y1 > curr_y1) ? prev_y1 : curr_y1;
+
+        if (union_x0 > HW_TEST_DIRTY_MARGIN)
+        {
+            union_x0 = (uint16_t)(union_x0 - HW_TEST_DIRTY_MARGIN);
+        }
+        else
+        {
+            union_x0 = 0U;
+        }
+
+        if (union_y0 > HW_TEST_DIRTY_MARGIN)
+        {
+            union_y0 = (uint16_t)(union_y0 - HW_TEST_DIRTY_MARGIN);
+        }
+        else
+        {
+            union_y0 = 0U;
+        }
+
+        if (union_x1 < (uint16_t)(BSP_LCD_WIDTH - 1U - HW_TEST_DIRTY_MARGIN))
+        {
+            union_x1 = (uint16_t)(union_x1 + HW_TEST_DIRTY_MARGIN);
+        }
+        else
+        {
+            union_x1 = (uint16_t)(BSP_LCD_WIDTH - 1U);
+        }
+
+        if (union_y1 < (uint16_t)(BSP_LCD_HEIGHT - 1U - HW_TEST_DIRTY_MARGIN))
+        {
+            union_y1 = (uint16_t)(union_y1 + HW_TEST_DIRTY_MARGIN);
+        }
+        else
+        {
+            union_y1 = (uint16_t)(BSP_LCD_HEIGHT - 1U);
+        }
+
+        dirty_x = union_x0;
+        dirty_y = union_y0;
+        dirty_w = (uint16_t)(union_x1 - union_x0 + 1U);
+        dirty_h = (uint16_t)(union_y1 - union_y0 + 1U);
+        hw_oled_fill_rect(dirty_x, dirty_y, dirty_w, dirty_h, BSP_LCD_COLOR_BLACK);
+    }
+
+    hw_oled_fill_rect(g_hw_test_block_x, g_hw_test_block_y, HW_TEST_BLOCK_W, HW_TEST_BLOCK_H, block_color);
+    hw_oled_draw_rect(g_hw_test_block_x, g_hw_test_block_y, HW_TEST_BLOCK_W, HW_TEST_BLOCK_H, BSP_LCD_COLOR_WHITE);
+
+    g_hw_test_prev_block_x = g_hw_test_block_x;
+    g_hw_test_prev_block_y = g_hw_test_block_y;
+    g_hw_test_block_inited = true;
+}
+
+static void enter_display_driver_moving_block_scene(void)
+{
+    g_hw_test_block_x = 12U;
+    g_hw_test_block_y = 56U;
+    g_hw_test_prev_block_x = g_hw_test_block_x;
+    g_hw_test_prev_block_y = g_hw_test_block_y;
+    g_hw_test_block_dx = 4;
+    g_hw_test_block_dy = 3;
+    g_hw_test_block_inited = false;
+
+    hw_oled_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, BSP_LCD_COLOR_BLACK);
+    hw_oled_draw_rect(2U, 2U, (uint16_t)(BSP_LCD_WIDTH - 4U), (uint16_t)(BSP_LCD_HEIGHT - 4U), BSP_LCD_COLOR_WHITE);
+    hw_oled_draw_text_xy(8U, 12U, "MOVING BLOCK 30FPS", 1U, 0xC638U);
+    hw_oled_draw_text_xy(8U, 26U, "DIRTY RECT TEST", 1U, 0xC638U);
+}
+
+static void run_display_driver_hw_test_loop(void)
+{
+    uint32_t now_ms;
+
+    now_ms = scheduler_now_ms();
+
+    if (g_hw_test_phase == HW_DISPLAY_TEST_SOLID)
+    {
+        if ((now_ms - g_hw_test_last_step_ms) >= HW_TEST_SOLID_STEP_MS)
+        {
+            g_hw_test_last_step_ms = now_ms;
+            run_display_driver_solid_color_step(g_hw_test_solid_idx);
+            g_hw_test_solid_idx = (uint8_t)((g_hw_test_solid_idx + 1U) % 8U);
+        }
+
+        if ((now_ms - g_hw_test_phase_started_ms) >= HW_TEST_SOLID_TOTAL_MS)
+        {
+            g_hw_test_phase = HW_DISPLAY_TEST_MOVING_BLOCK;
+            g_hw_test_phase_started_ms = now_ms;
+            g_hw_test_last_step_ms = 0U;
+            enter_display_driver_moving_block_scene();
+            hw_oled_draw_text(0U, "MOVING BLOCK");
+            hw_oled_draw_text(1U, "PATH + BOUNCE");
+            hw_oled_draw_text(2U, "CHECK STABILITY");
+            hw_oled_draw_text(3U, "NO TEARING");
+            hw_oled_refresh();
+        }
+        return;
+    }
+
+    if (g_hw_test_phase == HW_DISPLAY_TEST_MOVING_BLOCK)
+    {
+        if ((now_ms - g_hw_test_last_step_ms) >= HW_TEST_BLOCK_STEP_MS)
+        {
+            g_hw_test_last_step_ms = now_ms;
+            run_display_driver_moving_block_step();
+        }
+
+        if ((now_ms - g_hw_test_phase_started_ms) >= HW_TEST_BLOCK_TOTAL_MS)
+        {
+            g_hw_test_phase = HW_DISPLAY_TEST_API_PATTERN;
+            g_hw_test_phase_started_ms = now_ms;
+            run_display_driver_api_test();
+        }
+        return;
+    }
+
+    if ((now_ms - g_hw_test_phase_started_ms) >= HW_TEST_API_TOTAL_MS)
+    {
+        g_hw_test_phase = HW_DISPLAY_TEST_SOLID;
+        g_hw_test_phase_started_ms = now_ms;
+        g_hw_test_last_step_ms = 0U;
+        g_hw_test_solid_idx = 0U;
+        g_hw_test_block_inited = false;
+    }
+}
+
 void app_main_init(void)
 {
+#if (APP_HW_DRIVER_TEST_DISPLAY == 1U)
+    scheduler_init();
+    debug_log_init();
+    debug_log_info("APP", "display driver test mode: solid + moving + api");
+    g_hw_test_phase = HW_DISPLAY_TEST_SOLID;
+    g_hw_test_phase_started_ms = scheduler_now_ms();
+    g_hw_test_last_step_ms = 0U;
+    g_hw_test_solid_idx = 0U;
+    run_display_driver_solid_color_step(0U);
+    g_hw_test_solid_idx = 1U;
+    g_hw_driver_test_active = true;
+    return;
+#endif
+
     scheduler_init();
     param_store_init();
 
@@ -139,6 +462,13 @@ void app_main_loop(void)
     scheduler_flags_t flags;
     const temp_snapshot_t *temp;
     uint32_t now_ms;
+
+    if (g_hw_driver_test_active)
+    {
+        (void)hw_oled_process();
+        run_display_driver_hw_test_loop();
+        return;
+    }
 
 #if !defined(USE_STDPERIPH_DRIVER)
     scheduler_tick_1ms();

@@ -6,7 +6,7 @@
 
 - 核心服务已实现：调度器、温度管理、加热控制、PID、报警、预约计划、UI、日志、参数存储与协议导出。
 - 已完成硬件分层：业务逻辑通过硬件端口访问底层，GPIO/I2C/UART 等细节收敛在 BSP。
-- 提供主机侧模块测试，可用于回归验证。
+- 提供主机侧模块测试，可用于预检查与回归验证；凡依赖真实硬件行为的驱动测试，必须通过独立的 Keil Debug 构建在实物上执行，且与 Release 构建分离。
 
 ## 目录结构
 
@@ -137,5 +137,6 @@
 ## 参考资料
 
 - 集成指南：Project/StdPeriphIntegration.md。
+- UI 设计预览：docs/ui-design-preview.html。
 - Keil 工程：Project/MDK-ARM/WaterTempControl.uvprojx。
 - 主机测试入口：tests/run_tests.ps1。

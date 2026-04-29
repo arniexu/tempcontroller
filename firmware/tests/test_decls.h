@@ -1,6 +1,7 @@
 #ifndef TEST_DECLS_H
 #define TEST_DECLS_H
 
+int test_bsp_oled_driver_run(void);
 int test_scheduler_run(void);
 int test_pid_run(void);
 int test_debug_log_run(void);

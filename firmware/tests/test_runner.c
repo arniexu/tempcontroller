@@ -14,6 +14,7 @@ int main(void)
     unsigned int fail_count = 0U;
 
     const test_case_t cases[] = {
+        {"bsp_oled_driver", test_bsp_oled_driver_run},
         {"scheduler", test_scheduler_run},
         {"pid", test_pid_run},
         {"debug_log", test_debug_log_run},

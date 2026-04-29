@@ -19,6 +19,13 @@
 #define TFT_PIN_CS                  GPIO_Pin_9
 #define TFT_PIN_BL                  GPIO_Pin_10
 
+#define TFT_GPIO_SPEED              GPIO_Speed_10MHz
+#define TFT_BUS_SETTLE_NOP          (1U)
+#define TFT_WR_LOW_NOP              (6U)
+#define TFT_WR_HIGH_NOP             (6U)
+#define TFT_MIRROR_X_AROUND_CENTER  (0U)
+#define TFT_LCD_ENTRY_MODE          (0x1018U)
+
 #define TFT_COLOR_BG                (0x0000U)
 #define TFT_COLOR_FG                (0xFFFFU)
 
@@ -213,13 +220,22 @@ static void lcd_data_mode(GPIOMode_TypeDef mode)
 
     gpio.GPIO_Pin = 0xFFFFU;
     gpio.GPIO_Mode = mode;
-    gpio.GPIO_Speed = GPIO_Speed_50MHz;
+    gpio.GPIO_Speed = TFT_GPIO_SPEED;
     GPIO_Init(TFT_DATA_PORT, &gpio);
+}
+
+static void lcd_write_timing_delay(unsigned int cycles)
+{
+    while (cycles-- > 0U)
+    {
+        __NOP();
+    }
 }
 
 static void lcd_write_bus(uint16_t value)
 {
     TFT_DATA_PORT->ODR = value;
+    lcd_write_timing_delay(TFT_BUS_SETTLE_NOP);
 }
 
 static uint16_t lcd_read_bus(void)
@@ -230,7 +246,9 @@ static uint16_t lcd_read_bus(void)
 static void lcd_write_strobe(void)
 {
     lcd_ctrl_write(TFT_PIN_WR, 0);
+    lcd_write_timing_delay(TFT_WR_LOW_NOP);
     lcd_ctrl_write(TFT_PIN_WR, 1);
+    lcd_write_timing_delay(TFT_WR_HIGH_NOP);
 }
 
 static uint16_t lcd_read_strobe(void)
@@ -298,9 +316,26 @@ static void lcd_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 
 static void lcd_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
 {
+    uint16_t draw_x;
     uint32_t count;
 
-    lcd_set_window(x, y, (uint16_t)(x + w - 1U), (uint16_t)(y + h - 1U));
+    if ((w == 0U) || (h == 0U))
+    {
+        return;
+    }
+
+    draw_x = x;
+#if (TFT_MIRROR_X_AROUND_CENTER == 1U)
+    {
+        uint16_t x_end = (uint16_t)(x + w - 1U);
+        draw_x = (uint16_t)((BSP_LCD_WIDTH - 1U) - x_end);
+    }
+#endif
+
+    lcd_set_window(draw_x,
+                   y,
+                   (uint16_t)(draw_x + w - 1U),
+                   (uint16_t)(y + h - 1U));
     lcd_prepare_write_ram();
     for (count = 0UL; count < ((uint32_t)w * (uint32_t)h); ++count)
     {
@@ -366,7 +401,7 @@ static void lcd_init_932x(void)
     lcd_write_reg(LCD_REG_0,   0x0001U);
     lcd_write_reg(LCD_REG_1,   0x0100U);
     lcd_write_reg(LCD_REG_2,   0x0700U);
-    lcd_write_reg(LCD_REG_3,   0x1030U);
+    lcd_write_reg(LCD_REG_3,   TFT_LCD_ENTRY_MODE);
     lcd_write_reg(LCD_REG_4,   0x0000U);
     lcd_write_reg(LCD_REG_8,   0x0202U);
     lcd_write_reg(LCD_REG_9,   0x0000U);
@@ -418,7 +453,7 @@ static void lcd_init_932x(void)
     lcd_write_reg(LCD_REG_149, 0x0110U);
     lcd_write_reg(LCD_REG_151, 0x0000U);
     lcd_write_reg(LCD_REG_152, 0x0000U);
-    lcd_write_reg(LCD_REG_3,   0x1018U);
+    lcd_write_reg(LCD_REG_3,   TFT_LCD_ENTRY_MODE);
     lcd_write_reg(LCD_REG_7,   0x0173U);
 }
 
@@ -426,7 +461,7 @@ static void lcd_init_5408(void)
 {
     lcd_write_reg(LCD_REG_1,   0x0100U);
     lcd_write_reg(LCD_REG_2,   0x0700U);
-    lcd_write_reg(LCD_REG_3,   0x1030U);
+    lcd_write_reg(LCD_REG_3,   TFT_LCD_ENTRY_MODE);
     lcd_write_reg(LCD_REG_4,   0x0000U);
     lcd_write_reg(LCD_REG_8,   0x0202U);
     lcd_write_reg(LCD_REG_9,   0x0000U);
@@ -483,7 +518,7 @@ static void lcd_init_5408(void)
     lcd_write_reg(LCD_REG_149, 0x0110U);
     lcd_write_reg(LCD_REG_151, 0x0000U);
     lcd_write_reg(LCD_REG_152, 0x0000U);
-    lcd_write_reg(LCD_REG_3,   0x1018U);
+    lcd_write_reg(LCD_REG_3,   TFT_LCD_ENTRY_MODE);
     lcd_write_reg(LCD_REG_7,   0x0112U);
 }
 #endif
@@ -491,6 +526,9 @@ static void lcd_init_5408(void)
 void bsp_oled_init(void)
 {
     unsigned int i;
+
+    g_refresh_pending = 0U;
+    g_refresh_line = 0U;
 
 #if defined(USE_STDPERIPH_DRIVER)
     GPIO_InitTypeDef gpio;
@@ -502,7 +540,7 @@ void bsp_oled_init(void)
 
     gpio.GPIO_Pin = TFT_PIN_RD | TFT_PIN_WR | TFT_PIN_RS | TFT_PIN_CS | TFT_PIN_BL;
     gpio.GPIO_Mode = GPIO_Mode_Out_PP;
-    gpio.GPIO_Speed = GPIO_Speed_50MHz;
+    gpio.GPIO_Speed = TFT_GPIO_SPEED;
     GPIO_Init(TFT_CTRL_PORT, &gpio);
 
     lcd_ctrl_write(TFT_PIN_CS, 0);
@@ -694,7 +732,18 @@ int bsp_oled_process(void)
     }
     return (g_refresh_pending != 0U) ? 1 : 0;
 #else
-    return 0;
+    if (!g_refresh_pending)
+    {
+        return 0;
+    }
+
+    g_refresh_line++;
+    if (g_refresh_line >= BSP_OLED_LINE_COUNT)
+    {
+        g_refresh_pending = 0U;
+    }
+
+    return (g_refresh_pending != 0U) ? 1 : 0;
 #endif
 }
 

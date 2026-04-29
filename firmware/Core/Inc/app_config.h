@@ -5,6 +5,32 @@
 #define APP_TEMP_DEFAULT_SETPOINT_C     (45.0f)
 #define APP_PID_WINDOW_MS               (10000U)
 
+#if defined(USE_STDPERIPH_DRIVER)
+#if !defined(APP_BUILD_DEBUG) && !defined(APP_BUILD_RELEASE)
+#error "Keil hardware targets must define exactly one of APP_BUILD_DEBUG or APP_BUILD_RELEASE."
+#endif
+#endif
+
+#if !defined(APP_BUILD_DEBUG)
+#define APP_BUILD_DEBUG                 (0U)
+#endif
+
+#if !defined(APP_BUILD_RELEASE)
+#define APP_BUILD_RELEASE               (0U)
+#endif
+
+#if ((APP_BUILD_DEBUG + APP_BUILD_RELEASE) > 1U)
+#error "APP_BUILD_DEBUG and APP_BUILD_RELEASE cannot both be enabled."
+#endif
+
+#if !defined(APP_HW_DRIVER_TEST_DISPLAY)
+#define APP_HW_DRIVER_TEST_DISPLAY      (0U)
+#endif
+
+#if (APP_BUILD_RELEASE == 1U) && (APP_HW_DRIVER_TEST_DISPLAY == 1U)
+#error "Display driver hardware tests must not be compiled into release builds."
+#endif
+
 #define APP_TEMP_SENSOR_COUNT           (3U)
 #define APP_TEMP_FILTER_WINDOW          (5U)
 #define APP_TEMP_VALID_MIN_C            (-55.0f)
