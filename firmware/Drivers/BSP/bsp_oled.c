@@ -23,9 +23,10 @@
 #define TFT_BUS_SETTLE_NOP          (1U)
 #define TFT_WR_LOW_NOP              (6U)
 #define TFT_WR_HIGH_NOP             (6U)
-#define TFT_MIRROR_X_AROUND_CENTER  (0U)
+#define TFT_MIRROR_X_AROUND_CENTER  (1U)
 #define TFT_LCD_ENTRY_MODE          (0x1018U)
-#define TFT_DRAW_ROW_FROM_END       (1U)
+#define TFT_DRAW_ROW_FROM_END       (0U)
+#define TFT_TEXT_LOAD_Y_REVERSED    (1U)
 
 #define TFT_COLOR_BG                (0x0000U)
 #define TFT_COLOR_FG                (0xFFFFU)
@@ -348,29 +349,110 @@ static void lcd_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16
     }
 }
 
-static void lcd_draw_char(uint16_t x, uint16_t y, char c)
+static void lcd_draw_text_dir(uint16_t x,
+                              uint16_t y,
+                              const char *text,
+                              uint8_t scale,
+                              uint16_t color,
+                              uint8_t x_decreasing)
 {
-    uint8_t glyph[5];
-    uint16_t row;
+    uint16_t cursor_x;
+    uint16_t advance;
+    uint16_t i;
 
-    glyph_5x7(c, glyph);
-    for (row = 0U; row < LCD_CHAR_HEIGHT; ++row)
+    if ((text == 0) || (scale == 0U))
     {
-        uint16_t col;
-        uint16_t src_row = (uint16_t)(row / LCD_TEXT_SCALE);
+        return;
+    }
 
-        lcd_set_window(x,
-                       (uint16_t)(y + row),
-                       (uint16_t)(x + LCD_CHAR_WIDTH - 1U),
-                       (uint16_t)(y + row));
-        lcd_prepare_write_ram();
-        for (col = 0U; col < (LCD_GLYPH_WIDTH * LCD_TEXT_SCALE); ++col)
+    advance = (uint16_t)((LCD_GLYPH_WIDTH * scale) + 1U);
+    cursor_x = x;
+
+    for (i = 0U; text[i] != '\0'; ++i)
+    {
+        uint8_t glyph[8];
+        uint8_t glyph_w = 0U;
+        uint8_t glyph_h = 0U;
+        uint8_t col;
+
+        tg_glyph_5x7(text[i], glyph, &glyph_w, &glyph_h);
+        for (col = 0U; col < glyph_w; ++col)
         {
-            uint16_t src_col = (uint16_t)(col / LCD_TEXT_SCALE);
-            uint16_t color = ((glyph[src_col] & (1U << src_row)) != 0U) ? TFT_COLOR_FG : TFT_COLOR_BG;
-            lcd_write_data(color);
+            uint8_t bits = glyph[col];
+#if (TFT_TEXT_LOAD_Y_REVERSED == 1U)
+            int16_t row = (int16_t)glyph_h - 1;
+
+            while (row >= 0)
+            {
+                if ((bits & (1U << (uint8_t)row)) != 0U)
+                {
+                    uint8_t run = 1U;
+
+                    while (((int16_t)row - (int16_t)run) >= 0 &&
+                           ((bits & (1U << (uint8_t)((int16_t)row - (int16_t)run))) != 0U))
+                    {
+                        ++run;
+                    }
+
+                    tg_fill_rect(&g_tg_canvas,
+                                 cursor_x + ((uint16_t)col * scale),
+                                 y + ((uint16_t)(((int16_t)row - (int16_t)run) + 1) * scale),
+                                 scale,
+                                 (uint16_t)run * scale,
+                                 color);
+                    row = (int16_t)(row - (int16_t)run);
+                }
+                else
+                {
+                    --row;
+                }
+            }
+#else
+            uint8_t row = 0U;
+
+            while (row < glyph_h)
+            {
+                if ((bits & (1U << row)) != 0U)
+                {
+                    uint8_t run = 1U;
+
+                    while (((uint8_t)(row + run) < glyph_h) && ((bits & (1U << (row + run))) != 0U))
+                    {
+                        ++run;
+                    }
+
+                    tg_fill_rect(&g_tg_canvas,
+                                 cursor_x + ((uint16_t)col * scale),
+                                 y + ((uint16_t)row * scale),
+                                 scale,
+                                 (uint16_t)run * scale,
+                                 color);
+                    row = (uint8_t)(row + run);
+                }
+                else
+                {
+                    ++row;
+                }
+            }
+#endif
         }
-        lcd_write_data(TFT_COLOR_BG);
+
+        if (x_decreasing != 0U)
+        {
+            if (cursor_x < advance)
+            {
+                break;
+            }
+            cursor_x = (uint16_t)(cursor_x - advance);
+        }
+        else
+        {
+            if (cursor_x > (uint16_t)(BSP_LCD_WIDTH - advance))
+            {
+                break;
+            }
+            cursor_x = (uint16_t)(cursor_x + advance);
+        }
     }
 }
 
@@ -378,6 +460,7 @@ static void lcd_draw_text_line(uint8_t line)
 {
     static const uint16_t y_pos[BSP_OLED_LINE_COUNT] = {16U, 44U, 72U, 100U};
     char line_buf[BSP_OLED_LINE_CHARS + 1U];
+    uint16_t line_start_x;
 
     if (line >= BSP_OLED_LINE_COUNT)
     {
@@ -391,39 +474,19 @@ static void lcd_draw_text_line(uint8_t line)
                   TFT_COLOR_BG);
     strncpy(line_buf, g_lines[line], BSP_OLED_LINE_CHARS);
     line_buf[BSP_OLED_LINE_CHARS] = '\0';
+    
 #if (TFT_DRAW_ROW_FROM_END == 1U)
-    {
-        uint16_t cursor_x = (uint16_t)(BSP_LCD_WIDTH - LCD_TEXT_START_X - LCD_CHAR_WIDTH);
-        uint16_t i;
-        char ch[2];
-
-        ch[1] = '\0';
-        for (i = 0U; line_buf[i] != '\0'; ++i)
-        {
-            ch[0] = line_buf[i];
-            tg_draw_text(&g_tg_canvas,
-                         cursor_x,
-                         y_pos[line],
-                         ch,
-                         LCD_TEXT_SCALE,
-                         TFT_COLOR_FG,
-                         tg_glyph_5x7);
-            if (cursor_x < LCD_CHAR_WIDTH)
-            {
-                break;
-            }
-            cursor_x = (uint16_t)(cursor_x - LCD_CHAR_WIDTH);
-        }
-    }
+    line_start_x = (uint16_t)(BSP_LCD_WIDTH - LCD_TEXT_START_X - LCD_CHAR_WIDTH);
 #else
-    tg_draw_text(&g_tg_canvas,
-                 LCD_TEXT_START_X,
-                 y_pos[line],
-                 line_buf,
-                 LCD_TEXT_SCALE,
-                 TFT_COLOR_FG,
-                 tg_glyph_5x7);
+    line_start_x = LCD_TEXT_START_X;
 #endif
+
+    lcd_draw_text_dir(line_start_x,
+                      y_pos[line],
+                      line_buf,
+                      LCD_TEXT_SCALE,
+                      TFT_COLOR_FG,
+                      TFT_DRAW_ROW_FROM_END);
 }
 
 static void lcd_init_932x(void)
@@ -719,7 +782,8 @@ void bsp_oled_draw_text_xy(uint16_t x, uint16_t y, const char *text, uint8_t sca
         return;
     }
 
-    tg_draw_text(&g_tg_canvas, (int)x, (int)y, text, scale, color, tg_glyph_5x7);
+    /* UI coordinate system uses left-to-right text progression on X axis. */
+    lcd_draw_text_dir(x, y, text, scale, color, 0U);
 #else
     (void)x;
     (void)y;

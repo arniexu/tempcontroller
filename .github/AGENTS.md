@@ -89,3 +89,12 @@ Treat [docs/issue/lcd-ui-preview.html](docs/issue/lcd-ui-preview.html) as the au
 4. If a UI change request conflicts with the current HTML preview, update the HTML preview first and treat that update as the design review artifact.
 5. When implementing LCD UI code, preserve the design's information density, alignment, spacing, and page intent unless the HTML document is revised.
 6. Decorative device chrome in the HTML preview is not part of the firmware coordinate system; only the 240x320 `.screen` region maps to LCD drawing coordinates.
+
+## LCD Text Raster Direction Rule
+Treat this as a mandatory UI rendering standard for all LCD text drawing changes.
+
+1. In a single text line, the character anchor position strategy must remain stable for the selected draw mode; do not change per-character anchor semantics implicitly during unrelated UI tasks.
+2. For the current project standard, text raster loading in Y direction must be reversed from the previous default while keeping the same character start anchor behavior.
+3. Any task that touches UI text rendering, `ui_service.c`, display ports, `bsp_oled.c`, or text draw APIs must first check compliance against this rule before making changes.
+4. Any UI change delivery must include an explicit compliance statement confirming whether X character progression and Y raster load direction still follow the current project standard.
+5. If a request intentionally changes this standard, update this rule in the same task before or together with code changes.

@@ -72,13 +72,20 @@ bool bsp_key_get_state(bsp_key_id_t key)
     {
         GPIO_TypeDef *port = key_gpio_port(key);
         uint16_t pin = key_to_pin(key);
+        BitAction level;
 
         if ((port == 0) || (pin == 0U))
         {
             return false;
         }
 
-        return (GPIO_ReadInputDataBit(port, pin) == Bit_RESET);
+        level = GPIO_ReadInputDataBit(port, pin);
+        if (key == BSP_KEY_UP)
+        {
+            /* ALIENTEK WK_UP key on PA0 is active-high. */
+            return (level == Bit_SET);
+        }
+        return (level == Bit_RESET);
     }
 #else
     return g_mock_pressed[(unsigned int)key];

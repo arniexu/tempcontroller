@@ -475,6 +475,38 @@ static uint16_t ui_text_width(const char *text, uint8_t scale)
     return (uint16_t)((len * ((5U * (size_t)scale) + 1U)) - 1U);
 }
 
+static void render_coordinate_overlay(void)
+{
+    const uint16_t axis_x = 60U;
+    const uint16_t axis_y = 60U;
+
+    /* Coordinate overlay: origin at top-left, X increases right, Y increases down. */
+    hw_oled_draw_line(0U, 0U, axis_x, 0U, UI_LCD_ALERT);
+    hw_oled_draw_line(0U, 0U, 0U, axis_y, UI_LCD_GOOD);
+
+    hw_oled_draw_line(axis_x, 0U, (uint16_t)(axis_x - 5U), 3U, UI_LCD_ALERT);
+    hw_oled_draw_line(axis_x, 0U, (uint16_t)(axis_x - 5U), 0U, UI_LCD_ALERT);
+    hw_oled_draw_line(0U, axis_y, 3U, (uint16_t)(axis_y - 5U), UI_LCD_GOOD);
+    hw_oled_draw_line(0U, axis_y, 0U, (uint16_t)(axis_y - 5U), UI_LCD_GOOD);
+
+    hw_oled_draw_text_xy(2U, 2U, "O(0,0)", 1U, UI_LCD_TEXT);
+    hw_oled_draw_text_xy((uint16_t)(axis_x - 12U), 4U, "X+", 1U, UI_LCD_ALERT);
+    hw_oled_draw_text_xy(4U, (uint16_t)(axis_y - 10U), "Y+", 1U, UI_LCD_GOOD);
+}
+
+static void render_key_state_overlay(void)
+{
+    char key_state[20];
+    int set_on = hw_key_get_state(HW_KEY_SET) ? 1 : 0;
+    int up_on = hw_key_get_state(HW_KEY_UP) ? 1 : 0;
+    int down_on = hw_key_get_state(HW_KEY_DOWN) ? 1 : 0;
+    int back_on = hw_key_get_state(HW_KEY_BACK) ? 1 : 0;
+
+    (void)snprintf(key_state, sizeof(key_state), "K S%d U%d D%d B%d", set_on, up_on, down_on, back_on);
+    hw_oled_fill_rect(0U, 306U, BSP_LCD_WIDTH, 14U, UI_LCD_BG);
+    hw_oled_draw_text_xy(2U, 308U, key_state, 1U, UI_LCD_TEXT);
+}
+
 static void render_centered_text(uint16_t y, const char *text, uint8_t scale, uint16_t color)
 {
     uint16_t text_w = ui_text_width(text, scale);
@@ -880,6 +912,9 @@ static void render_page(void)
                 }
                 hw_oled_refresh();
             }
+
+            render_coordinate_overlay();
+            render_key_state_overlay();
 #else
             hw_oled_refresh();
 #endif
@@ -954,6 +989,9 @@ void ui_service_tick_100ms(app_params_t *params)
     }
 
     poll_keys_to_events();
+#if defined(USE_STDPERIPH_DRIVER)
+    render_key_state_overlay();
+#endif
     if (g_ui.pending_key != UI_KEY_NONE)
     {
         (void)queue_push(g_ui.pending_key);

@@ -14,7 +14,9 @@
 #include "scheduler.h"
 #include "temp_manager.h"
 #include "ui_service.h"
+#include "hw_temp_port.h"
 
+#include <stdio.h>
 #include <string.h>
 
 static app_mode_t g_mode = APP_MODE_IDLE;
@@ -46,6 +48,27 @@ static int16_t g_hw_test_block_dx = 4;
 static int16_t g_hw_test_block_dy = 3;
 static bool g_hw_test_block_inited = false;
 
+typedef enum
+{
+    HW_SMOKE_STAGE_DISPLAY = 0,
+    HW_SMOKE_STAGE_KEYS,
+    HW_SMOKE_STAGE_BUZZER,
+    HW_SMOKE_STAGE_RELAY,
+    HW_SMOKE_STAGE_UART,
+    HW_SMOKE_STAGE_RTC,
+    HW_SMOKE_STAGE_TEMP,
+    HW_SMOKE_STAGE_EEPROM,
+    HW_SMOKE_STAGE_SPIFLASH,
+    HW_SMOKE_STAGE_DONE
+} hw_smoke_stage_t;
+
+static hw_smoke_stage_t g_hw_smoke_stage = HW_SMOKE_STAGE_DISPLAY;
+static uint32_t g_hw_smoke_stage_started_ms = 0U;
+static uint8_t g_hw_smoke_stage_entered = 0U;
+static uint8_t g_hw_smoke_key_seen_mask = 0U;
+static uint8_t g_hw_smoke_pass_count = 0U;
+static uint8_t g_hw_smoke_fail_count = 0U;
+
 #define HW_TEST_SOLID_STEP_MS        (800U)
 #define HW_TEST_SOLID_TOTAL_MS       (6400U)
 #define HW_TEST_BLOCK_STEP_MS        (33U)
@@ -58,6 +81,380 @@ static bool g_hw_test_block_inited = false;
 #define HW_TEST_BLOCK_MIN_Y          (44U)
 #define HW_TEST_BLOCK_MAX_X          (BSP_LCD_WIDTH - HW_TEST_BLOCK_W - 4U)
 #define HW_TEST_BLOCK_MAX_Y          (BSP_LCD_HEIGHT - HW_TEST_BLOCK_H - 4U)
+#define HW_SMOKE_DISPLAY_MS          (8000U)
+#define HW_SMOKE_KEY_TIMEOUT_MS      (30000U)
+#define HW_SMOKE_OBSERVE_MS          (1200U)
+#define HW_SMOKE_STAGE_MSG_MS        (1500U)
+#define HW_SMOKE_KEY_REQUIRED_MASK   (0x05U)
+
+static void run_display_driver_hw_test_loop(void);
+
+static void hw_smoke_show_lines(const char *l0,
+                                const char *l1,
+                                const char *l2,
+                                const char *l3)
+{
+    hw_oled_draw_text(0U, l0);
+    hw_oled_draw_text(1U, l1);
+    hw_oled_draw_text(2U, l2);
+    hw_oled_draw_text(3U, l3);
+    hw_oled_refresh();
+}
+
+static void hw_smoke_next_stage(hw_smoke_stage_t stage, uint32_t now_ms)
+{
+    g_hw_smoke_stage = stage;
+    g_hw_smoke_stage_started_ms = now_ms;
+    g_hw_smoke_stage_entered = 0U;
+}
+
+static void hw_smoke_record_result(int pass)
+{
+    if (pass != 0)
+    {
+        if (g_hw_smoke_pass_count < 255U)
+        {
+            g_hw_smoke_pass_count++;
+        }
+    }
+    else
+    {
+        if (g_hw_smoke_fail_count < 255U)
+        {
+            g_hw_smoke_fail_count++;
+        }
+    }
+}
+
+static void run_all_hw_driver_smoke_test_loop(void)
+{
+    uint32_t now_ms = scheduler_now_ms();
+    char line2[24];
+    char line3[24];
+
+    switch (g_hw_smoke_stage)
+    {
+    case HW_SMOKE_STAGE_DISPLAY:
+        if (g_hw_smoke_stage_entered == 0U)
+        {
+            g_hw_smoke_stage_entered = 1U;
+            g_hw_test_phase = HW_DISPLAY_TEST_SOLID;
+            g_hw_test_phase_started_ms = now_ms;
+            g_hw_test_last_step_ms = 0U;
+            g_hw_test_solid_idx = 0U;
+            hw_smoke_show_lines("HW SMOKE: DISPLAY",
+                                "RUN PATTERN 8S",
+                                "CHECK COLOR/MOVE",
+                                "NO GLITCH");
+        }
+
+        run_display_driver_hw_test_loop();
+        (void)snprintf(line2,
+                   sizeof(line2),
+                   "T %lus/%lus",
+                   (unsigned long)((now_ms - g_hw_smoke_stage_started_ms) / 1000U),
+                   (unsigned long)(HW_SMOKE_DISPLAY_MS / 1000U));
+        hw_oled_draw_text(2U, line2);
+        hw_oled_refresh();
+        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_DISPLAY_MS)
+        {
+            hw_smoke_record_result(1);
+            hw_oled_clear();
+            hw_smoke_next_stage(HW_SMOKE_STAGE_KEYS, now_ms);
+        }
+        break;
+
+    case HW_SMOKE_STAGE_KEYS:
+        if (g_hw_smoke_stage_entered == 0U)
+        {
+            g_hw_smoke_stage_entered = 1U;
+            g_hw_smoke_key_seen_mask = 0U;
+            hw_smoke_show_lines("HW SMOKE: KEYS",
+                                "PRESS SET/UP/DN",
+                                "MASK 000",
+                                "REQ SET+DN");
+        }
+
+        if (hw_key_get_state(HW_KEY_SET))
+        {
+            g_hw_smoke_key_seen_mask |= 0x01U;
+        }
+        if (hw_key_get_state(HW_KEY_UP))
+        {
+            g_hw_smoke_key_seen_mask |= 0x02U;
+        }
+        if (hw_key_get_state(HW_KEY_DOWN))
+        {
+            g_hw_smoke_key_seen_mask |= 0x04U;
+        }
+
+        (void)snprintf(line2,
+                       sizeof(line2),
+                       "MASK %u%u%u",
+                       (g_hw_smoke_key_seen_mask & 0x01U) ? 1U : 0U,
+                       (g_hw_smoke_key_seen_mask & 0x02U) ? 1U : 0U,
+                       (g_hw_smoke_key_seen_mask & 0x04U) ? 1U : 0U);
+        (void)snprintf(line3,
+                   sizeof(line3),
+                   "RAW S%u U%u D%u",
+                   hw_key_get_state(HW_KEY_SET) ? 1U : 0U,
+                   hw_key_get_state(HW_KEY_UP) ? 1U : 0U,
+                   hw_key_get_state(HW_KEY_DOWN) ? 1U : 0U);
+        hw_oled_draw_text(2U, line2);
+        hw_oled_draw_text(3U, line3);
+        hw_oled_refresh();
+
+        if ((g_hw_smoke_key_seen_mask & HW_SMOKE_KEY_REQUIRED_MASK) == HW_SMOKE_KEY_REQUIRED_MASK)
+        {
+            hw_smoke_record_result(1);
+            hw_smoke_next_stage(HW_SMOKE_STAGE_BUZZER, now_ms);
+        }
+        else if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_KEY_TIMEOUT_MS)
+        {
+            hw_smoke_record_result(0);
+            hw_smoke_next_stage(HW_SMOKE_STAGE_BUZZER, now_ms);
+        }
+        break;
+
+    case HW_SMOKE_STAGE_BUZZER:
+        if (g_hw_smoke_stage_entered == 0U)
+        {
+            g_hw_smoke_stage_entered = 1U;
+            hw_buzzer_set(true);
+            hw_smoke_show_lines("HW SMOKE: BUZZER",
+                                "BUZZER ON 1.2S",
+                                "MANUAL CHECK",
+                                "LISTEN SOUND");
+        }
+
+        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_OBSERVE_MS)
+        {
+            hw_buzzer_set(false);
+            hw_smoke_record_result(1);
+            hw_smoke_next_stage(HW_SMOKE_STAGE_RELAY, now_ms);
+        }
+        break;
+
+    case HW_SMOKE_STAGE_RELAY:
+        if (g_hw_smoke_stage_entered == 0U)
+        {
+            g_hw_smoke_stage_entered = 1U;
+            hw_relay_set(true);
+            hw_smoke_show_lines("HW SMOKE: RELAY",
+                                "RELAY ON 1.2S",
+                                "MANUAL CHECK",
+                                "LISTEN CLICK");
+        }
+
+        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_OBSERVE_MS)
+        {
+            hw_relay_set(false);
+            hw_smoke_record_result(1);
+            hw_smoke_next_stage(HW_SMOKE_STAGE_UART, now_ms);
+        }
+        break;
+
+    case HW_SMOKE_STAGE_UART:
+        if (g_hw_smoke_stage_entered == 0U)
+        {
+            g_hw_smoke_stage_entered = 1U;
+            hw_uart_write("[HW_SMOKE] UART TX OK\r\n");
+            hw_uart_write("[HW_SMOKE] WAIT HOST ECHO OPTIONAL\r\n");
+            hw_smoke_record_result(1);
+            hw_smoke_show_lines("HW SMOKE: UART",
+                                "SEND TEXT FRAME",
+                                "CHECK SERIAL LOG",
+                                "TX OK;RX OPT");
+        }
+
+        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_STAGE_MSG_MS)
+        {
+            hw_smoke_next_stage(HW_SMOKE_STAGE_RTC, now_ms);
+        }
+        break;
+
+    case HW_SMOKE_STAGE_RTC:
+        if (g_hw_smoke_stage_entered == 0U)
+        {
+            uint16_t minutes = 0U;
+            int ok;
+
+            g_hw_smoke_stage_entered = 1U;
+            ok = hw_rtc_get_minutes_of_day(&minutes) ? 1 : 0;
+            hw_smoke_record_result(ok);
+            (void)snprintf(line2, sizeof(line2), "RTC %s", ok ? "PASS" : "FAIL");
+            (void)snprintf(line3,
+                           sizeof(line3),
+                           "MIN %u HH:%02u",
+                           (unsigned int)(minutes % 1440U),
+                           (unsigned int)((minutes / 60U) % 24U));
+            hw_smoke_show_lines("HW SMOKE: RTC",
+                                "READ MIN OF DAY",
+                                line2,
+                                line3);
+        }
+
+        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_STAGE_MSG_MS)
+        {
+            hw_smoke_next_stage(HW_SMOKE_STAGE_TEMP, now_ms);
+        }
+        break;
+
+    case HW_SMOKE_STAGE_TEMP:
+        if (g_hw_smoke_stage_entered == 0U)
+        {
+            float t0 = 0.0f;
+            float t1 = 0.0f;
+            float t2 = 0.0f;
+            uint8_t ok_count = 0U;
+            int ok0;
+            int ok1;
+            int ok2;
+
+            g_hw_smoke_stage_entered = 1U;
+            ok0 = hw_temp_port_read_c(0U, &t0) ? 1 : 0;
+            ok1 = hw_temp_port_read_c(1U, &t1) ? 1 : 0;
+            ok2 = hw_temp_port_read_c(2U, &t2) ? 1 : 0;
+            if (ok0)
+            {
+                ok_count++;
+            }
+            if (ok1)
+            {
+                ok_count++;
+            }
+            if (ok2)
+            {
+                ok_count++;
+            }
+
+            hw_smoke_record_result(ok_count > 0U ? 1 : 0);
+            (void)snprintf(line2,
+                           sizeof(line2),
+                           "DS18B20 OK %u/3",
+                           (unsigned int)ok_count);
+            (void)snprintf(line3,
+                           sizeof(line3),
+                           "%s%.1f %s%.1f %s%.1f",
+                           ok0 ? "A" : "-", t0,
+                           ok1 ? "B" : "-", t1,
+                           ok2 ? "C" : "-", t2);
+            hw_smoke_show_lines("HW SMOKE: TEMP",
+                                "READ 3 SENSORS",
+                                line2,
+                                line3);
+        }
+
+        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_STAGE_MSG_MS)
+        {
+            hw_smoke_next_stage(HW_SMOKE_STAGE_EEPROM, now_ms);
+        }
+        break;
+
+    case HW_SMOKE_STAGE_EEPROM:
+        if (g_hw_smoke_stage_entered == 0U)
+        {
+            static const uint8_t tx[8] = {0x5AU, 0xA5U, 0x11U, 0x22U, 0x33U, 0x44U, 0x55U, 0x66U};
+            uint8_t rx[8];
+            int ok = 0;
+            int wr_ok;
+            int rd_ok;
+
+            g_hw_smoke_stage_entered = 1U;
+            wr_ok = hw_eeprom_write(0x20U, tx, 8U) ? 1 : 0;
+            rd_ok = hw_eeprom_read(0x20U, rx, 8U) ? 1 : 0;
+            if (wr_ok && rd_ok &&
+                (memcmp(tx, rx, 8U) == 0))
+            {
+                ok = 1;
+            }
+
+            hw_smoke_record_result(ok);
+            (void)snprintf(line2,
+                           sizeof(line2),
+                           "WR%d RD%d CMP%d",
+                           wr_ok,
+                           rd_ok,
+                           ok);
+            (void)snprintf(line3,
+                           sizeof(line3),
+                           "R0=%02X R1=%02X",
+                           (unsigned int)rx[0],
+                           (unsigned int)rx[1]);
+            hw_smoke_show_lines("HW SMOKE: EEPROM",
+                                "WRITE/READ 8B",
+                                line2,
+                                line3);
+        }
+
+        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_STAGE_MSG_MS)
+        {
+            hw_smoke_next_stage(HW_SMOKE_STAGE_SPIFLASH, now_ms);
+        }
+        break;
+
+    case HW_SMOKE_STAGE_SPIFLASH:
+        if (g_hw_smoke_stage_entered == 0U)
+        {
+            static const uint8_t tx[8] = {0xC3U, 0x3CU, 0x10U, 0x20U, 0x30U, 0x40U, 0x50U, 0x60U};
+            uint8_t rx[8];
+            int ok = 0;
+            int wr_ok;
+            int rd_ok;
+
+            g_hw_smoke_stage_entered = 1U;
+            wr_ok = hw_spiflash_write(0x1000UL, tx, 8UL) ? 1 : 0;
+            rd_ok = hw_spiflash_read(0x1000UL, rx, 8UL) ? 1 : 0;
+            if (wr_ok && rd_ok &&
+                (memcmp(tx, rx, 8U) == 0))
+            {
+                ok = 1;
+            }
+
+            hw_smoke_record_result(ok);
+            (void)snprintf(line2,
+                           sizeof(line2),
+                           "WR%d RD%d CMP%d",
+                           wr_ok,
+                           rd_ok,
+                           ok);
+            (void)snprintf(line3,
+                           sizeof(line3),
+                           "R0=%02X R1=%02X",
+                           (unsigned int)rx[0],
+                           (unsigned int)rx[1]);
+            hw_smoke_show_lines("HW SMOKE: FLASH",
+                                "WRITE/READ 8B",
+                                line2,
+                                line3);
+        }
+
+        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_STAGE_MSG_MS)
+        {
+            hw_smoke_next_stage(HW_SMOKE_STAGE_DONE, now_ms);
+        }
+        break;
+
+    case HW_SMOKE_STAGE_DONE:
+        (void)snprintf(line2,
+                       sizeof(line2),
+                       "PASS %u FAIL %u",
+                       (unsigned int)g_hw_smoke_pass_count,
+                       (unsigned int)g_hw_smoke_fail_count);
+        (void)snprintf(line3,
+                       sizeof(line3),
+                       "KEY MASK %u",
+                       (unsigned int)g_hw_smoke_key_seen_mask);
+        hw_smoke_show_lines("HW SMOKE: DONE",
+                            "CHECK RESULT",
+                            line2,
+                            line3);
+        break;
+
+    default:
+        break;
+    }
+}
 
 static void apply_schedule_params(const app_params_t *params)
 {
@@ -414,13 +811,29 @@ void app_main_init(void)
 #if (APP_HW_DRIVER_TEST_DISPLAY == 1U)
     scheduler_init();
     debug_log_init();
-    debug_log_info("APP", "display driver test mode: solid + moving + api");
+    hw_oled_init();
+    hw_oled_clear();
+    hw_key_init();
+    hw_buzzer_init();
+    hw_buzzer_set(false);
+    hw_relay_init();
+    hw_relay_set(false);
+    hw_uart_init();
+    hw_rtc_init();
+    hw_eeprom_init();
+    hw_spiflash_init();
+    hw_temp_port_init();
+    debug_log_info("APP", "debug hw smoke test mode");
     g_hw_test_phase = HW_DISPLAY_TEST_SOLID;
     g_hw_test_phase_started_ms = scheduler_now_ms();
     g_hw_test_last_step_ms = 0U;
     g_hw_test_solid_idx = 0U;
-    run_display_driver_solid_color_step(0U);
-    g_hw_test_solid_idx = 1U;
+    g_hw_smoke_stage = HW_SMOKE_STAGE_DISPLAY;
+    g_hw_smoke_stage_started_ms = scheduler_now_ms();
+    g_hw_smoke_stage_entered = 0U;
+    g_hw_smoke_key_seen_mask = 0U;
+    g_hw_smoke_pass_count = 0U;
+    g_hw_smoke_fail_count = 0U;
     g_hw_driver_test_active = true;
     return;
 #endif
@@ -466,7 +879,9 @@ void app_main_loop(void)
     if (g_hw_driver_test_active)
     {
         (void)hw_oled_process();
-        run_display_driver_hw_test_loop();
+        run_all_hw_driver_smoke_test_loop();
+        hw_eeprom_process();
+        hw_spiflash_process();
         return;
     }
 
