@@ -158,11 +158,14 @@ static void glyph_5x7(char c, uint8_t out[5])
     case 'U': out[0]=0x3FU; out[1]=0x40U; out[2]=0x40U; out[3]=0x40U; out[4]=0x3FU; break;
     case 'V': out[0]=0x1FU; out[1]=0x20U; out[2]=0x40U; out[3]=0x20U; out[4]=0x1FU; break;
     case 'W': out[0]=0x3FU; out[1]=0x40U; out[2]=0x38U; out[3]=0x40U; out[4]=0x3FU; break;
+    case 'X': out[0]=0x63U; out[1]=0x14U; out[2]=0x08U; out[3]=0x14U; out[4]=0x63U; break;
     case 'Y': out[0]=0x07U; out[1]=0x08U; out[2]=0x70U; out[3]=0x08U; out[4]=0x07U; break;
     case ' ': break;
     case '.': out[2]=0x60U; break;
     case ':': out[1]=0x36U; out[3]=0x36U; break;
     case '-': out[1]=0x08U; out[2]=0x08U; out[3]=0x08U; break;
+    case '?': out[0]=0x02U; out[1]=0x01U; out[2]=0x59U; out[3]=0x09U; out[4]=0x06U; break;
+    case '>': out[0]=0x00U; out[1]=0x41U; out[2]=0x22U; out[3]=0x14U; out[4]=0x08U; break;
     case '/': out[0]=0x20U; out[1]=0x10U; out[2]=0x08U; out[3]=0x04U; out[4]=0x02U; break;
     case '*': out[0]=0x14U; out[1]=0x08U; out[2]=0x3EU; out[3]=0x08U; out[4]=0x14U; break;
     default:

@@ -52,12 +52,8 @@ typedef enum
 {
     HW_SMOKE_STAGE_DISPLAY = 0,
     HW_SMOKE_STAGE_KEYS,
-    HW_SMOKE_STAGE_BUZZER,
-    HW_SMOKE_STAGE_RELAY,
-    HW_SMOKE_STAGE_UART,
-    HW_SMOKE_STAGE_RTC,
+    HW_SMOKE_STAGE_ACTUATORS,
     HW_SMOKE_STAGE_TEMP,
-    HW_SMOKE_STAGE_EEPROM,
     HW_SMOKE_STAGE_SPIFLASH,
     HW_SMOKE_STAGE_DONE
 } hw_smoke_stage_t;
@@ -66,8 +62,25 @@ static hw_smoke_stage_t g_hw_smoke_stage = HW_SMOKE_STAGE_DISPLAY;
 static uint32_t g_hw_smoke_stage_started_ms = 0U;
 static uint8_t g_hw_smoke_stage_entered = 0U;
 static uint8_t g_hw_smoke_key_seen_mask = 0U;
+static uint8_t g_hw_smoke_key_required_mask = 0x07U;
+static uint8_t g_hw_smoke_key_baseline_mask = 0U;
+static uint8_t g_hw_smoke_key_stuck_mask = 0U;
 static uint8_t g_hw_smoke_pass_count = 0U;
 static uint8_t g_hw_smoke_fail_count = 0U;
+static uint8_t g_hw_smoke_last_key_raw_mask = 0U;
+static uint32_t g_hw_smoke_rand_state = 0x13572468UL;
+static uint32_t g_hw_smoke_last_temp_log_ms = 0U;
+static uint8_t g_hw_smoke_spi_choice = 0U;
+static uint32_t g_hw_smoke_spi_addr = 0x1000UL;
+static uint8_t g_hw_smoke_spi_tx[3][8];
+static uint8_t g_hw_smoke_spi_rx[8];
+static uint8_t g_hw_smoke_spi_done = 0U;
+static uint8_t g_hw_smoke_buzzer_on = 0U;
+static uint8_t g_hw_smoke_relay_on = 0U;
+static uint8_t g_hw_smoke_buzzer_tested = 0U;
+static uint8_t g_hw_smoke_relay_tested = 0U;
+static uint8_t g_hw_smoke_temp_port_inited = 0U;
+static const char *g_hw_smoke_last_key_name = "NONE";
 
 #define HW_TEST_SOLID_STEP_MS        (800U)
 #define HW_TEST_SOLID_TOTAL_MS       (6400U)
@@ -81,28 +94,189 @@ static uint8_t g_hw_smoke_fail_count = 0U;
 #define HW_TEST_BLOCK_MIN_Y          (44U)
 #define HW_TEST_BLOCK_MAX_X          (BSP_LCD_WIDTH - HW_TEST_BLOCK_W - 4U)
 #define HW_TEST_BLOCK_MAX_Y          (BSP_LCD_HEIGHT - HW_TEST_BLOCK_H - 4U)
-#define HW_SMOKE_DISPLAY_MS          (8000U)
-#define HW_SMOKE_KEY_TIMEOUT_MS      (30000U)
-#define HW_SMOKE_OBSERVE_MS          (1200U)
-#define HW_SMOKE_STAGE_MSG_MS        (1500U)
-#define HW_SMOKE_KEY_REQUIRED_MASK   (0x05U)
+#define HW_SMOKE_DISPLAY_MS          (5000U)
+#define HW_SMOKE_SPI_OPTION_COUNT    (3U)
+#define HW_SMOKE_SPI_DATA_LEN        (8U)
+#define HW_SMOKE_SPI_STEP_ADDR       (0x100UL)
+#define HW_SMOKE_TEMP_LOG_MS         (500U)
+#define HW_SMOKE_KEY_REQUIRED_MASK   (0x07U)
+#define HW_SMOKE_KEY_STUCK_MS        (800U)
+#define HW_SMOKE_KEY_DEGRADED_MS     (2500U)
 
 static void run_display_driver_hw_test_loop(void);
+
+static const char *hw_smoke_stage_to_str(hw_smoke_stage_t stage)
+{
+    switch (stage)
+    {
+    case HW_SMOKE_STAGE_DISPLAY: return "DISPLAY";
+    case HW_SMOKE_STAGE_KEYS: return "KEYS";
+    case HW_SMOKE_STAGE_ACTUATORS: return "ACT";
+    case HW_SMOKE_STAGE_TEMP: return "TEMP";
+    case HW_SMOKE_STAGE_SPIFLASH: return "SPIFLASH";
+    case HW_SMOKE_STAGE_DONE: return "DONE";
+    default: return "UNKNOWN";
+    }
+}
+
+static uint8_t hw_smoke_read_key_raw_mask(void)
+{
+    uint8_t raw_mask = 0U;
+
+    if (hw_key_get_state(HW_KEY_SET))
+    {
+        raw_mask |= 0x01U;
+    }
+    if (hw_key_get_state(HW_KEY_UP))
+    {
+        raw_mask |= 0x02U;
+    }
+    if (hw_key_get_state(HW_KEY_DOWN))
+    {
+        raw_mask |= 0x04U;
+    }
+
+    return raw_mask;
+}
+
+static uint8_t hw_smoke_take_key_press_mask(void)
+{
+    uint8_t raw_mask = hw_smoke_read_key_raw_mask();
+    uint8_t pressed_mask = (uint8_t)(raw_mask & (uint8_t)(~g_hw_smoke_last_key_raw_mask));
+
+    if (raw_mask != g_hw_smoke_last_key_raw_mask)
+    {
+        debug_log_info("APP", "hw_smoke keys raw=%u%u%u",
+                       (raw_mask & 0x01U) ? 1U : 0U,
+                       (raw_mask & 0x02U) ? 1U : 0U,
+                       (raw_mask & 0x04U) ? 1U : 0U);
+        g_hw_smoke_last_key_raw_mask = raw_mask;
+    }
+
+    return pressed_mask;
+}
+
+static const char *hw_smoke_key_name_from_mask(uint8_t key_mask)
+{
+    switch (key_mask)
+    {
+    case 0x01U: return "SET";
+    case 0x02U: return "UP";
+    case 0x04U: return "DOWN";
+    case 0x00U: return "NONE";
+    default: return "MULTI";
+    }
+}
+
+static uint32_t hw_smoke_rand_next(uint32_t salt)
+{
+    g_hw_smoke_rand_state = (g_hw_smoke_rand_state * 1664525UL) + 1013904223UL + salt;
+    return g_hw_smoke_rand_state;
+}
+
+static void hw_smoke_fill_random_bytes(uint8_t *buf, uint8_t len, uint32_t salt)
+{
+    uint8_t i;
+    uint32_t value = hw_smoke_rand_next(salt);
+
+    for (i = 0U; i < len; ++i)
+    {
+        if ((i & 0x03U) == 0U)
+        {
+            value = hw_smoke_rand_next((uint32_t)i + salt);
+        }
+        buf[i] = (uint8_t)(value >> ((i & 0x03U) * 8U));
+    }
+}
+
+static void hw_smoke_format_preview4(char *buf, size_t buf_size, const uint8_t *data)
+{
+    (void)snprintf(buf,
+                   buf_size,
+                   "%02X %02X %02X %02X",
+                   (unsigned int)data[0],
+                   (unsigned int)data[1],
+                   (unsigned int)data[2],
+                   (unsigned int)data[3]);
+}
+
+static void hw_smoke_prepare_spi_vectors(uint32_t now_ms)
+{
+    uint8_t option;
+
+    g_hw_smoke_spi_choice = 0U;
+    g_hw_smoke_spi_done = 0U;
+    g_hw_smoke_spi_addr = 0x1000UL + ((hw_smoke_rand_next(now_ms) % 8UL) * HW_SMOKE_SPI_STEP_ADDR);
+    memset(g_hw_smoke_spi_rx, 0, sizeof(g_hw_smoke_spi_rx));
+
+    for (option = 0U; option < HW_SMOKE_SPI_OPTION_COUNT; ++option)
+    {
+        hw_smoke_fill_random_bytes(g_hw_smoke_spi_tx[option], HW_SMOKE_SPI_DATA_LEN, now_ms + option);
+        debug_log_info("APP",
+                       "hw_smoke SPI opt%u addr=0x%04lX tx=%02X %02X %02X %02X %02X %02X %02X %02X",
+                       (unsigned int)(option + 1U),
+                       (unsigned long)g_hw_smoke_spi_addr,
+                       (unsigned int)g_hw_smoke_spi_tx[option][0],
+                       (unsigned int)g_hw_smoke_spi_tx[option][1],
+                       (unsigned int)g_hw_smoke_spi_tx[option][2],
+                       (unsigned int)g_hw_smoke_spi_tx[option][3],
+                       (unsigned int)g_hw_smoke_spi_tx[option][4],
+                       (unsigned int)g_hw_smoke_spi_tx[option][5],
+                       (unsigned int)g_hw_smoke_spi_tx[option][6],
+                       (unsigned int)g_hw_smoke_spi_tx[option][7]);
+    }
+}
 
 static void hw_smoke_show_lines(const char *l0,
                                 const char *l1,
                                 const char *l2,
                                 const char *l3)
 {
+    uint8_t guard = 0U;
+
     hw_oled_draw_text(0U, l0);
     hw_oled_draw_text(1U, l1);
     hw_oled_draw_text(2U, l2);
     hw_oled_draw_text(3U, l3);
     hw_oled_refresh();
+    while ((hw_oled_process() != 0) && (guard < 8U))
+    {
+        guard++;
+    }
+}
+
+static void hw_smoke_boot_stage(const char *line1, const char *line2)
+{
+    uint8_t guard = 0U;
+
+    hw_oled_draw_text(0U, "HW TEST BOOT");
+    hw_oled_draw_text(1U, line1);
+    hw_oled_draw_text(2U, line2);
+    hw_oled_draw_text(3U, "WAIT...");
+    hw_oled_refresh();
+    while ((hw_oled_process() != 0) && (guard < 8U))
+    {
+        guard++;
+    }
+}
+
+static void hw_smoke_refresh_blocking(void)
+{
+    uint8_t guard = 0U;
+
+    hw_oled_refresh();
+    while ((hw_oled_process() != 0) && (guard < 8U))
+    {
+        guard++;
+    }
 }
 
 static void hw_smoke_next_stage(hw_smoke_stage_t stage, uint32_t now_ms)
 {
+    debug_log_info("APP", "hw_smoke stage %s -> %s at %lums",
+                   hw_smoke_stage_to_str(g_hw_smoke_stage),
+                   hw_smoke_stage_to_str(stage),
+                   (unsigned long)now_ms);
     g_hw_smoke_stage = stage;
     g_hw_smoke_stage_started_ms = now_ms;
     g_hw_smoke_stage_entered = 0U;
@@ -129,6 +303,9 @@ static void hw_smoke_record_result(int pass)
 static void run_all_hw_driver_smoke_test_loop(void)
 {
     uint32_t now_ms = scheduler_now_ms();
+    uint8_t pressed_mask = hw_smoke_take_key_press_mask();
+    uint8_t raw_mask = g_hw_smoke_last_key_raw_mask;
+    uint8_t degraded_keys_ok = 0U;
     char line2[24];
     char line3[24];
 
@@ -138,27 +315,29 @@ static void run_all_hw_driver_smoke_test_loop(void)
         if (g_hw_smoke_stage_entered == 0U)
         {
             g_hw_smoke_stage_entered = 1U;
+            debug_log_info("APP", "hw_smoke enter DISPLAY");
             g_hw_test_phase = HW_DISPLAY_TEST_SOLID;
             g_hw_test_phase_started_ms = now_ms;
             g_hw_test_last_step_ms = 0U;
             g_hw_test_solid_idx = 0U;
             hw_smoke_show_lines("HW SMOKE: DISPLAY",
-                                "RUN PATTERN 8S",
+                                "RUN PATTERN 5S",
                                 "CHECK COLOR/MOVE",
                                 "NO GLITCH");
         }
 
         run_display_driver_hw_test_loop();
         (void)snprintf(line2,
-                   sizeof(line2),
-                   "T %lus/%lus",
-                   (unsigned long)((now_ms - g_hw_smoke_stage_started_ms) / 1000U),
-                   (unsigned long)(HW_SMOKE_DISPLAY_MS / 1000U));
+                       sizeof(line2),
+                       "T %lus/%lus",
+                       (unsigned long)((now_ms - g_hw_smoke_stage_started_ms) / 1000U),
+                       (unsigned long)(HW_SMOKE_DISPLAY_MS / 1000U));
         hw_oled_draw_text(2U, line2);
-        hw_oled_refresh();
+        hw_smoke_refresh_blocking();
         if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_DISPLAY_MS)
         {
             hw_smoke_record_result(1);
+            debug_log_info("APP", "hw_smoke DISPLAY pass");
             hw_oled_clear();
             hw_smoke_next_stage(HW_SMOKE_STAGE_KEYS, now_ms);
         }
@@ -169,226 +348,228 @@ static void run_all_hw_driver_smoke_test_loop(void)
         {
             g_hw_smoke_stage_entered = 1U;
             g_hw_smoke_key_seen_mask = 0U;
-            hw_smoke_show_lines("HW SMOKE: KEYS",
-                                "PRESS SET/UP/DN",
-                                "MASK 000",
-                                "REQ SET+DN");
+            g_hw_smoke_key_required_mask = HW_SMOKE_KEY_REQUIRED_MASK;
+            g_hw_smoke_key_stuck_mask = 0U;
+            g_hw_smoke_key_baseline_mask = hw_smoke_read_key_raw_mask();
+            g_hw_smoke_last_key_raw_mask = g_hw_smoke_key_baseline_mask;
+            raw_mask = g_hw_smoke_last_key_raw_mask;
+            pressed_mask = 0U;
+            g_hw_smoke_last_key_name = "NONE";
+            debug_log_info("APP", "hw_smoke enter KEYS require_mask=0x%02X",
+                           (unsigned int)HW_SMOKE_KEY_REQUIRED_MASK);
+            if (g_hw_smoke_key_baseline_mask != 0U)
+            {
+                debug_log_info("APP", "hw_smoke keys baseline=0x%02X",
+                               (unsigned int)g_hw_smoke_key_baseline_mask);
+            }
         }
 
-        if (hw_key_get_state(HW_KEY_SET))
+        if (((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_KEY_STUCK_MS) &&
+            (g_hw_smoke_key_baseline_mask != 0U) &&
+            (g_hw_smoke_key_stuck_mask == 0U))
         {
-            g_hw_smoke_key_seen_mask |= 0x01U;
-        }
-        if (hw_key_get_state(HW_KEY_UP))
-        {
-            g_hw_smoke_key_seen_mask |= 0x02U;
-        }
-        if (hw_key_get_state(HW_KEY_DOWN))
-        {
-            g_hw_smoke_key_seen_mask |= 0x04U;
+            g_hw_smoke_key_stuck_mask = (uint8_t)(raw_mask & g_hw_smoke_key_baseline_mask);
+            if (g_hw_smoke_key_stuck_mask != 0U)
+            {
+                g_hw_smoke_key_required_mask = (uint8_t)(HW_SMOKE_KEY_REQUIRED_MASK & (uint8_t)(~g_hw_smoke_key_stuck_mask));
+                debug_log_info("APP", "hw_smoke keys stuck=0x%02X req=0x%02X",
+                               (unsigned int)g_hw_smoke_key_stuck_mask,
+                               (unsigned int)g_hw_smoke_key_required_mask);
+            }
         }
 
+        if (pressed_mask != 0U)
+        {
+            g_hw_smoke_key_seen_mask |= pressed_mask;
+            g_hw_smoke_last_key_name = hw_smoke_key_name_from_mask(pressed_mask);
+            debug_log_info("APP", "hw_smoke key press=%s seen=0x%02X",
+                           g_hw_smoke_last_key_name,
+                           (unsigned int)g_hw_smoke_key_seen_mask);
+        }
+
+        degraded_keys_ok = (uint8_t)((g_hw_smoke_key_stuck_mask == 0x02U) &&
+                         ((g_hw_smoke_key_seen_mask & 0x01U) == 0U) &&
+                         ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_KEY_DEGRADED_MS));
+
+        hw_oled_draw_text(0U, "HW SMOKE: KEYS");
+        if (strcmp(g_hw_smoke_last_key_name, "NONE") == 0)
+        {
+            hw_oled_draw_text(1U, "LAST NONE");
+        }
+        else
+        {
+            char key_line[24];
+
+            (void)snprintf(key_line, sizeof(key_line), "LAST %s", g_hw_smoke_last_key_name);
+            hw_oled_draw_text(1U, key_line);
+        }
         (void)snprintf(line2,
                        sizeof(line2),
-                       "MASK %u%u%u",
+                       "RAW %u%u%u S%u%u%u",
+                       (raw_mask & 0x01U) ? 1U : 0U,
+                       (raw_mask & 0x02U) ? 1U : 0U,
+                       (raw_mask & 0x04U) ? 1U : 0U,
                        (g_hw_smoke_key_seen_mask & 0x01U) ? 1U : 0U,
                        (g_hw_smoke_key_seen_mask & 0x02U) ? 1U : 0U,
                        (g_hw_smoke_key_seen_mask & 0x04U) ? 1U : 0U);
         (void)snprintf(line3,
-                   sizeof(line3),
-                   "RAW S%u U%u D%u",
-                   hw_key_get_state(HW_KEY_SET) ? 1U : 0U,
-                   hw_key_get_state(HW_KEY_UP) ? 1U : 0U,
-                   hw_key_get_state(HW_KEY_DOWN) ? 1U : 0U);
+                       sizeof(line3),
+                       "%s",
+                       ((g_hw_smoke_key_seen_mask & g_hw_smoke_key_required_mask) == g_hw_smoke_key_required_mask) ? "SET NEXT" :
+                       (degraded_keys_ok != 0U) ? "UP BAD DN NEXT" :
+                       ((g_hw_smoke_key_stuck_mask & 0x02U) != 0U) ? "UP STUCK? PA0" :
+                       "PRESS ALL 3");
         hw_oled_draw_text(2U, line2);
         hw_oled_draw_text(3U, line3);
-        hw_oled_refresh();
+        hw_smoke_refresh_blocking();
 
-        if ((g_hw_smoke_key_seen_mask & HW_SMOKE_KEY_REQUIRED_MASK) == HW_SMOKE_KEY_REQUIRED_MASK)
+        if (((g_hw_smoke_key_seen_mask & g_hw_smoke_key_required_mask) == g_hw_smoke_key_required_mask) &&
+            ((pressed_mask & 0x01U) != 0U))
         {
             hw_smoke_record_result(1);
-            hw_smoke_next_stage(HW_SMOKE_STAGE_BUZZER, now_ms);
+            debug_log_info("APP", "hw_smoke KEYS pass mask=0x%02X",
+                           (unsigned int)g_hw_smoke_key_seen_mask);
+            g_hw_smoke_last_temp_log_ms = 0U;
+            hw_smoke_next_stage(HW_SMOKE_STAGE_TEMP, now_ms);
         }
-        else if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_KEY_TIMEOUT_MS)
+        else if ((degraded_keys_ok != 0U) && ((pressed_mask & 0x04U) != 0U))
         {
             hw_smoke_record_result(0);
-            hw_smoke_next_stage(HW_SMOKE_STAGE_BUZZER, now_ms);
-        }
-        break;
-
-    case HW_SMOKE_STAGE_BUZZER:
-        if (g_hw_smoke_stage_entered == 0U)
-        {
-            g_hw_smoke_stage_entered = 1U;
-            hw_buzzer_set(true);
-            hw_smoke_show_lines("HW SMOKE: BUZZER",
-                                "BUZZER ON 1.2S",
-                                "MANUAL CHECK",
-                                "LISTEN SOUND");
-        }
-
-        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_OBSERVE_MS)
-        {
-            hw_buzzer_set(false);
-            hw_smoke_record_result(1);
-            hw_smoke_next_stage(HW_SMOKE_STAGE_RELAY, now_ms);
-        }
-        break;
-
-    case HW_SMOKE_STAGE_RELAY:
-        if (g_hw_smoke_stage_entered == 0U)
-        {
-            g_hw_smoke_stage_entered = 1U;
-            hw_relay_set(true);
-            hw_smoke_show_lines("HW SMOKE: RELAY",
-                                "RELAY ON 1.2S",
-                                "MANUAL CHECK",
-                                "LISTEN CLICK");
-        }
-
-        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_OBSERVE_MS)
-        {
-            hw_relay_set(false);
-            hw_smoke_record_result(1);
-            hw_smoke_next_stage(HW_SMOKE_STAGE_UART, now_ms);
-        }
-        break;
-
-    case HW_SMOKE_STAGE_UART:
-        if (g_hw_smoke_stage_entered == 0U)
-        {
-            g_hw_smoke_stage_entered = 1U;
-            hw_uart_write("[HW_SMOKE] UART TX OK\r\n");
-            hw_uart_write("[HW_SMOKE] WAIT HOST ECHO OPTIONAL\r\n");
-            hw_smoke_record_result(1);
-            hw_smoke_show_lines("HW SMOKE: UART",
-                                "SEND TEXT FRAME",
-                                "CHECK SERIAL LOG",
-                                "TX OK;RX OPT");
-        }
-
-        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_STAGE_MSG_MS)
-        {
-            hw_smoke_next_stage(HW_SMOKE_STAGE_RTC, now_ms);
-        }
-        break;
-
-    case HW_SMOKE_STAGE_RTC:
-        if (g_hw_smoke_stage_entered == 0U)
-        {
-            uint16_t minutes = 0U;
-            int ok;
-
-            g_hw_smoke_stage_entered = 1U;
-            ok = hw_rtc_get_minutes_of_day(&minutes) ? 1 : 0;
-            hw_smoke_record_result(ok);
-            (void)snprintf(line2, sizeof(line2), "RTC %s", ok ? "PASS" : "FAIL");
-            (void)snprintf(line3,
-                           sizeof(line3),
-                           "MIN %u HH:%02u",
-                           (unsigned int)(minutes % 1440U),
-                           (unsigned int)((minutes / 60U) % 24U));
-            hw_smoke_show_lines("HW SMOKE: RTC",
-                                "READ MIN OF DAY",
-                                line2,
-                                line3);
-        }
-
-        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_STAGE_MSG_MS)
-        {
+            debug_log_info("APP", "hw_smoke KEYS degraded pass mask=0x%02X stuck=0x%02X",
+                           (unsigned int)g_hw_smoke_key_seen_mask,
+                           (unsigned int)g_hw_smoke_key_stuck_mask);
+            g_hw_smoke_last_temp_log_ms = 0U;
             hw_smoke_next_stage(HW_SMOKE_STAGE_TEMP, now_ms);
         }
         break;
 
     case HW_SMOKE_STAGE_TEMP:
+    {
+        float t0 = 0.0f;
+        float t1 = 0.0f;
+        float t2 = 0.0f;
+        int ok0;
+        int ok1;
+        int ok2;
+
         if (g_hw_smoke_stage_entered == 0U)
         {
-            float t0 = 0.0f;
-            float t1 = 0.0f;
-            float t2 = 0.0f;
-            uint8_t ok_count = 0U;
-            int ok0;
-            int ok1;
-            int ok2;
-
             g_hw_smoke_stage_entered = 1U;
+            debug_log_info("APP", "hw_smoke enter TEMP");
+            if (g_hw_smoke_temp_port_inited == 0U)
+            {
+                hw_temp_port_init();
+                g_hw_smoke_temp_port_inited = 1U;
+                debug_log_info("APP", "hw_smoke TEMP bus init done");
+            }
             ok0 = hw_temp_port_read_c(0U, &t0) ? 1 : 0;
             ok1 = hw_temp_port_read_c(1U, &t1) ? 1 : 0;
             ok2 = hw_temp_port_read_c(2U, &t2) ? 1 : 0;
-            if (ok0)
-            {
-                ok_count++;
-            }
-            if (ok1)
-            {
-                ok_count++;
-            }
-            if (ok2)
-            {
-                ok_count++;
-            }
-
-            hw_smoke_record_result(ok_count > 0U ? 1 : 0);
-            (void)snprintf(line2,
-                           sizeof(line2),
-                           "DS18B20 OK %u/3",
-                           (unsigned int)ok_count);
-            (void)snprintf(line3,
-                           sizeof(line3),
-                           "%s%.1f %s%.1f %s%.1f",
-                           ok0 ? "A" : "-", t0,
-                           ok1 ? "B" : "-", t1,
-                           ok2 ? "C" : "-", t2);
-            hw_smoke_show_lines("HW SMOKE: TEMP",
-                                "READ 3 SENSORS",
-                                line2,
-                                line3);
+            hw_smoke_record_result((ok0 || ok1 || ok2) ? 1 : 0);
         }
 
-        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_STAGE_MSG_MS)
+        ok0 = hw_temp_port_read_c(0U, &t0) ? 1 : 0;
+        ok1 = hw_temp_port_read_c(1U, &t1) ? 1 : 0;
+        ok2 = hw_temp_port_read_c(2U, &t2) ? 1 : 0;
+        hw_oled_draw_text(0U, "HW SMOKE: TEMP");
+        hw_oled_draw_text(1U, "LIVE CHANGE TEMP");
+        (void)snprintf(line2,
+                       sizeof(line2),
+                       "%s%.1f %s%.1f",
+                       ok0 ? "A" : "-", t0,
+                       ok1 ? "B" : "-", t1);
+        (void)snprintf(line3,
+                       sizeof(line3),
+                       "%s%.1f SET>NXT",
+                       ok2 ? "C" : "-", t2);
+        hw_oled_draw_text(2U, line2);
+        hw_oled_draw_text(3U, line3);
+        hw_smoke_refresh_blocking();
+
+        if ((now_ms - g_hw_smoke_last_temp_log_ms) >= HW_SMOKE_TEMP_LOG_MS)
         {
-            hw_smoke_next_stage(HW_SMOKE_STAGE_EEPROM, now_ms);
+            g_hw_smoke_last_temp_log_ms = now_ms;
+            debug_log_info("APP", "hw_smoke TEMP live t0=%.2f t1=%.2f t2=%.2f",
+                           t0,
+                           t1,
+                           t2);
+        }
+
+        if ((pressed_mask & 0x01U) != 0U)
+        {
+            debug_log_info("APP", "hw_smoke TEMP proceed by SET");
+            hw_smoke_next_stage(HW_SMOKE_STAGE_ACTUATORS, now_ms);
         }
         break;
+    }
 
-    case HW_SMOKE_STAGE_EEPROM:
+    case HW_SMOKE_STAGE_ACTUATORS:
         if (g_hw_smoke_stage_entered == 0U)
         {
-            static const uint8_t tx[8] = {0x5AU, 0xA5U, 0x11U, 0x22U, 0x33U, 0x44U, 0x55U, 0x66U};
-            uint8_t rx[8];
-            int ok = 0;
-            int wr_ok;
-            int rd_ok;
-
             g_hw_smoke_stage_entered = 1U;
-            wr_ok = hw_eeprom_write(0x20U, tx, 8U) ? 1 : 0;
-            rd_ok = hw_eeprom_read(0x20U, rx, 8U) ? 1 : 0;
-            if (wr_ok && rd_ok &&
-                (memcmp(tx, rx, 8U) == 0))
-            {
-                ok = 1;
-            }
-
-            hw_smoke_record_result(ok);
-            (void)snprintf(line2,
-                           sizeof(line2),
-                           "WR%d RD%d CMP%d",
-                           wr_ok,
-                           rd_ok,
-                           ok);
-            (void)snprintf(line3,
-                           sizeof(line3),
-                           "R0=%02X R1=%02X",
-                           (unsigned int)rx[0],
-                           (unsigned int)rx[1]);
-            hw_smoke_show_lines("HW SMOKE: EEPROM",
-                                "WRITE/READ 8B",
-                                line2,
-                                line3);
+            g_hw_smoke_buzzer_on = 0U;
+            g_hw_smoke_relay_on = 0U;
+            g_hw_smoke_buzzer_tested = 0U;
+            g_hw_smoke_relay_tested = 0U;
+            hw_buzzer_set(false);
+            hw_relay_set(false);
+            debug_log_info("APP", "hw_smoke enter ACTUATORS");
         }
 
-        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_STAGE_MSG_MS)
+        if ((pressed_mask & 0x01U) != 0U)
         {
+            g_hw_smoke_buzzer_on = (uint8_t)(g_hw_smoke_buzzer_on == 0U ? 1U : 0U);
+            g_hw_smoke_buzzer_tested = 1U;
+            hw_buzzer_set(g_hw_smoke_buzzer_on != 0U);
+            debug_log_info("APP", "hw_smoke ACT buzzer=%u", (unsigned int)g_hw_smoke_buzzer_on);
+        }
+        if (((g_hw_smoke_key_stuck_mask & 0x02U) == 0U) && ((pressed_mask & 0x02U) != 0U))
+        {
+            g_hw_smoke_relay_on = (uint8_t)(g_hw_smoke_relay_on == 0U ? 1U : 0U);
+            g_hw_smoke_relay_tested = 1U;
+            hw_relay_set(g_hw_smoke_relay_on != 0U);
+            debug_log_info("APP", "hw_smoke ACT relay=%u led1=%u",
+                           (unsigned int)g_hw_smoke_relay_on,
+                           (unsigned int)g_hw_smoke_relay_on);
+        }
+        if (((g_hw_smoke_key_stuck_mask & 0x02U) != 0U) && ((pressed_mask & 0x04U) != 0U) &&
+            ((g_hw_smoke_buzzer_tested == 0U) || (g_hw_smoke_relay_tested == 0U)))
+        {
+            g_hw_smoke_relay_on = (uint8_t)(g_hw_smoke_relay_on == 0U ? 1U : 0U);
+            g_hw_smoke_relay_tested = 1U;
+            hw_relay_set(g_hw_smoke_relay_on != 0U);
+            debug_log_info("APP", "hw_smoke ACT relay=%u led1=%u degraded=1",
+                           (unsigned int)g_hw_smoke_relay_on,
+                           (unsigned int)g_hw_smoke_relay_on);
+        }
+
+        hw_oled_draw_text(0U, "HW SMOKE: ACT");
+        hw_oled_draw_text(1U,
+                          ((g_hw_smoke_key_stuck_mask & 0x02U) != 0U) ? "SET BUZ DN RLY" : "SET BUZ UP RLY");
+        (void)snprintf(line2,
+                       sizeof(line2),
+                       "BZ%u RY%u LED1%u",
+                       (unsigned int)g_hw_smoke_buzzer_on,
+                       (unsigned int)g_hw_smoke_relay_on,
+                       (unsigned int)g_hw_smoke_relay_on);
+        hw_oled_draw_text(2U, line2);
+        hw_oled_draw_text(3U,
+                          (((g_hw_smoke_key_stuck_mask & 0x02U) != 0U) &&
+                           ((g_hw_smoke_buzzer_tested == 0U) || (g_hw_smoke_relay_tested == 0U))) ?
+                              "TEST BUZ+RLY" :
+                              "DN NEXT");
+        hw_smoke_refresh_blocking();
+
+        if (((pressed_mask & 0x04U) != 0U) &&
+            (((g_hw_smoke_key_stuck_mask & 0x02U) == 0U) ||
+             ((g_hw_smoke_buzzer_tested != 0U) && (g_hw_smoke_relay_tested != 0U))))
+        {
+            hw_buzzer_set(false);
+            hw_relay_set(false);
+            g_hw_smoke_buzzer_on = 0U;
+            g_hw_smoke_relay_on = 0U;
+            hw_smoke_record_result(1);
+            hw_smoke_prepare_spi_vectors(now_ms);
             hw_smoke_next_stage(HW_SMOKE_STAGE_SPIFLASH, now_ms);
         }
         break;
@@ -396,42 +577,101 @@ static void run_all_hw_driver_smoke_test_loop(void)
     case HW_SMOKE_STAGE_SPIFLASH:
         if (g_hw_smoke_stage_entered == 0U)
         {
-            static const uint8_t tx[8] = {0xC3U, 0x3CU, 0x10U, 0x20U, 0x30U, 0x40U, 0x50U, 0x60U};
-            uint8_t rx[8];
-            int ok = 0;
-            int wr_ok;
-            int rd_ok;
-
             g_hw_smoke_stage_entered = 1U;
-            wr_ok = hw_spiflash_write(0x1000UL, tx, 8UL) ? 1 : 0;
-            rd_ok = hw_spiflash_read(0x1000UL, rx, 8UL) ? 1 : 0;
-            if (wr_ok && rd_ok &&
-                (memcmp(tx, rx, 8U) == 0))
-            {
-                ok = 1;
-            }
-
-            hw_smoke_record_result(ok);
-            (void)snprintf(line2,
-                           sizeof(line2),
-                           "WR%d RD%d CMP%d",
-                           wr_ok,
-                           rd_ok,
-                           ok);
-            (void)snprintf(line3,
-                           sizeof(line3),
-                           "R0=%02X R1=%02X",
-                           (unsigned int)rx[0],
-                           (unsigned int)rx[1]);
-            hw_smoke_show_lines("HW SMOKE: FLASH",
-                                "WRITE/READ 8B",
-                                line2,
-                                line3);
+            debug_log_info("APP", "hw_smoke enter SPIFLASH addr=0x%04lX",
+                           (unsigned long)g_hw_smoke_spi_addr);
         }
 
-        if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_STAGE_MSG_MS)
+        if ((pressed_mask & 0x02U) != 0U)
         {
-            hw_smoke_next_stage(HW_SMOKE_STAGE_DONE, now_ms);
+            if ((g_hw_smoke_key_stuck_mask & 0x02U) == 0U)
+            {
+                g_hw_smoke_spi_choice = (uint8_t)((g_hw_smoke_spi_choice + 1U) % HW_SMOKE_SPI_OPTION_COUNT);
+                g_hw_smoke_spi_done = 0U;
+                debug_log_info("APP", "hw_smoke SPI select=%u",
+                               (unsigned int)(g_hw_smoke_spi_choice + 1U));
+            }
+        }
+        if ((pressed_mask & 0x04U) != 0U)
+        {
+            if ((g_hw_smoke_key_stuck_mask & 0x02U) == 0U)
+            {
+                hw_smoke_prepare_spi_vectors(now_ms);
+                debug_log_info("APP", "hw_smoke SPI reroll");
+            }
+            else
+            {
+                g_hw_smoke_spi_choice = (uint8_t)((g_hw_smoke_spi_choice + 1U) % HW_SMOKE_SPI_OPTION_COUNT);
+                g_hw_smoke_spi_done = 0U;
+                debug_log_info("APP", "hw_smoke SPI select=%u degraded=1",
+                               (unsigned int)(g_hw_smoke_spi_choice + 1U));
+            }
+        }
+        if ((pressed_mask & 0x01U) != 0U)
+        {
+            int wr_ok = hw_spiflash_write(g_hw_smoke_spi_addr,
+                                          g_hw_smoke_spi_tx[g_hw_smoke_spi_choice],
+                                          HW_SMOKE_SPI_DATA_LEN) ? 1 : 0;
+            int rd_ok = hw_spiflash_read(g_hw_smoke_spi_addr,
+                                         g_hw_smoke_spi_rx,
+                                         HW_SMOKE_SPI_DATA_LEN) ? 1 : 0;
+            int cmp_ok = (wr_ok && rd_ok &&
+                          (memcmp(g_hw_smoke_spi_tx[g_hw_smoke_spi_choice],
+                                  g_hw_smoke_spi_rx,
+                                  HW_SMOKE_SPI_DATA_LEN) == 0)) ? 1 : 0;
+
+            g_hw_smoke_spi_done = 1U;
+            hw_smoke_record_result(cmp_ok);
+            debug_log_info("APP",
+                           "hw_smoke SPIFLASH sel=%u addr=0x%04lX wr=%d rd=%d cmp=%d rx=%02X %02X %02X %02X %02X %02X %02X %02X",
+                           (unsigned int)(g_hw_smoke_spi_choice + 1U),
+                           (unsigned long)g_hw_smoke_spi_addr,
+                           wr_ok,
+                           rd_ok,
+                           cmp_ok,
+                           (unsigned int)g_hw_smoke_spi_rx[0],
+                           (unsigned int)g_hw_smoke_spi_rx[1],
+                           (unsigned int)g_hw_smoke_spi_rx[2],
+                           (unsigned int)g_hw_smoke_spi_rx[3],
+                           (unsigned int)g_hw_smoke_spi_rx[4],
+                           (unsigned int)g_hw_smoke_spi_rx[5],
+                           (unsigned int)g_hw_smoke_spi_rx[6],
+                           (unsigned int)g_hw_smoke_spi_rx[7]);
+            if (cmp_ok != 0)
+            {
+                hw_smoke_next_stage(HW_SMOKE_STAGE_DONE, now_ms);
+            }
+        }
+
+        {
+            char preview[24];
+
+            hw_smoke_format_preview4(preview, sizeof(preview), g_hw_smoke_spi_tx[g_hw_smoke_spi_choice]);
+            (void)snprintf(line2,
+                           sizeof(line2),
+                           "S%u @%04lX",
+                           (unsigned int)(g_hw_smoke_spi_choice + 1U),
+                           (unsigned long)g_hw_smoke_spi_addr);
+            if (g_hw_smoke_spi_done != 0U)
+            {
+                char rx_preview[24];
+
+                hw_smoke_format_preview4(rx_preview, sizeof(rx_preview), g_hw_smoke_spi_rx);
+                (void)snprintf(line3, sizeof(line3), "RX %s", rx_preview);
+            }
+            else
+            {
+                (void)snprintf(line3,
+                               sizeof(line3),
+                               "%s",
+                               ((g_hw_smoke_key_stuck_mask & 0x02U) != 0U) ? "SET WR DN SEL" : "SET WR DN NEW");
+            }
+
+            hw_oled_draw_text(0U, "HW SMOKE: SPI");
+            hw_oled_draw_text(1U, line2);
+            hw_oled_draw_text(2U, preview);
+            hw_oled_draw_text(3U, line3);
+            hw_smoke_refresh_blocking();
         }
         break;
 
@@ -449,6 +689,14 @@ static void run_all_hw_driver_smoke_test_loop(void)
                             "CHECK RESULT",
                             line2,
                             line3);
+        if (g_hw_smoke_stage_entered == 0U)
+        {
+            g_hw_smoke_stage_entered = 1U;
+            debug_log_info("APP", "hw_smoke DONE pass=%u fail=%u key_mask=0x%02X",
+                           (unsigned int)g_hw_smoke_pass_count,
+                           (unsigned int)g_hw_smoke_fail_count,
+                           (unsigned int)g_hw_smoke_key_seen_mask);
+        }
         break;
 
     default:
@@ -809,20 +1057,33 @@ static void run_display_driver_hw_test_loop(void)
 void app_main_init(void)
 {
 #if (APP_HW_DRIVER_TEST_DISPLAY == 1U)
+    uint16_t rtc_minutes = 0U;
+    bool rtc_ready = false;
+
     scheduler_init();
     debug_log_init();
     hw_oled_init();
     hw_oled_clear();
+    hw_smoke_boot_stage("OLED OK", "KEY INIT");
     hw_key_init();
+    hw_smoke_boot_stage("KEY OK", "BUZZER INIT");
     hw_buzzer_init();
     hw_buzzer_set(false);
+    hw_smoke_boot_stage("BUZZER OK", "RELAY INIT");
     hw_relay_init();
     hw_relay_set(false);
+    hw_smoke_boot_stage("RELAY OK", "UART INIT");
     hw_uart_init();
+    hw_smoke_boot_stage("UART OK", "RTC INIT");
     hw_rtc_init();
+    rtc_ready = hw_rtc_get_minutes_of_day(&rtc_minutes);
+    (void)rtc_minutes;
+    hw_smoke_boot_stage(rtc_ready ? "RTC OK" : "RTC FAIL", "EEPROM INIT");
     hw_eeprom_init();
+    hw_smoke_boot_stage("EEPROM OK", "FLASH INIT");
     hw_spiflash_init();
-    hw_temp_port_init();
+    hw_smoke_boot_stage("FLASH OK", "SMOKE TEST");
+    g_hw_smoke_temp_port_inited = 0U;
     debug_log_info("APP", "debug hw smoke test mode");
     g_hw_test_phase = HW_DISPLAY_TEST_SOLID;
     g_hw_test_phase_started_ms = scheduler_now_ms();
@@ -834,6 +1095,16 @@ void app_main_init(void)
     g_hw_smoke_key_seen_mask = 0U;
     g_hw_smoke_pass_count = 0U;
     g_hw_smoke_fail_count = 0U;
+    g_hw_smoke_last_key_raw_mask = 0U;
+    g_hw_smoke_last_key_name = "NONE";
+    g_hw_smoke_last_temp_log_ms = 0U;
+    g_hw_smoke_spi_choice = 0U;
+    g_hw_smoke_spi_addr = 0x1000UL;
+    g_hw_smoke_spi_done = 0U;
+    g_hw_smoke_buzzer_on = 0U;
+    g_hw_smoke_relay_on = 0U;
+    g_hw_smoke_temp_port_inited = 0U;
+    g_hw_smoke_rand_state ^= scheduler_now_ms();
     g_hw_driver_test_active = true;
     return;
 #endif
