@@ -79,6 +79,21 @@ Treat this as a mandatory, highest-priority hardware debugging and validation ru
 8. If a debug session is explicitly required for download or investigation, treat exiting debug mode as a required cleanup step before considering the operation complete.
 9. Firmware flashing is mandatory via Keil MDK tooling (`D:\keil MDK\UV4\UV4.exe`) and must not be replaced by non-Keil flashing flows (such as pyOCD, J-Link Commander, ST-LINK Utility, OpenOCD, or custom programmers) unless the user explicitly overrides this rule.
 10. For flash operations, the default required path is Keil flash-only download; entering Keil debug mode is allowed only when explicitly requested by the user and must be exited as a required cleanup step.
+11. All driver tests must include user-interaction steps whenever a real user action can validate the driver more directly, such as button presses, observing relay clicks, listening for buzzer output, checking display changes, or confirming serial output.
+12. All driver tests must include randomized input data, randomized payloads, randomized addresses, randomized timing variation, or randomized test ordering whenever the driver interface allows it; avoid relying only on a single fixed pattern unless hardware constraints make randomization impossible.
+13. Driver tests are not considered valid acceptance evidence unless they are executed on the physical board. Host-side mocks, simulations, and dry runs may support debugging, but they do not satisfy driver-test completion.
+14. If random-data execution or user-interaction validation is skipped for a driver test, the task must be treated as incomplete unless the user explicitly approves that limitation.
+
+## Board Profile Rule
+Treat this as the mandatory board-baseline rule for this repository.
+
+1. Default board profile is MiniSTM32 v1.9.
+2. Board reference artifacts are [docs/bored/mini STM32 BOARD v1.9.jpg](docs/bored/mini%20STM32%20BOARD%20v1.9.jpg) and [docs/bored/MiniSTM32 V3 IO引脚分配表.md](docs/bored/MiniSTM32%20V3%20IO引脚分配表.md).
+3. Key mapping baseline for this project is SET=PA13, UP=PA0, DOWN=PA15; do not change without explicit user approval.
+4. PA13 is a SWD/JTAG multiplexed pin. If used as GPIO input, SWJ remap implications must be handled explicitly and called out in delivery notes.
+5. PA15 is JTAG-multiplexed and shared with on-board KEY1/PS_CLK behavior; JTAG remap implications must be handled explicitly when used as GPIO.
+6. PA0 may conflict with DS18B20 jumper routing (board-level multiplexing); any UP-key failure analysis must check this first.
+7. Keep implementation pin maps aligned with BSP sources and update this rule in the same task whenever pin assignments change.
 
 ## LCD UI Design Authority
 Treat [docs/issue/lcd-ui-preview.html](docs/issue/lcd-ui-preview.html) as the authoritative LCD visual design document for all TFT/LCD UI work.

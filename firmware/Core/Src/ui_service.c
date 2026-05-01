@@ -31,6 +31,7 @@ typedef struct
         int prev_pressed;
         unsigned int hold_ticks;
         int long_fired;
+        int short_fired;
         unsigned int repeat_ticks;
     } key_track[HW_KEY_COUNT];
     app_mode_t last_mode;
@@ -296,11 +297,32 @@ static void poll_keys_to_events(void)
                 g_ui.key_track[i].prev_pressed = 1;
                 g_ui.key_track[i].hold_ticks = 1U;
                 g_ui.key_track[i].long_fired = 0;
+                g_ui.key_track[i].short_fired = 0;
                 g_ui.key_track[i].repeat_ticks = 0U;
             }
             else
             {
                 g_ui.key_track[i].hold_ticks++;
+            }
+
+            /* Fallback for noisy/sticky lines: emit one short-key event on hold. */
+            if ((!g_ui.key_track[i].short_fired) && (g_ui.key_track[i].hold_ticks >= 3U))
+            {
+                if (i == (unsigned int)HW_KEY_SET)
+                {
+                    (void)queue_push(UI_KEY_SET);
+                    g_ui.key_track[i].short_fired = 1;
+                }
+                else if (i == (unsigned int)HW_KEY_UP)
+                {
+                    (void)queue_push(UI_KEY_UP);
+                    g_ui.key_track[i].short_fired = 1;
+                }
+                else if (i == (unsigned int)HW_KEY_DOWN)
+                {
+                    (void)queue_push(UI_KEY_DOWN);
+                    g_ui.key_track[i].short_fired = 1;
+                }
             }
 
             if (i == (unsigned int)HW_KEY_SET)
@@ -348,18 +370,21 @@ static void poll_keys_to_events(void)
             {
                 if (i == (unsigned int)HW_KEY_SET)
                 {
-                    if (!g_ui.key_track[i].long_fired)
+                    if ((!g_ui.key_track[i].long_fired) && (!g_ui.key_track[i].short_fired))
                     {
                         (void)queue_push(UI_KEY_SET);
                     }
                 }
                 else if (i == (unsigned int)HW_KEY_UP)
                 {
-                    (void)queue_push(UI_KEY_UP);
+                    if (!g_ui.key_track[i].short_fired)
+                    {
+                        (void)queue_push(UI_KEY_UP);
+                    }
                 }
                 else if (i == (unsigned int)HW_KEY_DOWN)
                 {
-                    if (!g_ui.key_track[i].long_fired)
+                    if ((!g_ui.key_track[i].long_fired) && (!g_ui.key_track[i].short_fired))
                     {
                         (void)queue_push(UI_KEY_DOWN);
                     }
@@ -372,6 +397,7 @@ static void poll_keys_to_events(void)
                 g_ui.key_track[i].prev_pressed = 0;
                 g_ui.key_track[i].hold_ticks = 0U;
                 g_ui.key_track[i].long_fired = 0;
+                g_ui.key_track[i].short_fired = 0;
                 g_ui.key_track[i].repeat_ticks = 0U;
             }
         }
@@ -938,6 +964,7 @@ void ui_service_init(void)
             g_ui.key_track[i].prev_pressed = 0;
             g_ui.key_track[i].hold_ticks = 0U;
             g_ui.key_track[i].long_fired = 0;
+            g_ui.key_track[i].short_fired = 0;
             g_ui.key_track[i].repeat_ticks = 0U;
         }
     }

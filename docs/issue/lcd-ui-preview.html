@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WaterTemp LCD UI Preview</title>
+  <title>水温控制界面预览</title>
   <style>
     :root {
       --bg: #0d1117;
@@ -416,162 +416,273 @@
       border-radius: 999px;
       background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), var(--accent), var(--warm));
     }
+
+    .sensor-strip {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      top: 196px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .sensor-item {
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 7px 6px;
+      text-align: center;
+    }
+
+    .sensor-item .name {
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .sensor-item .value {
+      margin-top: 4px;
+      font-size: 16px;
+      line-height: 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .hint-symbol {
+      position: absolute;
+      right: 22px;
+      bottom: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 13px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .kv-box {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      top: 102px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 10px 12px;
+    }
+
+    .kv-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 5px 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+    }
+
+    .kv-line:last-child {
+      border-bottom: 0;
+    }
+
+    .kv-k {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .kv-v {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <section class="hero">
       <div>
-        <h1>LCD 页面视觉定稿预览</h1>
-        <p>按 240 × 320 实机尺寸绘制，每张图对应一个固件页面，先定设计再落代码。</p>
+        <h1>液晶页面视觉定稿预览</h1>
+        <p>按二百四十乘三百二十实机尺寸绘制，每张图对应一个固件页面，先定设计再落代码。</p>
       </div>
       <div class="badge-row">
-        <span class="badge">240x320</span>
-        <span class="badge">dark only</span>
-        <span class="badge">low memory</span>
-        <span class="badge">large numerals</span>
+        <span class="badge">二百四十乘三百二十</span>
+        <span class="badge">三探头测温</span>
+        <span class="badge">安全优先</span>
+        <span class="badge">低内存占用</span>
+        <span class="badge">大字号读数</span>
       </div>
     </section>
 
     <section class="grid">
       <article class="card">
-        <h2>启动页 Splash</h2>
-        <p>中心品牌构图，避免杂讯，开机一眼能识别设备状态。</p>
+        <h2>启动页</h2>
+        <p>开机 1~3 秒显示品牌与系统身份，随后进入自检结果页。</p>
         <div class="device">
           <div class="screen scanlines">
             <div class="center-stack">
-              <div class="brand">TEMP</div>
-              <div class="brand warm">CTRL</div>
+              <div class="brand">水温</div>
+              <div class="brand warm">控制</div>
               <div class="bar"></div>
-              <div class="subbrand">STM32 WATER CONTROL</div>
+              <div class="subbrand">固定容积三点测温</div>
             </div>
           </div>
         </div>
       </article>
 
       <article class="card">
-        <h2>首页 Home</h2>
-        <p>只保留一个主温度，一个设定值，一条底部状态，首页不承担参数阅读任务。</p>
+        <h2>首页</h2>
+        <p>首页仅保留主温度、目标值和运行状态，三点温度移至详情页查看。</p>
         <div class="device">
           <div class="screen scanlines">
-            <div class="big-label">Current Temp</div>
-            <div class="chip">Auto</div>
-            <div class="big-temp">62.5<span class="unit">C</span></div>
-            <div class="divider"></div>
-            <div class="row" style="top: 198px;">
-              <span class="k">Set</span>
-              <span class="v good">65.0C</span>
+            <div class="big-label">融合温度</div>
+            <div class="chip">加热中</div>
+            <div class="big-temp">58.2<span class="unit">度</span></div>
+            <div class="divider" style="top: 186px;"></div>
+            <div class="row" style="top: 196px;">
+              <span class="k">目标</span>
+              <span class="v good">60.0度</span>
             </div>
-            <div class="footer-note">Heater On</div>
-            <div class="footer-sub">Stable control / no alarm</div>
+            <div class="footer-note" style="bottom: 56px;">加热开启 / 稳定运行</div>
+            <div class="footer-sub" style="bottom: 36px;">安全余量 1.0度</div>
+            <div class="hint-symbol">◀ ▶</div>
           </div>
         </div>
       </article>
 
       <article class="card">
-        <h2>设定温度 Set Temp</h2>
-        <p>单卡片大值，进入页面就知道当前正在调什么，不显示无关信息。</p>
+        <h2>设定温度</h2>
+        <p>只保留目标温度编辑，附带当前融合温度与状态提示，避免误调。</p>
         <div class="device">
           <div class="screen scanlines">
-            <div class="shell-title">Set Temp</div>
-            <div class="shell-sub">Auto Mode</div>
+            <div class="shell-title">设定温度</div>
+            <div class="shell-sub">步进零点五度</div>
             <div class="shell-rule"></div>
             <div class="value-card">
-              <div class="card-label">Setpoint</div>
-              <div class="card-value good">65.0C</div>
+              <div class="card-label">目标值</div>
+              <div class="card-value good">60.0度</div>
             </div>
-            <div class="status-line" style="top: 246px;">CTRL 62.5C</div>
-            <div class="status-line muted" style="top: 272px;">SET TO EDIT</div>
+            <div class="status-line" style="top: 242px;">当前融合58.2度</div>
+            <div class="status-line muted" style="top: 264px;">设定保存 / 长按取消</div>
+            <div class="hint-symbol">OK ⤒</div>
           </div>
         </div>
       </article>
 
       <article class="card">
-        <h2>PID 页面 PID</h2>
-        <p>一次只展示一个字段，靠页面切换或字段切换，不在同屏塞 Kp/Ki/Kd 三块。</p>
+        <h2>控温参数快捷档</h2>
+        <p>面向用户只暴露档位，参数细节收敛到维护层，降低误操作风险。</p>
         <div class="device">
           <div class="screen scanlines">
-            <div class="shell-title">PID</div>
-            <div class="shell-sub">Field 1 / 3</div>
+            <div class="shell-title">参数档位</div>
+            <div class="shell-sub">当前第二档 共三档</div>
             <div class="shell-rule"></div>
-            <div class="value-card">
-              <div class="card-label">KP</div>
-              <div class="card-value accent">8.5</div>
+            <div class="value-card" style="height: 96px;">
+              <div class="card-label">当前档位</div>
+              <div class="card-value accent">平衡档</div>
             </div>
-            <div class="status-line" style="top: 246px;">FIELD 1/3</div>
-            <div class="status-line muted" style="top: 272px;">SET NEXT / LONG SET EXIT</div>
+            <div class="status-line" style="top: 234px;">快热 / 平衡 / 保温</div>
+            <div class="status-line muted" style="top: 258px;">设定切换 / 长按退出</div>
+            <div class="hint-symbol">OK ◀</div>
           </div>
         </div>
       </article>
 
       <article class="card">
-        <h2>报警阈值 Alarm</h2>
-        <p>报警页需要明显风险色，但只在主值和状态位使用，不做满屏红色污染。</p>
+        <h2>运行详情</h2>
+        <p>详情页承载三点温度和关键运行值，首页不再堆叠显示。</p>
         <div class="device">
           <div class="screen scanlines">
-            <div class="shell-title">Alarm</div>
-            <div class="shell-sub">Safety Limit</div>
+            <div class="shell-title">运行详情</div>
+            <div class="shell-sub">三点温度与控制</div>
             <div class="shell-rule"></div>
-            <div class="value-card">
-              <div class="card-label">Alarm Limit</div>
-              <div class="card-value alert">85.0C</div>
+            <div class="kv-box">
+              <div class="kv-line"><span class="kv-k">上中下</span><span class="kv-v">59.0/58.4/57.2</span></div>
+              <div class="kv-line"><span class="kv-k">控制输出</span><span class="kv-v">42%</span></div>
+              <div class="kv-line"><span class="kv-k">安全最高</span><span class="kv-v">59.0度</span></div>
             </div>
-            <div class="status-line alert" style="top: 246px;">ALARM READY</div>
-            <div class="status-line muted" style="top: 272px;">SET TO EDIT</div>
+            <div class="status-line" style="top: 246px;">目标60.0度 / 融合58.2度</div>
+            <div class="status-line muted" style="top: 268px;">三点温度正常</div>
+            <div class="hint-symbol">◀ ▶</div>
           </div>
         </div>
       </article>
 
       <article class="card">
-        <h2>定时窗口 Schedule</h2>
-        <p>主卡片只显示生效窗口，下方再补一个当前时间和加热许可状态。</p>
+        <h2>超温报警</h2>
+        <p>异常态用高对比提醒，明确“为什么停热”和“如何恢复”。</p>
         <div class="device">
           <div class="screen scanlines">
-            <div class="shell-title">Schedule</div>
-            <div class="shell-sub">Window On</div>
+            <div class="shell-title alert">超温报警</div>
+            <div class="shell-sub">温度超过阈值</div>
+            <div class="shell-rule" style="background: linear-gradient(90deg, var(--alert), rgba(255, 95, 87, 0.1));"></div>
+            <div class="value-card" style="height: 96px; border-color: rgba(255, 95, 87, 0.45);">
+              <div class="card-label">安全最高</div>
+              <div class="card-value alert">61.4度</div>
+            </div>
+            <div class="status-line alert" style="top: 240px;">已强制停止加热</div>
+            <div class="status-line muted" style="top: 264px;">恢复阈值58.0度 持续60秒</div>
+            <div class="hint-symbol">OK</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>探头异常</h2>
+        <p>单探头异常进入降级模式，页面提示限制条件和建议操作。</p>
+        <div class="device">
+          <div class="screen scanlines">
+            <div class="shell-title">探头故障</div>
+            <div class="shell-sub">降级运行模式</div>
+            <div class="shell-rule"></div>
+            <div class="kv-box">
+              <div class="kv-line"><span class="kv-k">故障项</span><span class="kv-v alert">下层探头离线</span></div>
+              <div class="kv-line"><span class="kv-k">运行模式</span><span class="kv-v warm">降级运行</span></div>
+              <div class="kv-line"><span class="kv-k">输出上限</span><span class="kv-v">55%</span></div>
+            </div>
+            <div class="status-line" style="top: 246px;">加热已受限 / 请检查连线</div>
+            <div class="status-line muted" style="top: 268px;">每5秒自动重试</div>
+            <div class="hint-symbol">OK</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>自检结果页</h2>
+        <p>承接启动页，明确系统是否可运行，并给出限制项和下一步动作。</p>
+        <div class="device">
+          <div class="screen scanlines">
+            <div class="shell-title">上电自检</div>
+            <div class="shell-sub">启动检查结果</div>
+            <div class="shell-rule"></div>
+            <div class="kv-box">
+              <div class="kv-line"><span class="kv-k">参数区</span><span class="kv-v good">校验通过</span></div>
+              <div class="kv-line"><span class="kv-k">温度探头</span><span class="kv-v">2路可用</span></div>
+              <div class="kv-line"><span class="kv-k">运行结论</span><span class="kv-v warm">降级运行</span></div>
+            </div>
+            <div class="status-line" style="top: 246px;">限制 预约功能已禁用</div>
+            <div class="status-line muted" style="top: 268px;">检查结束后自动进入首页</div>
+            <div class="hint-symbol">OK</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>导出页</h2>
+        <p>日志页突出记录规模、导出命令和采样周期，方便追溯问题。</p>
+        <div class="device">
+          <div class="screen scanlines">
+            <div class="shell-title">日志导出</div>
+            <div class="shell-sub">串口输出</div>
             <div class="shell-rule"></div>
             <div class="value-card tall" style="height: 88px;">
-              <div class="card-label">Active Window</div>
-              <div class="card-value medium accent">06:30-08:00</div>
-            </div>
-            <div class="status-line" style="top: 234px;">NOW 07:12  NEXT 08:00</div>
-            <div class="status-line muted" style="top: 260px;">HEAT PERMITTED</div>
-          </div>
-        </div>
-      </article>
-
-      <article class="card">
-        <h2>导出页 Export</h2>
-        <p>导出页只讲三件事：有多少日志、采样周期是多少、怎么导出。</p>
-        <div class="device">
-          <div class="screen scanlines">
-            <div class="shell-title">Export</div>
-            <div class="shell-sub">UART Output</div>
-            <div class="shell-rule"></div>
-            <div class="value-card tall" style="height: 88px;">
-              <div class="card-label">Log Count</div>
+              <div class="card-label">日志条数</div>
               <div class="card-value good">128</div>
             </div>
-            <div class="status-line" style="top: 234px;">PERIOD 5S</div>
-            <div class="status-line muted" style="top: 260px;">UART CMD LOG_EXPORT</div>
-          </div>
-        </div>
-      </article>
-
-      <article class="card">
-        <h2>系统信息 Info</h2>
-        <p>系统页不再堆说明文案，只保留配置身份和一个关键操作提示。</p>
-        <div class="device">
-          <div class="screen scanlines">
-            <div class="shell-title">Info</div>
-            <div class="shell-sub">Device Profile</div>
-            <div class="shell-rule"></div>
-            <div class="value-card tall" style="height: 88px;">
-              <div class="card-label">Profile</div>
-              <div class="card-value medium accent">TEMP CTRL</div>
-            </div>
-            <div class="status-line good" style="top: 234px;">EEPROM OK / RTC OK</div>
-            <div class="status-line muted" style="top: 260px;">LONG SET TO RESET</div>
+            <div class="status-line" style="top: 246px;">记录周期5秒</div>
+            <div class="status-line muted" style="top: 268px;">串口命令 日志导出</div>
+            <div class="hint-symbol">OK ⤓</div>
           </div>
         </div>
       </article>

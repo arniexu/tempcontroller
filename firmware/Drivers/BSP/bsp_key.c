@@ -15,7 +15,7 @@ static GPIO_TypeDef *key_gpio_port(bsp_key_id_t key)
     switch (key)
     {
     case BSP_KEY_SET:
-        return GPIOC;
+        return GPIOA;
     case BSP_KEY_UP:
         return GPIOA;
     case BSP_KEY_DOWN:
@@ -30,7 +30,7 @@ static uint16_t key_to_pin(bsp_key_id_t key)
     switch (key)
     {
     case BSP_KEY_SET:
-        return GPIO_Pin_5;
+        return GPIO_Pin_13;
     case BSP_KEY_UP:
         return GPIO_Pin_0;
     case BSP_KEY_DOWN:
@@ -46,18 +46,14 @@ void bsp_key_init(void)
 #if defined(USE_STDPERIPH_DRIVER)
     GPIO_InitTypeDef gpio;
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO, ENABLE);
-    GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO, ENABLE);
+    /* PA13 is SWDIO by default; disable SWJ to use it as SET key input. */
+    GPIO_PinRemapConfig(GPIO_Remap_SWJ_Disable, ENABLE);
 
-    gpio.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_15;
+    gpio.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_13 | GPIO_Pin_15;
     gpio.GPIO_Mode = GPIO_Mode_IPU;
     gpio.GPIO_Speed = GPIO_Speed_2MHz;
     GPIO_Init(GPIOA, &gpio);
-
-    gpio.GPIO_Pin = GPIO_Pin_5;
-    gpio.GPIO_Mode = GPIO_Mode_IPU;
-    gpio.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_Init(GPIOC, &gpio);
 #endif
 }
 
