@@ -4,19 +4,14 @@
 
 #include <string.h>
 
-#if defined(USE_STDPERIPH_DRIVER)
-#include "stm32f10x_gpio.h"
-#include "stm32f10x_rcc.h"
-#include "stm32f10x_spi.h"
+#if defined(USE_HAL_DRIVER)
+#include "stm32f1xx_hal.h"
 
-#define SPIFLASH_SPI              SPI1
-#define SPIFLASH_SPI_CLK          RCC_APB2Periph_SPI1
 #define SPIFLASH_GPIO_PORT        GPIOA
-#define SPIFLASH_GPIO_CLK         RCC_APB2Periph_GPIOA
-#define SPIFLASH_PIN_SCK          GPIO_Pin_5
-#define SPIFLASH_PIN_MISO         GPIO_Pin_6
-#define SPIFLASH_PIN_MOSI         GPIO_Pin_7
-#define SPIFLASH_PIN_CS           GPIO_Pin_2
+#define SPIFLASH_PIN_SCK          GPIO_PIN_5
+#define SPIFLASH_PIN_MISO         GPIO_PIN_6
+#define SPIFLASH_PIN_MOSI         GPIO_PIN_7
+#define SPIFLASH_PIN_CS           GPIO_PIN_2
 
 #define SPIFLASH_CMD_WREN         (0x06U)
 #define SPIFLASH_CMD_RDSR         (0x05U)
@@ -25,55 +20,40 @@
 #define SPIFLASH_CMD_SE           (0x20U)
 
 #define SPIFLASH_STATUS_WIP       (0x01U)
-//@TODO: TOO BIG RETRIES
-#define SPIFLASH_TIMEOUT          (1000000UL)
+#define SPIFLASH_TIMEOUT_MS       (20U)
+#define SPIFLASH_READY_RETRY      (20000UL)
 #define SPIFLASH_PAGE_SIZE        (256UL)
 #define SPIFLASH_SECTOR_SIZE      (4096UL)
 
+static SPI_HandleTypeDef g_hspi = {0};
 static int g_spiflash_inited = 0;
 static int g_spiflash_last_status = 1;
 
 static void spiflash_cs_low(void)
 {
-    GPIO_ResetBits(SPIFLASH_GPIO_PORT, SPIFLASH_PIN_CS);
+    HAL_GPIO_WritePin(SPIFLASH_GPIO_PORT, SPIFLASH_PIN_CS, GPIO_PIN_RESET);
 }
 
 static void spiflash_cs_high(void)
 {
-    GPIO_SetBits(SPIFLASH_GPIO_PORT, SPIFLASH_PIN_CS);
+    HAL_GPIO_WritePin(SPIFLASH_GPIO_PORT, SPIFLASH_PIN_CS, GPIO_PIN_SET);
 }
 
 static uint8_t spiflash_xfer(uint8_t data)
 {
-    uint32_t timeout = SPIFLASH_TIMEOUT;
+    uint8_t rx = 0xFFU;
 
-    while ((SPI_I2S_GetFlagStatus(SPIFLASH_SPI, SPI_I2S_FLAG_TXE) == RESET) && (timeout > 0UL))
-    {
-        timeout--;
-    }
-    if (timeout == 0UL)
+    if (HAL_SPI_TransmitReceive(&g_hspi, &data, &rx, 1U, SPIFLASH_TIMEOUT_MS) != HAL_OK)
     {
         return 0xFFU;
     }
 
-    SPI_I2S_SendData(SPIFLASH_SPI, data);
-
-    timeout = SPIFLASH_TIMEOUT;
-    while ((SPI_I2S_GetFlagStatus(SPIFLASH_SPI, SPI_I2S_FLAG_RXNE) == RESET) && (timeout > 0UL))
-    {
-        timeout--;
-    }
-    if (timeout == 0UL)
-    {
-        return 0xFFU;
-    }
-
-    return (uint8_t)SPI_I2S_ReceiveData(SPIFLASH_SPI);
+    return rx;
 }
 
 static int spiflash_wait_ready(void)
 {
-    uint32_t timeout = SPIFLASH_TIMEOUT;
+    uint32_t timeout = SPIFLASH_READY_RETRY;
 
     while (timeout > 0UL)
     {
@@ -148,38 +128,45 @@ static int spiflash_page_program(uint32_t addr, const uint8_t *buf, uint32_t len
 
 void bsp_spiflash_init(void)
 {
-    GPIO_InitTypeDef gpio;
-    SPI_InitTypeDef spi;
+    GPIO_InitTypeDef gpio = {0};
 
-    RCC_APB2PeriphClockCmd(SPIFLASH_GPIO_CLK | SPIFLASH_SPI_CLK, ENABLE);
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_SPI1_CLK_ENABLE();
 
-    gpio.GPIO_Pin = SPIFLASH_PIN_SCK | SPIFLASH_PIN_MOSI;
-    gpio.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_Init(SPIFLASH_GPIO_PORT, &gpio);
+    gpio.Pin = SPIFLASH_PIN_SCK | SPIFLASH_PIN_MOSI;
+    gpio.Speed = GPIO_SPEED_FREQ_HIGH;
+    gpio.Mode = GPIO_MODE_AF_PP;
+    HAL_GPIO_Init(SPIFLASH_GPIO_PORT, &gpio);
 
-    gpio.GPIO_Pin = SPIFLASH_PIN_MISO;
-    gpio.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_Init(SPIFLASH_GPIO_PORT, &gpio);
+    gpio.Pin = SPIFLASH_PIN_MISO;
+    gpio.Mode = GPIO_MODE_INPUT;
+    gpio.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(SPIFLASH_GPIO_PORT, &gpio);
 
-    gpio.GPIO_Pin = SPIFLASH_PIN_CS;
-    gpio.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_Init(SPIFLASH_GPIO_PORT, &gpio);
+    gpio.Pin = SPIFLASH_PIN_CS;
+    gpio.Mode = GPIO_MODE_OUTPUT_PP;
+    gpio.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(SPIFLASH_GPIO_PORT, &gpio);
     spiflash_cs_high();
 
-    SPI_I2S_DeInit(SPIFLASH_SPI);
-    SPI_StructInit(&spi);
-    spi.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
-    spi.SPI_Mode = SPI_Mode_Master;
-    spi.SPI_DataSize = SPI_DataSize_8b;
-    spi.SPI_CPOL = SPI_CPOL_Low;
-    spi.SPI_CPHA = SPI_CPHA_1Edge;
-    spi.SPI_NSS = SPI_NSS_Soft;
-    spi.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
-    spi.SPI_FirstBit = SPI_FirstBit_MSB;
-    spi.SPI_CRCPolynomial = 7U;
-    SPI_Init(SPIFLASH_SPI, &spi);
-    SPI_Cmd(SPIFLASH_SPI, ENABLE);
+    g_hspi.Instance = SPI1;
+    g_hspi.Init.Mode = SPI_MODE_MASTER;
+    g_hspi.Init.Direction = SPI_DIRECTION_2LINES;
+    g_hspi.Init.DataSize = SPI_DATASIZE_8BIT;
+    g_hspi.Init.CLKPolarity = SPI_POLARITY_LOW;
+    g_hspi.Init.CLKPhase = SPI_PHASE_1EDGE;
+    g_hspi.Init.NSS = SPI_NSS_SOFT;
+    g_hspi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+    g_hspi.Init.FirstBit = SPI_FIRSTBIT_MSB;
+    g_hspi.Init.TIMode = SPI_TIMODE_DISABLE;
+    g_hspi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+    g_hspi.Init.CRCPolynomial = 7U;
+    if (HAL_SPI_Init(&g_hspi) != HAL_OK)
+    {
+        g_spiflash_inited = 0;
+        g_spiflash_last_status = -1;
+        return;
+    }
 
     g_spiflash_inited = 1;
     g_spiflash_last_status = 1;
@@ -352,3 +339,4 @@ void bsp_spiflash_mock_set_access_ok(int read_ok, int write_ok)
 }
 
 #endif
+

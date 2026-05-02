@@ -1156,7 +1156,7 @@ void app_main_loop(void)
         return;
     }
 
-#if !defined(USE_STDPERIPH_DRIVER)
+#if !defined(USE_STDPERIPH_DRIVER) && !defined(USE_HAL_DRIVER)
     scheduler_tick_1ms();
 #endif
 
@@ -1253,3 +1253,4 @@ void app_main_loop(void)
     hw_eeprom_process();
     sync_runtime_params_if_changed();
 }
+

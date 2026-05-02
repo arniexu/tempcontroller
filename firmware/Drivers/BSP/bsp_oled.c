@@ -4,22 +4,19 @@
 
 #include "tiny_graphics.h"
 
-#if defined(USE_STDPERIPH_DRIVER)
-#include "stm32f10x_gpio.h"
-#include "stm32f10x_rcc.h"
+#if defined(USE_HAL_DRIVER)
+#include "stm32f1xx_hal.h"
 
 #define TFT_DATA_PORT               GPIOB
 #define TFT_CTRL_PORT               GPIOC
-#define TFT_DATA_CLK                RCC_APB2Periph_GPIOB
-#define TFT_CTRL_CLK                RCC_APB2Periph_GPIOC
 
-#define TFT_PIN_RD                  GPIO_Pin_6
-#define TFT_PIN_WR                  GPIO_Pin_7
-#define TFT_PIN_RS                  GPIO_Pin_8
-#define TFT_PIN_CS                  GPIO_Pin_9
-#define TFT_PIN_BL                  GPIO_Pin_10
+#define TFT_PIN_RD                  GPIO_PIN_6
+#define TFT_PIN_WR                  GPIO_PIN_7
+#define TFT_PIN_RS                  GPIO_PIN_8
+#define TFT_PIN_CS                  GPIO_PIN_9
+#define TFT_PIN_BL                  GPIO_PIN_10
 
-#define TFT_GPIO_SPEED              GPIO_Speed_10MHz
+#define TFT_GPIO_SPEED              GPIO_SPEED_FREQ_LOW
 #define TFT_BUS_SETTLE_NOP          (1U)
 #define TFT_WR_LOW_NOP              (6U)
 #define TFT_WR_HIGH_NOP             (6U)
@@ -102,12 +99,12 @@ static char g_lines[BSP_OLED_LINE_COUNT][BSP_OLED_LINE_CHARS + 1U];
 static uint8_t g_refresh_pending = 0U;
 static uint8_t g_refresh_line = 0U;
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
 static tg_canvas_t g_tg_canvas;
 static void lcd_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
 #endif
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
 static void glyph_5x7(char c, uint8_t out[5])
 {
     uint8_t i;
@@ -188,7 +185,7 @@ static void oled_build_frame(void)
 {
 }
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_STDPERIPH_DRIVER) || defined(USE_HAL_DRIVER)
 static void tg_lcd_fill_rect(void *ctx,
                              uint16_t x,
                              uint16_t y,
@@ -211,24 +208,18 @@ static void lcd_delay(unsigned int n)
 
 static void lcd_ctrl_write(uint16_t pin, int high)
 {
-    if (high)
-    {
-        GPIO_SetBits(TFT_CTRL_PORT, pin);
-    }
-    else
-    {
-        GPIO_ResetBits(TFT_CTRL_PORT, pin);
-    }
+    HAL_GPIO_WritePin(TFT_CTRL_PORT, pin, high ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
-static void lcd_data_mode(GPIOMode_TypeDef mode)
+static void lcd_data_mode(uint32_t mode)
 {
-    GPIO_InitTypeDef gpio;
+    GPIO_InitTypeDef gpio = {0};
 
-    gpio.GPIO_Pin = 0xFFFFU;
-    gpio.GPIO_Mode = mode;
-    gpio.GPIO_Speed = TFT_GPIO_SPEED;
-    GPIO_Init(TFT_DATA_PORT, &gpio);
+    gpio.Pin = 0xFFFFU;
+    gpio.Mode = mode;
+    gpio.Pull = GPIO_NOPULL;
+    gpio.Speed = TFT_GPIO_SPEED;
+    HAL_GPIO_Init(TFT_DATA_PORT, &gpio);
 }
 
 static void lcd_write_timing_delay(unsigned int cycles)
@@ -293,11 +284,11 @@ static uint16_t lcd_read_reg(uint16_t reg)
     uint16_t value;
 
     lcd_write_index(reg);
-    lcd_data_mode(GPIO_Mode_IN_FLOATING);
+    lcd_data_mode(GPIO_MODE_INPUT);
     lcd_ctrl_write(TFT_PIN_RS, 1);
     (void)lcd_read_strobe();
     value = lcd_read_strobe();
-    lcd_data_mode(GPIO_Mode_Out_PP);
+    lcd_data_mode(GPIO_MODE_OUTPUT_PP);
     return value;
 }
 
@@ -629,18 +620,21 @@ void bsp_oled_init(void)
     g_refresh_pending = 0U;
     g_refresh_line = 0U;
 
-#if defined(USE_STDPERIPH_DRIVER)
-    GPIO_InitTypeDef gpio;
+#if defined(USE_HAL_DRIVER)
+    GPIO_InitTypeDef gpio = {0};
 
-    RCC_APB2PeriphClockCmd(TFT_DATA_CLK | TFT_CTRL_CLK | RCC_APB2Periph_AFIO, ENABLE);
-    GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_AFIO_CLK_ENABLE();
+    __HAL_AFIO_REMAP_SWJ_NOJTAG();
 
-    lcd_data_mode(GPIO_Mode_Out_PP);
+    lcd_data_mode(GPIO_MODE_OUTPUT_PP);
 
-    gpio.GPIO_Pin = TFT_PIN_RD | TFT_PIN_WR | TFT_PIN_RS | TFT_PIN_CS | TFT_PIN_BL;
-    gpio.GPIO_Mode = GPIO_Mode_Out_PP;
-    gpio.GPIO_Speed = TFT_GPIO_SPEED;
-    GPIO_Init(TFT_CTRL_PORT, &gpio);
+    gpio.Pin = TFT_PIN_RD | TFT_PIN_WR | TFT_PIN_RS | TFT_PIN_CS | TFT_PIN_BL;
+    gpio.Mode = GPIO_MODE_OUTPUT_PP;
+    gpio.Pull = GPIO_NOPULL;
+    gpio.Speed = TFT_GPIO_SPEED;
+    HAL_GPIO_Init(TFT_CTRL_PORT, &gpio);
 
     lcd_ctrl_write(TFT_PIN_CS, 0);
     lcd_ctrl_write(TFT_PIN_RD, 1);
@@ -681,7 +675,7 @@ void bsp_oled_clear(void)
         g_lines[i][0] = '\0';
     }
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
     if (g_lcd_ready != 0U)
     {
         tg_fill_rect(&g_tg_canvas, 0, 0, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, TFT_COLOR_BG);
@@ -691,7 +685,7 @@ void bsp_oled_clear(void)
 
 void bsp_oled_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
 {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
     if (g_lcd_ready == 0U)
     {
         return;
@@ -709,7 +703,7 @@ void bsp_oled_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t
 
 void bsp_oled_draw_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
 {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
     if (g_lcd_ready == 0U)
     {
         return;
@@ -727,7 +721,7 @@ void bsp_oled_draw_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t
 
 void bsp_oled_fill_round_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t radius, uint16_t color)
 {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
     if (g_lcd_ready == 0U)
     {
         return;
@@ -746,7 +740,7 @@ void bsp_oled_fill_round_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, ui
 
 void bsp_oled_draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color)
 {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
     if (g_lcd_ready == 0U)
     {
         return;
@@ -764,7 +758,7 @@ void bsp_oled_draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint
 
 void bsp_oled_draw_circle(uint16_t cx, uint16_t cy, uint16_t radius, uint16_t color)
 {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
     if (g_lcd_ready == 0U)
     {
         return;
@@ -781,7 +775,7 @@ void bsp_oled_draw_circle(uint16_t cx, uint16_t cy, uint16_t radius, uint16_t co
 
 void bsp_oled_draw_text_xy(uint16_t x, uint16_t y, const char *text, uint8_t scale, uint16_t color)
 {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_STDPERIPH_DRIVER) || defined(USE_HAL_DRIVER)
     if ((g_lcd_ready == 0U) || (text == 0))
     {
         return;
@@ -818,7 +812,7 @@ void bsp_oled_refresh(void)
 
 int bsp_oled_process(void)
 {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_STDPERIPH_DRIVER) || defined(USE_HAL_DRIVER)
     if ((!g_refresh_pending) || (!g_lcd_ready))
     {
         return 0;
@@ -861,4 +855,5 @@ const char *bsp_oled_mock_get_line(uint8_t line)
 
     return g_lines[line];
 }
+
 

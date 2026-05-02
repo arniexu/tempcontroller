@@ -50,7 +50,7 @@ typedef struct
 static ui_ctx_t g_ui;
 
 static void render_page(void);
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_STDPERIPH_DRIVER) || defined(USE_HAL_DRIVER)
 static void render_settings_value_card(void);
 #endif
 
@@ -291,7 +291,7 @@ static void render_page_sync(app_params_t *params, ui_redraw_mode_t redraw_mode)
 
     if (redraw_mode == UI_REDRAW_SETTINGS_CARD)
     {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_STDPERIPH_DRIVER) || defined(USE_HAL_DRIVER)
         render_settings_value_card();
 #else
         g_ui.render_cache_valid = 0;
@@ -581,7 +581,7 @@ static const char *page_text(ui_page_t page)
     }
 }
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_STDPERIPH_DRIVER) || defined(USE_HAL_DRIVER)
 static uint16_t ui_text_width(const char *text, uint8_t scale)
 {
     size_t len;
@@ -957,7 +957,7 @@ static void render_page(void)
 
         if (changed)
         {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_STDPERIPH_DRIVER) || defined(USE_HAL_DRIVER)
             if (g_ui.splash_ticks > 0U)
             {
                 render_startup_splash();
@@ -1144,3 +1144,4 @@ unsigned int ui_service_get_pid_field(void)
 {
     return g_ui.pid_field;
 }
+

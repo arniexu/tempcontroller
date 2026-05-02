@@ -4,13 +4,8 @@
 
 static bsp_ds18b20_diag_t g_diag = {0};
 
-#if defined(USE_STDPERIPH_DRIVER)
-#include "stm32f10x.h"
-#include "stm32f10x_exti.h"
-#include "stm32f10x_gpio.h"
-#include "misc.h"
-#include "stm32f10x_rcc.h"
-#include "stm32f10x_tim.h"
+#if defined(USE_HAL_DRIVER)
+#include "stm32f1xx_hal.h"
 
 #define DS18B20_CMD_SKIP_ROM      (0xCCU)
 #define DS18B20_CMD_CONVERT_T     (0x44U)
@@ -20,7 +15,7 @@ static bsp_ds18b20_diag_t g_diag = {0};
 
 #if (APP_USE_MOCK_TEMP_SOURCE == 0U)
 static GPIO_TypeDef *const g_sensor_port[BSP_DS18B20_SENSOR_COUNT] = {GPIOA, GPIOA, GPIOA};
-static const uint16_t g_sensor_pin[BSP_DS18B20_SENSOR_COUNT] = {GPIO_Pin_1, GPIO_Pin_3, GPIO_Pin_4};
+static const uint16_t g_sensor_pin[BSP_DS18B20_SENSOR_COUNT] = {GPIO_PIN_1, GPIO_PIN_3, GPIO_PIN_4};
 static const uint8_t g_sensor_pin_source[BSP_DS18B20_SENSOR_COUNT] = {GPIO_PinSource1, GPIO_PinSource3, GPIO_PinSource4};
 static volatile uint8_t g_presence_fall_seen[BSP_DS18B20_SENSOR_COUNT] = {0U, 0U, 0U};
 
@@ -394,7 +389,7 @@ static bool g_mock_valid[BSP_DS18B20_SENSOR_COUNT] = {true, true, true};
 
 void bsp_ds18b20_init(void)
 {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
 #if (APP_USE_MOCK_TEMP_SOURCE == 0U)
     GPIO_InitTypeDef gpio;
     TIM_TimeBaseInitTypeDef tim;
@@ -473,7 +468,7 @@ void bsp_ds18b20_init(void)
     bsp_ds18b20_reset_diag();
 }
 
-#if defined(USE_STDPERIPH_DRIVER) && (APP_USE_MOCK_TEMP_SOURCE == 0U)
+#if defined(USE_HAL_DRIVER) && (APP_USE_MOCK_TEMP_SOURCE == 0U)
 void EXTI1_IRQHandler(void)
 {
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
@@ -606,7 +601,7 @@ bool bsp_ds18b20_read_c(uint8_t index, float *temp_c)
     *temp_c = g_mock_temp[index];
     return true;
 #else
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
     uint8_t retry;
 
     for (retry = 0U; retry < DS18B20_READ_RETRY; ++retry)
@@ -697,3 +692,4 @@ void bsp_ds18b20_mock_set_valid(uint8_t index, bool valid)
 
     g_mock_valid[index] = valid;
 }
+

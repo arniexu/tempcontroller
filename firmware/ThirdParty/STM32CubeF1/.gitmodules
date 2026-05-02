@@ -1,0 +1,88 @@
+[submodule "Drivers/CMSIS/Device/ST/STM32F1xx"]
+	path = Drivers/CMSIS/Device/ST/STM32F1xx
+	url = https://github.com/STMicroelectronics/cmsis_device_f1.git
+	branch = master
+[submodule "Drivers/STM32F1xx_HAL_Driver"]
+	path = Drivers/STM32F1xx_HAL_Driver
+	url = https://github.com/STMicroelectronics/stm32f1xx_hal_driver.git
+	branch = master
+[submodule "Drivers/BSP/STM32F1xx_Nucleo"]
+	path = Drivers/BSP/STM32F1xx_Nucleo
+	url = https://github.com/STMicroelectronics/stm32f1xx-nucleo-bsp.git
+	branch = main
+[submodule "Drivers/BSP/STM32VL-Discovery"]
+	path = Drivers/BSP/STM32VL-Discovery
+	url = https://github.com/STMicroelectronics/stm32vldiscovery-bsp.git
+	branch = main
+[submodule "Drivers/BSP/STM3210C_EVAL"]
+	path = Drivers/BSP/STM3210C_EVAL
+	url = https://github.com/STMicroelectronics/stm3210c-eval-bsp.git
+	branch = main
+[submodule "Drivers/BSP/STM3210E_EVAL"]
+	path = Drivers/BSP/STM3210E_EVAL
+	url = https://github.com/STMicroelectronics/stm3210e-eval-bsp.git
+	branch = main
+[submodule "Drivers/BSP/Components/Common"]
+	path = Drivers/BSP/Components/Common
+	url = https://github.com/STMicroelectronics/stm32-bsp-common.git
+	branch = main
+[submodule "Drivers/BSP/Components/ak4343"]
+	path = Drivers/BSP/Components/ak4343
+	url = https://github.com/STMicroelectronics/stm32-ak4343.git
+	branch = main
+[submodule "Drivers/BSP/Components/cs43l22"]
+	path = Drivers/BSP/Components/cs43l22
+	url = https://github.com/STMicroelectronics/stm32-cs43l22.git
+	branch = main
+[submodule "Drivers/BSP/Components/hx8347d"]
+	path = Drivers/BSP/Components/hx8347d
+	url = https://github.com/STMicroelectronics/stm32-hx8347d.git
+	branch = main
+[submodule "Drivers/BSP/Components/ili9320"]
+	path = Drivers/BSP/Components/ili9320
+	url = https://github.com/STMicroelectronics/stm32-ili9320.git
+	branch = main
+[submodule "Drivers/BSP/Components/ili9325"]
+	path = Drivers/BSP/Components/ili9325
+	url = https://github.com/STMicroelectronics/stm32-ili9325.git
+	branch = main
+[submodule "Drivers/BSP/Components/lis302dl"]
+	path = Drivers/BSP/Components/lis302dl
+	url = https://github.com/STMicroelectronics/stm32-lis302dl.git
+	branch = main
+[submodule "Drivers/BSP/Components/spfd5408"]
+	path = Drivers/BSP/Components/spfd5408
+	url = https://github.com/STMicroelectronics/stm32-spfd5408.git
+	branch = main
+[submodule "Drivers/BSP/Components/st7735"]
+	path = Drivers/BSP/Components/st7735
+	url = https://github.com/STMicroelectronics/stm32-st7735.git
+	branch = main
+[submodule "Drivers/BSP/Components/stlm75"]
+	path = Drivers/BSP/Components/stlm75
+	url = https://github.com/STMicroelectronics/stm32-stlm75.git
+	branch = main
+[submodule "Drivers/BSP/Components/stmpe811"]
+	path = Drivers/BSP/Components/stmpe811
+	url = https://github.com/STMicroelectronics/stm32-stmpe811.git
+	branch = main
+[submodule "Middlewares/ST/STM32_USB_Device_Library"]
+	path = Middlewares/ST/STM32_USB_Device_Library
+	url = https://github.com/STMicroelectronics/stm32-mw-usb-device.git
+	branch = master
+[submodule "Middlewares/ST/STM32_USB_Host_Library"]
+	path = Middlewares/ST/STM32_USB_Host_Library
+	url = https://github.com/STMicroelectronics/stm32-mw-usb-host.git
+	branch = master
+[submodule "Middlewares/Third_Party/FatFs"]
+	path = Middlewares/Third_Party/FatFs
+	url = https://github.com/STMicroelectronics/stm32-mw-fatfs.git
+	branch = master
+[submodule "Middlewares/Third_Party/FreeRTOS"]
+	path = Middlewares/Third_Party/FreeRTOS
+	url = https://github.com/STMicroelectronics/stm32-mw-freertos.git
+	branch = master
+[submodule "Middlewares/Third_Party/LwIP"]
+	path = Middlewares/Third_Party/LwIP
+	url = https://github.com/STMicroelectronics/stm32-mw-lwip.git
+	branch = master

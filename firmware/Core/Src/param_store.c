@@ -6,10 +6,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#if defined(USE_STDPERIPH_DRIVER)
-#include "stm32f10x_crc.h"
-#include "stm32f10x_flash.h"
-#include "stm32f10x_rcc.h"
+#if defined(USE_HAL_DRIVER)
+#include "stm32f1xx_hal.h"
 #endif
 
 #define PARAM_STORE_MAGIC         (0x50415241UL)
@@ -35,7 +33,7 @@
 #define PARAM_STORE_EEPROM_SLOT_B_ADDR  (sizeof(param_nv_record_t))
 #endif
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
 #define PARAM_STORE_PAGE_A_ADDR   (0x0800F800UL)
 #define PARAM_STORE_PAGE_B_ADDR   (0x0800FC00UL)
 #define PARAM_STORE_FLASH_ERASED  (0xFFFFFFFFUL)
@@ -70,11 +68,11 @@ static app_params_t g_params;
 static unsigned int g_flush_delay_s = 0U;
 static int g_flush_pending = 0;
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
 static int g_crc_hw_inited = 0;
 #endif
 
-#if !defined(USE_STDPERIPH_DRIVER)
+#if !defined(USE_HAL_DRIVER)
 static uint8_t g_nv_page_a[sizeof(param_nv_record_t)];
 static uint8_t g_nv_page_b[sizeof(param_nv_record_t)];
 static int g_nv_page_a_written = 0;
@@ -120,18 +118,23 @@ static uint32_t param_record_crc_sw(const param_nv_record_t *r)
 
 static uint32_t param_record_crc_hw(const param_nv_record_t *r)
 {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
     const uint32_t *w = (const uint32_t *)r;
     const uint32_t word_count = (uint32_t)((sizeof(param_nv_record_t) - sizeof(uint32_t)) / sizeof(uint32_t));
+    uint32_t i;
 
     if (!g_crc_hw_inited)
     {
-        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_CRC, ENABLE);
+        __HAL_RCC_CRC_CLK_ENABLE();
         g_crc_hw_inited = 1;
     }
 
-    CRC_ResetDR();
-    return CRC_CalcBlockCRC((uint32_t *)w, word_count);
+    CRC->CR = CRC_CR_RESET;
+    for (i = 0U; i < word_count; ++i)
+    {
+        CRC->DR = w[i];
+    }
+    return CRC->DR;
 #else
     return param_record_crc_sw(r);
 #endif
@@ -164,10 +167,10 @@ static int param_record_valid(const param_nv_record_t *r)
     return (param_record_crc_hw(r) == r->crc32) ? 1 : 0;
 }
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
 static void read_record_from_flash(uint32_t addr, param_nv_record_t *out)
 {
-    const uint8_t *src = (const uint8_t *)addr;
+    const uint8_t *src = (const uint8_t *)(uintptr_t)addr;
     uint8_t *dst = (uint8_t *)out;
     unsigned int i;
 
@@ -182,50 +185,61 @@ static int program_record_to_flash(uint32_t addr, const param_nv_record_t *rec)
     const uint32_t *w = (const uint32_t *)rec;
     unsigned int i;
     unsigned int word_count = (unsigned int)(sizeof(param_nv_record_t) / sizeof(uint32_t));
+    FLASH_EraseInitTypeDef erase_cfg;
+    uint32_t page_error = 0U;
 
-    FLASH_Unlock();
+    HAL_FLASH_Unlock();
 
-    if (FLASH_ErasePage(addr) != FLASH_COMPLETE)
+    erase_cfg.TypeErase = FLASH_TYPEERASE_PAGES;
+    erase_cfg.PageAddress = addr;
+    erase_cfg.NbPages = 1U;
+    if (HAL_FLASHEx_Erase(&erase_cfg, &page_error) != HAL_OK)
     {
-        FLASH_Lock();
+        HAL_FLASH_Lock();
         return 0;
     }
 
     for (i = 0U; i < word_count; ++i)
     {
-        if (FLASH_ProgramWord(addr + (i * 4U), w[i]) != FLASH_COMPLETE)
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr + (i * 4U), w[i]) != HAL_OK)
         {
-            FLASH_Lock();
+            HAL_FLASH_Lock();
             return 0;
         }
     }
 
-    FLASH_Lock();
+    HAL_FLASH_Lock();
     return 1;
 }
 
 static int erase_page_if_written(uint32_t addr)
 {
-    const uint32_t *p = (const uint32_t *)addr;
+    const uint32_t *p = (const uint32_t *)(uintptr_t)addr;
+    FLASH_EraseInitTypeDef erase_cfg;
+    uint32_t page_error = 0U;
+
     if (*p == PARAM_STORE_FLASH_ERASED)
     {
         return 1;
     }
 
-    FLASH_Unlock();
-    if (FLASH_ErasePage(addr) != FLASH_COMPLETE)
+    HAL_FLASH_Unlock();
+    erase_cfg.TypeErase = FLASH_TYPEERASE_PAGES;
+    erase_cfg.PageAddress = addr;
+    erase_cfg.NbPages = 1U;
+    if (HAL_FLASHEx_Erase(&erase_cfg, &page_error) != HAL_OK)
     {
-        FLASH_Lock();
+        HAL_FLASH_Lock();
         return 0;
     }
-    FLASH_Lock();
+    HAL_FLASH_Lock();
     return 1;
 }
 #endif
 
 static void read_record_from_fallback(unsigned int slot, param_nv_record_t *out)
 {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
     if (slot == 0U)
     {
     //@TODO:
@@ -265,7 +279,7 @@ static void read_record_from_fallback(unsigned int slot, param_nv_record_t *out)
 
 static int write_record_to_fallback(unsigned int slot, const param_nv_record_t *rec)
 {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
     if (slot == 0U)
     {
         if (program_record_to_flash(PARAM_STORE_PAGE_A_ADDR, rec))
@@ -336,7 +350,7 @@ static int load_from_nv(app_params_t *params, uint32_t *seq_out)
     {
         read_record_from_fallback(1U, &b);
     }
-#elif defined(USE_STDPERIPH_DRIVER)
+#elif defined(USE_HAL_DRIVER)
     read_record_from_flash(PARAM_STORE_PAGE_A_ADDR, &a);
     read_record_from_flash(PARAM_STORE_PAGE_B_ADDR, &b);
 #else
@@ -421,7 +435,7 @@ static void save_to_nv(const app_params_t *params)
     {
         read_record_from_fallback(1U, &b);
     }
-#elif defined(USE_STDPERIPH_DRIVER)
+#elif defined(USE_HAL_DRIVER)
     read_record_from_flash(PARAM_STORE_PAGE_A_ADDR, &a);
     read_record_from_flash(PARAM_STORE_PAGE_B_ADDR, &b);
 #else
@@ -490,7 +504,7 @@ static void save_to_nv(const app_params_t *params)
             (void)write_record_to_fallback(1U, &rec);
         }
     }
-#elif defined(USE_STDPERIPH_DRIVER)
+#elif defined(USE_HAL_DRIVER)
     if (!a_valid || (b_valid && (b.seq > a.seq)))
     {
         if (program_record_to_flash(PARAM_STORE_PAGE_A_ADDR, &rec))
@@ -628,3 +642,4 @@ app_params_t *param_store_get_mutable(void)
 {
     return &g_params;
 }
+

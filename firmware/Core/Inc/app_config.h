@@ -5,7 +5,7 @@
 #define APP_TEMP_DEFAULT_SETPOINT_C     (45.0f)
 #define APP_PID_WINDOW_MS               (10000U)
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_STDPERIPH_DRIVER) || defined(USE_HAL_DRIVER)
 #if !defined(APP_BUILD_DEBUG) && !defined(APP_BUILD_RELEASE)
 #error "Keil hardware targets must define exactly one of APP_BUILD_DEBUG or APP_BUILD_RELEASE."
 #endif
@@ -45,7 +45,7 @@
 
 /*
  * When project is built for STM32F103 target, define USE_STDPERIPH_DRIVER
- * in compiler symbols to enable StdPeriph-based BSP implementation.
+ * or USE_HAL_DRIVER in compiler symbols to enable hardware BSP implementation.
  */
 #define APP_UART_BAUDRATE               (115200U)
 
@@ -68,3 +68,4 @@
 #define APP_LOG_CAPACITY                (256U)
 
 #endif
+

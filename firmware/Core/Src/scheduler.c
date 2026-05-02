@@ -1,8 +1,9 @@
 #include "scheduler.h"
 #include "app_config.h"
 
-#if defined(USE_STDPERIPH_DRIVER)
-#include "stm32f10x.h"
+#if defined(USE_HAL_DRIVER)
+#include "stm32f1xx.h"
+#include "stm32f1xx_hal.h"
 #endif
 
 static volatile uint32_t g_ms = 0U;
@@ -21,7 +22,7 @@ void scheduler_init(void)
     g_last_ui = 0U;
     g_last_control = 0U;
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
     (void)SysTick_Config(SystemCoreClock / 1000U);
 #endif
 }
@@ -32,9 +33,10 @@ void scheduler_tick_1ms(void)
     g_ms++;
 }
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
 void SysTick_Handler(void)
 {
+    HAL_IncTick();
     scheduler_tick_1ms();
 }
 #endif

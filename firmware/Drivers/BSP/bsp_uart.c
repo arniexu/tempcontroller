@@ -1,17 +1,15 @@
 #include "bsp_uart.h"
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
 #include <string.h>
 
 #include "app_config.h"
-#include "stm32f10x_gpio.h"
-#include "misc.h"
-#include "stm32f10x_rcc.h"
-#include "stm32f10x_usart.h"
+#include "stm32f1xx_hal.h"
 
 #define BSP_UART_TX_TIMEOUT_LOOPS   (200000U)
 #define BSP_UART_TX_BUF_SIZE         (256U)
 
+static UART_HandleTypeDef g_huart1;
 static char g_line_buf[128];
 static volatile unsigned int g_line_len = 0U;
 static volatile bool g_line_ready = false;
@@ -42,21 +40,21 @@ static void uart_rx_char(char ch)
 
 void USART1_IRQHandler(void)
 {
-    if (USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
+    if ((USART1->SR & USART_SR_RXNE) != 0U)
     {
-        uart_rx_char((char)(USART_ReceiveData(USART1) & 0xFFU));
+        uart_rx_char((char)(USART1->DR & 0xFFU));
     }
 
-    if (USART_GetITStatus(USART1, USART_IT_TXE) != RESET)
+    if (((USART1->SR & USART_SR_TXE) != 0U) && ((USART1->CR1 & USART_CR1_TXEIE) != 0U))
     {
         if (g_tx_tail != g_tx_head)
         {
-            USART_SendData(USART1, (uint16_t)(uint8_t)g_tx_buf[g_tx_tail]);
+            USART1->DR = (uint16_t)(uint8_t)g_tx_buf[g_tx_tail];
             g_tx_tail = (g_tx_tail + 1U) % BSP_UART_TX_BUF_SIZE;
         }
         else
         {
-            USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
+            CLEAR_BIT(USART1->CR1, USART_CR1_TXEIE);
         }
     }
 }
@@ -64,34 +62,36 @@ void USART1_IRQHandler(void)
 
 void bsp_uart_init(void)
 {
-#if defined(USE_STDPERIPH_DRIVER)
-    GPIO_InitTypeDef gpio;
-    USART_InitTypeDef usart;
-    NVIC_InitTypeDef nvic;
+#if defined(USE_HAL_DRIVER)
+    GPIO_InitTypeDef gpio = {0};
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_USART1, ENABLE);
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_USART1_CLK_ENABLE();
 
-    gpio.GPIO_Pin = GPIO_Pin_9;
-    gpio.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_Init(GPIOA, &gpio);
+    gpio.Pin = GPIO_PIN_9;
+    gpio.Mode = GPIO_MODE_AF_PP;
+    gpio.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOA, &gpio);
 
-    gpio.GPIO_Pin = GPIO_Pin_10;
-    gpio.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_Init(GPIOA, &gpio);
+    gpio.Pin = GPIO_PIN_10;
+    gpio.Mode = GPIO_MODE_INPUT;
+    gpio.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &gpio);
 
-    USART_StructInit(&usart);
-    usart.USART_BaudRate = APP_UART_BAUDRATE;
-    usart.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-    USART_Init(USART1, &usart);
-    USART_Cmd(USART1, ENABLE);
-    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+    g_huart1.Instance = USART1;
+    g_huart1.Init.BaudRate = APP_UART_BAUDRATE;
+    g_huart1.Init.WordLength = UART_WORDLENGTH_8B;
+    g_huart1.Init.StopBits = UART_STOPBITS_1;
+    g_huart1.Init.Parity = UART_PARITY_NONE;
+    g_huart1.Init.Mode = UART_MODE_TX_RX;
+    g_huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    g_huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+    (void)HAL_UART_Init(&g_huart1);
 
-    nvic.NVIC_IRQChannel = USART1_IRQn;
-    nvic.NVIC_IRQChannelPreemptionPriority = 2U;
-    nvic.NVIC_IRQChannelSubPriority = 0U;
-    nvic.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&nvic);
+    HAL_NVIC_SetPriority(USART1_IRQn, 2U, 0U);
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
+
+    SET_BIT(USART1->CR1, USART_CR1_RXNEIE);
 
     g_line_len = 0U;
     g_line_ready = false;
@@ -103,7 +103,7 @@ void bsp_uart_init(void)
 
 bool bsp_uart_read_line(char *buf, unsigned int buf_size)
 {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
     unsigned int n;
 
     if ((buf == 0) || (buf_size == 0U))
@@ -137,7 +137,7 @@ bool bsp_uart_read_line(char *buf, unsigned int buf_size)
 
 void bsp_uart_write(const char *text)
 {
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
     uint32_t timeout;
 
     if (text == 0)
@@ -160,7 +160,7 @@ void bsp_uart_write(const char *text)
             {
                 g_tx_buf[head] = *text;
                 g_tx_head = next;
-                USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
+                SET_BIT(USART1->CR1, USART_CR1_TXEIE);
                 __enable_irq();
                 break;
             }
@@ -179,3 +179,4 @@ void bsp_uart_write(const char *text)
     (void)text;
 #endif
 }
+

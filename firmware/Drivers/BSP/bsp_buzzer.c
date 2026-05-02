@@ -1,24 +1,23 @@
 #include "bsp_buzzer.h"
 
-#if defined(USE_STDPERIPH_DRIVER)
-#include "stm32f10x_gpio.h"
-#include "stm32f10x_rcc.h"
+#if defined(USE_HAL_DRIVER)
+#include "stm32f1xx_hal.h"
 #endif
 
 static bool g_buzzer_on = false;
 
 void bsp_buzzer_init(void)
 {
-#if defined(USE_STDPERIPH_DRIVER)
-    GPIO_InitTypeDef gpio;
+#if defined(USE_HAL_DRIVER)
+    GPIO_InitTypeDef gpio = {0};
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+    __HAL_RCC_GPIOA_CLK_ENABLE();
 
-    gpio.GPIO_Pin = GPIO_Pin_8;
-    gpio.GPIO_Speed = GPIO_Speed_2MHz;
-    gpio.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_Init(GPIOA, &gpio);
-    GPIO_ResetBits(GPIOA, GPIO_Pin_8);
+    gpio.Pin = GPIO_PIN_8;
+    gpio.Speed = GPIO_SPEED_FREQ_LOW;
+    gpio.Mode = GPIO_MODE_OUTPUT_PP;
+    HAL_GPIO_Init(GPIOA, &gpio);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
 #endif
 
     g_buzzer_on = false;
@@ -28,14 +27,14 @@ void bsp_buzzer_set(bool on)
 {
     g_buzzer_on = on;
 
-#if defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
     if (on)
     {
-        GPIO_SetBits(GPIOA, GPIO_Pin_8);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
     }
     else
     {
-        GPIO_ResetBits(GPIOA, GPIO_Pin_8);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
     }
 #endif
 }
