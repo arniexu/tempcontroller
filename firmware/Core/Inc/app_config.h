@@ -65,6 +65,11 @@
 #define APP_TASK_UI_PERIOD_MS           (200U)
 #define APP_TASK_CONTROL_PERIOD_MS      (1000U)
 
+#define APP_USE_LVGL_UI                 (1U)
+#define APP_LVGL_TASK_PERIOD_MS         (20U)
+#define APP_LVGL_BUF_LINES              (8U)
+#define APP_LVGL_STARTUP_SELF_TEST      (1U)
+
 #define APP_LOG_CAPACITY                (256U)
 
 #endif

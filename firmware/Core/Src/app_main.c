@@ -13,6 +13,8 @@
 #include "schedule_service.h"
 #include "scheduler.h"
 #include "temp_manager.h"
+#include "ui_lvgl_port.h"
+#include "ui_lvgl_view.h"
 #include "ui_service.h"
 #include "hw_temp_port.h"
 
@@ -27,6 +29,9 @@ static bool g_prev_alarm = false;
 static unsigned int g_log_tick_count = 0U;
 static app_params_t g_runtime_params;
 static uint32_t g_last_1ms_tick = 0U;
+#if (APP_USE_LVGL_UI == 1U)
+static uint32_t g_last_lvgl_task_ms = 0U;
+#endif
 static bool g_hw_driver_test_active = false;
 
 typedef enum
@@ -1122,7 +1127,11 @@ void app_main_init(void)
     hw_buzzer_set(false);
     schedule_service_init();
     log_service_init();
+#if (APP_USE_LVGL_UI == 1U)
+    ui_lvgl_port_init();
+#else
     ui_service_init();
+#endif
 
     {
         const app_params_t *params = param_store_get();
@@ -1137,6 +1146,9 @@ void app_main_init(void)
     g_prev_alarm = false;
     g_log_tick_count = 0U;
     g_last_1ms_tick = scheduler_now_ms();
+#if (APP_USE_LVGL_UI == 1U)
+    g_last_lvgl_task_ms = g_last_1ms_tick;
+#endif
 
     debug_log_info("APP", "init done set=%.2f alarm=%.2f", param_store_get()->set_temp_c, param_store_get()->alarm_threshold_c);
 }
@@ -1165,13 +1177,26 @@ void app_main_loop(void)
     {
         g_last_1ms_tick++;
         heater_ctrl_update_1ms();
+#if (APP_USE_LVGL_UI == 1U)
+        ui_lvgl_port_tick_1ms();
+#endif
     }
+
+#if (APP_USE_LVGL_UI == 1U)
+    if ((now_ms - g_last_lvgl_task_ms) >= APP_LVGL_TASK_PERIOD_MS)
+    {
+        g_last_lvgl_task_ms = now_ms;
+        ui_lvgl_port_task();
+    }
+#endif
 
     scheduler_poll(&flags);
 
     if (flags.task_key_100ms)
     {
+#if (APP_USE_LVGL_UI == 0U)
         ui_service_tick_100ms(param_store_get_mutable());
+#endif
     }
 
     if (flags.task_control_1s)
@@ -1240,12 +1265,19 @@ void app_main_loop(void)
     if (flags.task_ui_200ms)
     {
         temp = temp_manager_get_snapshot();
+#if (APP_USE_LVGL_UI == 1U)
+        ui_lvgl_view_update_home(temp->t_ctrl,
+                                 param_store_get()->set_temp_c,
+                                 heater_ctrl_get_state() ? 1 : 0,
+                                 alarm_service_is_active() ? 1 : 0);
+#else
         ui_service_tick_200ms(g_mode,
                               temp,
                               param_store_get(),
                               g_pid_out,
                               heater_ctrl_get_state() ? 1 : 0,
                               alarm_service_is_active() ? 1 : 0);
+#endif
     }
 
     protocol_export_process();

@@ -17,6 +17,11 @@ void bsp_oled_fill_round_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, ui
 void bsp_oled_draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color);
 void bsp_oled_draw_circle(uint16_t cx, uint16_t cy, uint16_t radius, uint16_t color);
 void bsp_oled_draw_text_xy(uint16_t x, uint16_t y, const char *text, uint8_t scale, uint16_t color);
+void bsp_oled_write_area_rgb565(uint16_t x,
+								uint16_t y,
+								uint16_t w,
+								uint16_t h,
+								const uint16_t *pixels);
 
 void bsp_oled_init(void);
 void bsp_oled_clear(void);
