@@ -26,6 +26,7 @@ void scheduler_init(void)
 #endif
 }
 
+//@TODO: why not use the systick timer  
 void scheduler_tick_1ms(void)
 {
     g_ms++;

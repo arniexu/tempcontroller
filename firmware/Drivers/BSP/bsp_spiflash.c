@@ -25,6 +25,7 @@
 #define SPIFLASH_CMD_SE           (0x20U)
 
 #define SPIFLASH_STATUS_WIP       (0x01U)
+//@TODO: TOO BIG RETRIES
 #define SPIFLASH_TIMEOUT          (1000000UL)
 #define SPIFLASH_PAGE_SIZE        (256UL)
 #define SPIFLASH_SECTOR_SIZE      (4096UL)
@@ -184,6 +185,7 @@ void bsp_spiflash_init(void)
     g_spiflash_last_status = 1;
 }
 
+// HAL
 int bsp_spiflash_read(uint32_t addr, uint8_t *buf, uint32_t len)
 {
     uint32_t i;

@@ -1,6 +1,7 @@
 #ifndef PARAM_STORE_H
 #define PARAM_STORE_H
 
+
 typedef struct
 {
     float set_temp_c;

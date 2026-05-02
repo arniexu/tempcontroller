@@ -228,6 +228,7 @@ static void read_record_from_fallback(unsigned int slot, param_nv_record_t *out)
 #if defined(USE_STDPERIPH_DRIVER)
     if (slot == 0U)
     {
+    //@TODO:
     #if (APP_PARAM_STORE_USE_EEPROM == 1U)
     static int read_record_from_eeprom(uint16_t addr, param_nv_record_t *out)
     {
@@ -556,6 +557,7 @@ void param_store_load_defaults(app_params_t *params)
     params->log_period_s = 1U;
 }
 
+//@TODO:
 void param_store_load(app_params_t *params)
 {
     if (params == 0)
@@ -606,6 +608,7 @@ void param_store_tick_1s(void)
 
 void param_store_flush_now(void)
 {
+    //@TODO:
     if (!g_flush_pending)
     {
         return;
