@@ -1,10 +1,16 @@
 #ifndef BSP_DS18B20_H
 #define BSP_DS18B20_H
 
+#include "app_config.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
+#if defined(BSP_SENSOR_DS18B20_SENSOR_COUNT)
+#define BSP_DS18B20_SENSOR_COUNT    (BSP_SENSOR_DS18B20_SENSOR_COUNT)
+#else
 #define BSP_DS18B20_SENSOR_COUNT    (3U)
+#endif
 
 typedef enum
 {

@@ -1,17 +1,17 @@
 #include "bsp_spiflash.h"
 
-#include "app_config.h"
+#include "../../ProjectConfig/bsp_config_select.h"
 
 #include <string.h>
 
 #if defined(USE_HAL_DRIVER)
 #include "stm32f1xx_hal.h"
 
-#define SPIFLASH_GPIO_PORT        GPIOA
-#define SPIFLASH_PIN_SCK          GPIO_PIN_5
-#define SPIFLASH_PIN_MISO         GPIO_PIN_6
-#define SPIFLASH_PIN_MOSI         GPIO_PIN_7
-#define SPIFLASH_PIN_CS           GPIO_PIN_2
+#define SPIFLASH_GPIO_PORT        BSP_SPIFLASH_GPIO_PORT
+#define SPIFLASH_PIN_SCK          BSP_SPIFLASH_PIN_SCK
+#define SPIFLASH_PIN_MISO         BSP_SPIFLASH_PIN_MISO
+#define SPIFLASH_PIN_MOSI         BSP_SPIFLASH_PIN_MOSI
+#define SPIFLASH_PIN_CS           BSP_SPIFLASH_PIN_CS
 
 #define SPIFLASH_CMD_WREN         (0x06U)
 #define SPIFLASH_CMD_RDSR         (0x05U)
@@ -130,8 +130,8 @@ void bsp_spiflash_init(void)
 {
     GPIO_InitTypeDef gpio = {0};
 
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_SPI1_CLK_ENABLE();
+    BSP_SPIFLASH_GPIO_CLK_ENABLE();
+    BSP_SPIFLASH_PERIPH_CLK_ENABLE();
 
     gpio.Pin = SPIFLASH_PIN_SCK | SPIFLASH_PIN_MOSI;
     gpio.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -177,7 +177,7 @@ int bsp_spiflash_read(uint32_t addr, uint8_t *buf, uint32_t len)
 {
     uint32_t i;
 
-    if ((!g_spiflash_inited) || (buf == 0) || (len == 0UL) || ((addr + len) > APP_SPIFLASH_TOTAL_SIZE_BYTES))
+    if ((!g_spiflash_inited) || (buf == 0) || (len == 0UL) || ((addr + len) > BSP_SPIFLASH_TOTAL_SIZE_BYTES))
     {
         g_spiflash_last_status = -1;
         return 0;
@@ -207,7 +207,7 @@ int bsp_spiflash_write(uint32_t addr, const uint8_t *buf, uint32_t len)
     uint32_t off = 0UL;
     uint32_t last_sector = 0xFFFFFFFFUL;
 
-    if ((!g_spiflash_inited) || (buf == 0) || (len == 0UL) || ((addr + len) > APP_SPIFLASH_TOTAL_SIZE_BYTES))
+    if ((!g_spiflash_inited) || (buf == 0) || (len == 0UL) || ((addr + len) > BSP_SPIFLASH_TOTAL_SIZE_BYTES))
     {
         g_spiflash_last_status = -1;
         return 0;
@@ -269,7 +269,7 @@ void bsp_spiflash_mock_set_access_ok(int read_ok, int write_ok)
 
 #else
 
-static uint8_t g_mock_spiflash[APP_SPIFLASH_TOTAL_SIZE_BYTES];
+static uint8_t g_mock_spiflash[BSP_SPIFLASH_TOTAL_SIZE_BYTES];
 static int g_mock_inited = 0;
 static int g_mock_read_ok = 1;
 static int g_mock_write_ok = 1;
@@ -286,7 +286,7 @@ void bsp_spiflash_init(void)
 
 int bsp_spiflash_read(uint32_t addr, uint8_t *buf, uint32_t len)
 {
-    if ((buf == 0) || (len == 0UL) || ((addr + len) > APP_SPIFLASH_TOTAL_SIZE_BYTES))
+    if ((buf == 0) || (len == 0UL) || ((addr + len) > BSP_SPIFLASH_TOTAL_SIZE_BYTES))
     {
         return 0;
     }
@@ -303,7 +303,7 @@ int bsp_spiflash_read(uint32_t addr, uint8_t *buf, uint32_t len)
 
 int bsp_spiflash_write(uint32_t addr, const uint8_t *buf, uint32_t len)
 {
-    if ((buf == 0) || (len == 0UL) || ((addr + len) > APP_SPIFLASH_TOTAL_SIZE_BYTES))
+    if ((buf == 0) || (len == 0UL) || ((addr + len) > BSP_SPIFLASH_TOTAL_SIZE_BYTES))
     {
         return 0;
     }

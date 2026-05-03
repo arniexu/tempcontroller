@@ -1,6 +1,6 @@
 #include "bsp_eeprom.h"
 
-#include "app_config.h"
+#include "../../ProjectConfig/bsp_config_select.h"
 
 #include <string.h>
 
@@ -8,36 +8,36 @@
 #include "stm32f1xx_hal.h"
 #endif
 
-#ifndef APP_EEPROM_TOTAL_SIZE_BYTES
-#define APP_EEPROM_TOTAL_SIZE_BYTES    (256U)
+#ifndef BSP_EEPROM_TOTAL_SIZE_BYTES
+#define BSP_EEPROM_TOTAL_SIZE_BYTES    (256U)
 #endif
 
-#ifndef APP_EEPROM_PAGE_SIZE_BYTES
-#define APP_EEPROM_PAGE_SIZE_BYTES     (8U)
+#ifndef BSP_EEPROM_PAGE_SIZE_BYTES
+#define BSP_EEPROM_PAGE_SIZE_BYTES     (8U)
 #endif
 
-#ifndef APP_EEPROM_I2C_ADDR_7BIT
-#define APP_EEPROM_I2C_ADDR_7BIT       (0x50U)
+#ifndef BSP_EEPROM_I2C_ADDR_7BIT
+#define BSP_EEPROM_I2C_ADDR_7BIT       (0x50U)
 #endif
 
-#ifndef APP_EEPROM_I2C_SPEED_HZ
-#define APP_EEPROM_I2C_SPEED_HZ        (100000U)
+#ifndef BSP_EEPROM_I2C_SPEED_HZ
+#define BSP_EEPROM_I2C_SPEED_HZ        (100000U)
 #endif
 
-#if (APP_EEPROM_TOTAL_SIZE_BYTES == 0U)
-#error "APP_EEPROM_TOTAL_SIZE_BYTES must be > 0"
+#if (BSP_EEPROM_TOTAL_SIZE_BYTES == 0U)
+#error "BSP_EEPROM_TOTAL_SIZE_BYTES must be > 0"
 #endif
 
-#if (APP_EEPROM_PAGE_SIZE_BYTES == 0U)
-#error "APP_EEPROM_PAGE_SIZE_BYTES must be > 0"
+#if (BSP_EEPROM_PAGE_SIZE_BYTES == 0U)
+#error "BSP_EEPROM_PAGE_SIZE_BYTES must be > 0"
 #endif
 
-#if (APP_EEPROM_TOTAL_SIZE_BYTES > 256U)
-#error "APP_EEPROM_TOTAL_SIZE_BYTES must be <= 256 for this driver"
+#if (BSP_EEPROM_TOTAL_SIZE_BYTES > 256U)
+#error "BSP_EEPROM_TOTAL_SIZE_BYTES must be <= 256 for this driver"
 #endif
 
-#if (APP_EEPROM_I2C_SPEED_HZ == 0U)
-#error "APP_EEPROM_I2C_SPEED_HZ must be > 0"
+#if (BSP_EEPROM_I2C_SPEED_HZ == 0U)
+#error "BSP_EEPROM_I2C_SPEED_HZ must be > 0"
 #endif
 
 #if defined(USE_HAL_DRIVER)
@@ -52,7 +52,7 @@ static int eeprom_wait_ready(void)
 
     for (retry = 0U; retry < 200U; ++retry)
     {
-        if (HAL_I2C_IsDeviceReady(&g_hi2c2, (uint16_t)(APP_EEPROM_I2C_ADDR_7BIT << 1U), 1U, 10U) == HAL_OK)
+        if (HAL_I2C_IsDeviceReady(&g_hi2c2, (uint16_t)(BSP_EEPROM_I2C_ADDR_7BIT << 1U), 1U, 10U) == HAL_OK)
         {
             return 1;
         }
@@ -64,7 +64,7 @@ static int eeprom_wait_ready(void)
 static int eeprom_write_chunk(uint16_t addr, const uint8_t *buf, uint16_t len)
 {
     if (HAL_I2C_Mem_Write(&g_hi2c2,
-                          (uint16_t)(APP_EEPROM_I2C_ADDR_7BIT << 1U),
+                          (uint16_t)(BSP_EEPROM_I2C_ADDR_7BIT << 1U),
                           addr,
                           I2C_MEMADD_SIZE_8BIT,
                           (uint8_t *)buf,
@@ -79,7 +79,7 @@ static int eeprom_write_chunk(uint16_t addr, const uint8_t *buf, uint16_t len)
 #endif
 
 #if !defined(USE_HAL_DRIVER)
-static uint8_t g_mock_mem[APP_EEPROM_TOTAL_SIZE_BYTES];
+static uint8_t g_mock_mem[BSP_EEPROM_TOTAL_SIZE_BYTES];
 static int g_mock_read_ok = 1;
 static int g_mock_write_ok = 1;
 static int g_mock_busy = 0;
@@ -91,17 +91,17 @@ void bsp_eeprom_init(void)
 #if defined(USE_HAL_DRIVER)
     GPIO_InitTypeDef gpio = {0};
 
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_I2C2_CLK_ENABLE();
+    BSP_EEPROM_GPIO_CLK_ENABLE();
+    BSP_EEPROM_PERIPH_CLK_ENABLE();
 
-    gpio.Pin = GPIO_PIN_10 | GPIO_PIN_11;
+    gpio.Pin = BSP_EEPROM_PIN_SCL | BSP_EEPROM_PIN_SDA;
     gpio.Mode = GPIO_MODE_AF_OD;
     gpio.Pull = GPIO_NOPULL;
     gpio.Speed = GPIO_SPEED_FREQ_HIGH;
-    HAL_GPIO_Init(GPIOB, &gpio);
+    HAL_GPIO_Init(BSP_EEPROM_GPIO_PORT, &gpio);
 
     g_hi2c2.Instance = I2C2;
-    g_hi2c2.Init.ClockSpeed = APP_EEPROM_I2C_SPEED_HZ;
+    g_hi2c2.Init.ClockSpeed = BSP_EEPROM_I2C_SPEED_HZ;
     g_hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_2;
     g_hi2c2.Init.OwnAddress1 = 0U;
     g_hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
@@ -135,7 +135,7 @@ void bsp_eeprom_mock_set_access_ok(int read_ok, int write_ok)
 
 int bsp_eeprom_read(uint16_t addr, uint8_t *buf, uint16_t len)
 {
-    if ((buf == 0) || (len == 0U) || ((uint32_t)addr + (uint32_t)len > (uint32_t)APP_EEPROM_TOTAL_SIZE_BYTES))
+    if ((buf == 0) || (len == 0U) || ((uint32_t)addr + (uint32_t)len > (uint32_t)BSP_EEPROM_TOTAL_SIZE_BYTES))
     {
         return 0;
     }
@@ -148,7 +148,7 @@ int bsp_eeprom_read(uint16_t addr, uint8_t *buf, uint16_t len)
     }
 
     if (HAL_I2C_Mem_Read(&g_hi2c2,
-                         (uint16_t)(APP_EEPROM_I2C_ADDR_7BIT << 1U),
+                         (uint16_t)(BSP_EEPROM_I2C_ADDR_7BIT << 1U),
                          addr,
                          I2C_MEMADD_SIZE_8BIT,
                          buf,
@@ -176,14 +176,14 @@ int bsp_eeprom_read(uint16_t addr, uint8_t *buf, uint16_t len)
 
 int bsp_eeprom_write(uint16_t addr, const uint8_t *buf, uint16_t len)
 {
-    uint16_t off = 0U;
-
-    if ((buf == 0) || (len == 0U) || ((uint32_t)addr + (uint32_t)len > (uint32_t)APP_EEPROM_TOTAL_SIZE_BYTES))
+    if ((buf == 0) || (len == 0U) || ((uint32_t)addr + (uint32_t)len > (uint32_t)BSP_EEPROM_TOTAL_SIZE_BYTES))
     {
         return 0;
     }
 
 #if defined(USE_HAL_DRIVER)
+    uint16_t off = 0U;
+
     if (!g_inited)
     {
         g_async_status = -1;
@@ -193,12 +193,12 @@ int bsp_eeprom_write(uint16_t addr, const uint8_t *buf, uint16_t len)
     while (off < len)
     {
         uint16_t cur = (uint16_t)(addr + off);
-        uint16_t page_off = (uint16_t)(cur % APP_EEPROM_PAGE_SIZE_BYTES);
+        uint16_t page_off = (uint16_t)(cur % BSP_EEPROM_PAGE_SIZE_BYTES);
         uint16_t chunk = (uint16_t)(len - off);
 
-        if (chunk > (uint16_t)(APP_EEPROM_PAGE_SIZE_BYTES - page_off))
+        if (chunk > (uint16_t)(BSP_EEPROM_PAGE_SIZE_BYTES - page_off))
         {
-            chunk = (uint16_t)(APP_EEPROM_PAGE_SIZE_BYTES - page_off);
+            chunk = (uint16_t)(BSP_EEPROM_PAGE_SIZE_BYTES - page_off);
         }
 
         if (!eeprom_write_chunk(cur, &buf[off], chunk))

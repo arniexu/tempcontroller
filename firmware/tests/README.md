@@ -68,6 +68,7 @@ gcc -std=c11 -Wall -Wextra -Werror \
   ../Drivers/BSP/bsp_rtc.c \
   ../Drivers/BSP/bsp_relay.c \
   stubs/bsp_uart_test_stub.c \
+  stubs/ui_lvgl_test_stub.c \
   test_scheduler.c test_pid.c test_alarm_service.c test_param_store.c \
   test_log_service.c test_heater_ctrl.c test_temp_manager.c test_schedule_service.c \
   test_ui_service.c test_protocol_export.c test_app_main.c test_runner.c \

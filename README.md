@@ -119,7 +119,7 @@
 
 ## 集成说明
 
-1. MCU 目标构建需启用 USE_STDPERIPH_DRIVER。
+1. MCU 目标构建可启用 `USE_STDPERIPH_DRIVER`（Keil）或 `USE_HAL_DRIVER`（PlatformIO/HAL）。
 2. 使用真实 DS18B20 时，将 APP_USE_MOCK_TEMP_SOURCE 设置为 0。
 3. 确认 OneWire 与两路 I2C 总线具备正确上拉。
 4. 按实际硬件版本核对继电器/蜂鸣器有效电平。
@@ -139,4 +139,5 @@
 - 集成指南：Project/StdPeriphIntegration.md。
 - UI 设计预览：docs/ui-design-preview.html。
 - Keil 工程：Project/MDK-ARM/WaterTempControl.uvprojx。
+- PlatformIO HAL：platformio.ini（说明见 firmware/platformio/README.md）。
 - 主机测试入口：tests/run_tests.ps1。

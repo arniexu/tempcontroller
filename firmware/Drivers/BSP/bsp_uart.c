@@ -3,7 +3,7 @@
 #if defined(USE_HAL_DRIVER)
 #include <string.h>
 
-#include "app_config.h"
+#include "../../ProjectConfig/bsp_config_select.h"
 #include "stm32f1xx_hal.h"
 
 #define BSP_UART_TX_TIMEOUT_LOOPS   (200000U)
@@ -65,21 +65,21 @@ void bsp_uart_init(void)
 #if defined(USE_HAL_DRIVER)
     GPIO_InitTypeDef gpio = {0};
 
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_USART1_CLK_ENABLE();
+    BSP_UART_GPIO_CLK_ENABLE();
+    BSP_UART_PERIPH_CLK_ENABLE();
 
-    gpio.Pin = GPIO_PIN_9;
+    gpio.Pin = BSP_UART_PIN_TX;
     gpio.Mode = GPIO_MODE_AF_PP;
     gpio.Speed = GPIO_SPEED_FREQ_HIGH;
-    HAL_GPIO_Init(GPIOA, &gpio);
+    HAL_GPIO_Init(BSP_UART_GPIO_PORT, &gpio);
 
-    gpio.Pin = GPIO_PIN_10;
+    gpio.Pin = BSP_UART_PIN_RX;
     gpio.Mode = GPIO_MODE_INPUT;
     gpio.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &gpio);
+    HAL_GPIO_Init(BSP_UART_GPIO_PORT, &gpio);
 
     g_huart1.Instance = USART1;
-    g_huart1.Init.BaudRate = APP_UART_BAUDRATE;
+    g_huart1.Init.BaudRate = BSP_UART_BAUDRATE;
     g_huart1.Init.WordLength = UART_WORDLENGTH_8B;
     g_huart1.Init.StopBits = UART_STOPBITS_1;
     g_huart1.Init.Parity = UART_PARITY_NONE;

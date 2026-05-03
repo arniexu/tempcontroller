@@ -48,6 +48,29 @@ Treat this as a mandatory delivery rule for every code module.
 7. Hardware-dependent tests must live only in a separate Keil-driven debug build and must not be compiled into release builds.
 8. Release builds must exclude hardware test scaffolding, diagnostic scenes, and driver-test entry flows unless a dedicated production requirement explicitly says otherwise.
 
+## PlatformIO Layering Rule
+Treat this as a mandatory build-configuration architecture rule for PlatformIO.
+
+1. PlatformIO configuration must follow three layers: common layer (`[env]`), chip layer (`[env:chip-*]`), and project+build layer (`[env:<project>-Debug/Release]`).
+2. Common layer must hold only shared toolchain/build settings and source filters; it must not define project identity macros.
+3. Chip layer must define board/chip-specific settings and chip-family macros only.
+4. Project+build layer must define project macros (`APP_PROJECT_*`) and build-mode macros (`APP_BUILD_DEBUG`/`APP_BUILD_RELEASE`).
+5. Every project must provide both Debug and Release PlatformIO environments.
+6. Legacy environment names may be kept as aliases, but aliases must map to canonical environments via `extends` and must not duplicate full configuration blocks.
+7. Artifact naming must be centrally managed by `firmware/platformio/hal/pio_progname.py` and stay consistent with environment naming.
+8. Any PlatformIO configuration change must include a build validation matrix covering all canonical project environments.
+9. If any canonical environment fails after a config change, the change is incomplete unless the user explicitly accepts the known blocker.
+10. PlatformIO config submissions must explicitly list: changed layers, macro placement compliance, alias mapping changes, and artifact naming impact.
+
+## Component Decoupling Rule
+Treat this as a mandatory component-governance rule for project configurations.
+
+1. Component switches must use `COMP_*` names and be defined only in project config headers.
+2. Project build files must not directly encode component business decisions; they select project/build/chip only.
+3. Legacy `APP_*` component macros may exist only as compatibility mappings to `COMP_*`.
+4. Component dependency and mutual-exclusion checks must be centralized in `app_config.h`.
+5. Any component switch change must include a brief impact statement for Debug and Release canonical environments.
+
 ## Debug Workflow Rule
 Treat this as a mandatory debugging order for all investigation and bug-fix tasks.
 

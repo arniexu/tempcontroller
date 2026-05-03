@@ -34,8 +34,13 @@
 #endif
 
 #if defined(USE_HAL_DRIVER)
+#if defined(STM32F4xx) || defined(STM32F407xx)
+#define PARAM_STORE_PAGE_A_ADDR   (0x08008000UL)
+#define PARAM_STORE_PAGE_B_ADDR   (0x0800C000UL)
+#else
 #define PARAM_STORE_PAGE_A_ADDR   (0x0800F800UL)
 #define PARAM_STORE_PAGE_B_ADDR   (0x0800FC00UL)
+#endif
 #define PARAM_STORE_FLASH_ERASED  (0xFFFFFFFFUL)
 #endif
 
@@ -48,6 +53,7 @@ typedef struct
     app_params_t payload;
     uint32_t crc32;
 } param_nv_record_t;
+
 
 static void read_record_from_fallback(unsigned int slot, param_nv_record_t *out);
 static int write_record_to_fallback(unsigned int slot, const param_nv_record_t *rec);
@@ -190,9 +196,16 @@ static int program_record_to_flash(uint32_t addr, const param_nv_record_t *rec)
 
     HAL_FLASH_Unlock();
 
+#if defined(STM32F4xx) || defined(STM32F407xx)
+    erase_cfg.TypeErase = FLASH_TYPEERASE_SECTORS;
+    erase_cfg.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+    erase_cfg.Sector = (addr == PARAM_STORE_PAGE_A_ADDR) ? FLASH_SECTOR_2 : FLASH_SECTOR_3;
+    erase_cfg.NbSectors = 1U;
+#else
     erase_cfg.TypeErase = FLASH_TYPEERASE_PAGES;
     erase_cfg.PageAddress = addr;
     erase_cfg.NbPages = 1U;
+#endif
     if (HAL_FLASHEx_Erase(&erase_cfg, &page_error) != HAL_OK)
     {
         HAL_FLASH_Lock();
@@ -224,9 +237,16 @@ static int erase_page_if_written(uint32_t addr)
     }
 
     HAL_FLASH_Unlock();
+#if defined(STM32F4xx) || defined(STM32F407xx)
+    erase_cfg.TypeErase = FLASH_TYPEERASE_SECTORS;
+    erase_cfg.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+    erase_cfg.Sector = (addr == PARAM_STORE_PAGE_A_ADDR) ? FLASH_SECTOR_2 : FLASH_SECTOR_3;
+    erase_cfg.NbSectors = 1U;
+#else
     erase_cfg.TypeErase = FLASH_TYPEERASE_PAGES;
     erase_cfg.PageAddress = addr;
     erase_cfg.NbPages = 1U;
+#endif
     if (HAL_FLASHEx_Erase(&erase_cfg, &page_error) != HAL_OK)
     {
         HAL_FLASH_Lock();

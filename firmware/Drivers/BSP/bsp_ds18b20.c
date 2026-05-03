@@ -13,10 +13,19 @@ static bsp_ds18b20_diag_t g_diag = {0};
 #define DS18B20_CONVERT_TIMEOUT_MS (750U)
 #define DS18B20_READ_RETRY         (2U)
 
-#if (APP_USE_MOCK_TEMP_SOURCE == 0U)
-static GPIO_TypeDef *const g_sensor_port[BSP_DS18B20_SENSOR_COUNT] = {GPIOA, GPIOA, GPIOA};
-static const uint16_t g_sensor_pin[BSP_DS18B20_SENSOR_COUNT] = {GPIO_PIN_1, GPIO_PIN_3, GPIO_PIN_4};
-static const uint8_t g_sensor_pin_source[BSP_DS18B20_SENSOR_COUNT] = {GPIO_PinSource1, GPIO_PinSource3, GPIO_PinSource4};
+#if (COMP_SENSOR_DS18B20_ENABLE == 1U)
+static GPIO_TypeDef *const g_sensor_port[BSP_DS18B20_SENSOR_COUNT] = {
+    BSP_SENSOR_DS18B20_GPIO_PORT_0,
+    BSP_SENSOR_DS18B20_GPIO_PORT_1,
+    BSP_SENSOR_DS18B20_GPIO_PORT_2};
+static const uint16_t g_sensor_pin[BSP_DS18B20_SENSOR_COUNT] = {
+    BSP_SENSOR_DS18B20_PIN_0,
+    BSP_SENSOR_DS18B20_PIN_1,
+    BSP_SENSOR_DS18B20_PIN_2};
+static const uint8_t g_sensor_pin_source[BSP_DS18B20_SENSOR_COUNT] = {
+    BSP_SENSOR_DS18B20_PIN_SOURCE_0,
+    BSP_SENSOR_DS18B20_PIN_SOURCE_1,
+    BSP_SENSOR_DS18B20_PIN_SOURCE_2};
 static volatile uint8_t g_presence_fall_seen[BSP_DS18B20_SENSOR_COUNT] = {0U, 0U, 0U};
 
 typedef enum
@@ -44,7 +53,7 @@ static volatile ow_irq_ctx_t g_ow_irq = {0U, 0U, 0U, 0U, 0U, 0U, 0U, OW_IRQ_OP_N
 static uint8_t ow_read_pin(uint8_t index);
 #endif
 
-#if (APP_USE_MOCK_TEMP_SOURCE == 0U)
+#if (COMP_SENSOR_DS18B20_ENABLE == 1U)
 static void ds18b20_diag_inc(uint32_t *counter)
 {
     if (*counter < 0xFFFFFFFFUL)
@@ -379,7 +388,13 @@ static bool ds18b20_read_once(uint8_t index, float *temp_c)
     *temp_c = (float)raw / 16.0f;
     return true;
 }
+
+static uint16_t ds18b20_gpio_pin_mask(void)
+{
+    return (uint16_t)(g_sensor_pin[0] | g_sensor_pin[1] | g_sensor_pin[2]);
+}
 #endif
+
 #endif
 
 static bsp_ds18b20_presence_mode_t g_presence_mode = BSP_DS18B20_PRESENCE_IRQ_ONLY;
@@ -390,19 +405,19 @@ static bool g_mock_valid[BSP_DS18B20_SENSOR_COUNT] = {true, true, true};
 void bsp_ds18b20_init(void)
 {
 #if defined(USE_HAL_DRIVER)
-#if (APP_USE_MOCK_TEMP_SOURCE == 0U)
+#if (COMP_SENSOR_DS18B20_ENABLE == 1U)
     GPIO_InitTypeDef gpio;
     TIM_TimeBaseInitTypeDef tim;
     EXTI_InitTypeDef exti;
     NVIC_InitTypeDef nvic;
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO, ENABLE);
+    RCC_APB2PeriphClockCmd(BSP_SENSOR_DS18B20_GPIO_APB2_MASK | RCC_APB2Periph_AFIO, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 | RCC_APB1Periph_TIM4, ENABLE);
 
-    gpio.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_3 | GPIO_Pin_4;
+    gpio.GPIO_Pin = ds18b20_gpio_pin_mask();
     gpio.GPIO_Mode = GPIO_Mode_IPU;
     gpio.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOA, &gpio);
+    GPIO_Init(g_sensor_port[0], &gpio);
 
     GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, g_sensor_pin_source[0]);
     GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, g_sensor_pin_source[1]);
@@ -468,7 +483,7 @@ void bsp_ds18b20_init(void)
     bsp_ds18b20_reset_diag();
 }
 
-#if defined(USE_HAL_DRIVER) && (APP_USE_MOCK_TEMP_SOURCE == 0U)
+#if defined(USE_HAL_DRIVER) && (COMP_SENSOR_DS18B20_ENABLE == 1U)
 void EXTI1_IRQHandler(void)
 {
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
@@ -592,7 +607,7 @@ bool bsp_ds18b20_read_c(uint8_t index, float *temp_c)
         return false;
     }
 
-#if (APP_USE_MOCK_TEMP_SOURCE == 1U)
+#if (COMP_SENSOR_DS18B20_ENABLE == 0U)
     if (!g_mock_valid[index])
     {
         return false;

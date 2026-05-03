@@ -179,6 +179,22 @@ static inline bool hw_rtc_get_minutes_of_day(uint16_t *minutes_of_day)
 #define HW_OLED_LINE_COUNT  (4U)
 #define HW_OLED_LINE_CHARS  (21U)
 
+#if !defined(BSP_LCD_WIDTH)
+#define BSP_LCD_WIDTH        (240U)
+#endif
+
+#if !defined(BSP_LCD_HEIGHT)
+#define BSP_LCD_HEIGHT       (320U)
+#endif
+
+#if !defined(BSP_LCD_COLOR_BLACK)
+#define BSP_LCD_COLOR_BLACK  (0x0000U)
+#endif
+
+#if !defined(BSP_LCD_COLOR_WHITE)
+#define BSP_LCD_COLOR_WHITE  (0xFFFFU)
+#endif
+
 void hw_key_init(void);
 bool hw_key_get_state(hw_key_id_t key);
 

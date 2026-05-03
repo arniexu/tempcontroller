@@ -250,7 +250,11 @@ static void hw_smoke_show_lines(const char *l0,
     }
 }
 
+#if (APP_HW_DRIVER_TEST_DISPLAY == 0U) && defined(__GNUC__)
+static void __attribute__((unused)) hw_smoke_boot_stage(const char *line1, const char *line2)
+#else
 static void hw_smoke_boot_stage(const char *line1, const char *line2)
+#endif
 {
     uint8_t guard = 0U;
 
@@ -662,7 +666,7 @@ static void run_all_hw_driver_smoke_test_loop(void)
                 char rx_preview[24];
 
                 hw_smoke_format_preview4(rx_preview, sizeof(rx_preview), g_hw_smoke_spi_rx);
-                (void)snprintf(line3, sizeof(line3), "RX %s", rx_preview);
+                (void)snprintf(line3, sizeof(line3), "RX %.20s", rx_preview);
             }
             else
             {
