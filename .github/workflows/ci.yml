@@ -184,7 +184,7 @@ jobs:
             ../Drivers/BSP/bsp_buzzer.c \
             ../Drivers/BSP/bsp_eeprom.c \
             ../Drivers/BSP/bsp_key.c \
-            ../Drivers/BSP/bsp_oled.c \
+            ../Drivers/BSP/bsp_lcd_8080.c \
             ../Drivers/BSP/bsp_rtc.c \
             ../Drivers/BSP/bsp_relay.c \
             stubs/bsp_uart_test_stub.c \

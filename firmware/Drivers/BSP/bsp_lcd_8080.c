@@ -1,4 +1,8 @@
-#include "bsp_oled.h"
+#include "app_config.h"
+
+#if defined(APP_DISPLAY_DRIVER_LCD_8080)
+
+#include "bsp_lcd_8080.h"
 
 #include <string.h>
 
@@ -25,16 +29,18 @@
 #define TFT_DRAW_ROW_FROM_END       (0U)
 #define TFT_TEXT_LOAD_Y_REVERSED    (1U)
 
-#define TFT_COLOR_BG                (0x0000U)
-#define TFT_COLOR_FG                (0xFFFFU)
+#define OLED_COLOR_BG               (BSP_OLED_COLOR_BLACK)
+#define OLED_COLOR_FG               (BSP_OLED_COLOR_WHITE)
 
-#define LCD_TEXT_SCALE              (2U)
+#define LCD_TEXT_SCALE              (1U)
 #define LCD_GLYPH_WIDTH             (5U)
 #define LCD_GLYPH_HEIGHT            (7U)
 #define LCD_CHAR_WIDTH              ((LCD_GLYPH_WIDTH * LCD_TEXT_SCALE) + 1U)
 #define LCD_CHAR_HEIGHT             (LCD_GLYPH_HEIGHT * LCD_TEXT_SCALE)
-#define LCD_TEXT_START_X            (4U)
-#define LCD_TEXT_CLEAR_MARGIN_Y     (2U)
+#define LCD_TEXT_START_X            (1U)
+#define LCD_TEXT_CLEAR_MARGIN_Y     (1U)
+#define TFT_PHYSICAL_WIDTH          (240U)
+#define TFT_PHYSICAL_HEIGHT         (320U)
 
 #define LCD_REG_0                   (0x00U)
 #define LCD_REG_1                   (0x01U)
@@ -187,7 +193,19 @@ static void oled_build_frame(void)
 {
 }
 
-#if defined(USE_STDPERIPH_DRIVER) || defined(USE_HAL_DRIVER)
+static uint16_t oled_line_y(uint8_t line)
+{
+    static const uint16_t y_pos[BSP_OLED_LINE_COUNT] = {4U, 20U, 36U, 52U};
+
+    if (line >= BSP_OLED_LINE_COUNT)
+    {
+        return 0U;
+    }
+
+    return y_pos[line];
+}
+
+#if defined(USE_HAL_DRIVER)
 static void tg_lcd_fill_rect(void *ctx,
                              uint16_t x,
                              uint16_t y,
@@ -366,7 +384,7 @@ static void lcd_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16
 #if (TFT_MIRROR_X_AROUND_CENTER == 1U)
     {
         uint16_t x_end = (uint16_t)(x + w - 1U);
-        draw_x = (uint16_t)((BSP_LCD_WIDTH - 1U) - x_end);
+        draw_x = (uint16_t)((BSP_OLED_WIDTH - 1U) - x_end);
     }
 #endif
 
@@ -479,7 +497,7 @@ static void lcd_draw_text_dir(uint16_t x,
         }
         else
         {
-            if (cursor_x > (uint16_t)(BSP_LCD_WIDTH - advance))
+            if (cursor_x > (uint16_t)(BSP_OLED_WIDTH - advance))
             {
                 break;
             }
@@ -490,34 +508,36 @@ static void lcd_draw_text_dir(uint16_t x,
 
 static void lcd_draw_text_line(uint8_t line)
 {
-    static const uint16_t y_pos[BSP_OLED_LINE_COUNT] = {16U, 44U, 72U, 100U};
     char line_buf[BSP_OLED_LINE_CHARS + 1U];
     uint16_t line_start_x;
+    uint16_t line_y;
 
     if (line >= BSP_OLED_LINE_COUNT)
     {
         return;
     }
 
+    line_y = oled_line_y(line);
+
     lcd_fill_rect(0U,
-                  (uint16_t)(y_pos[line] - LCD_TEXT_CLEAR_MARGIN_Y),
-                  240U,
+                  (uint16_t)(line_y - LCD_TEXT_CLEAR_MARGIN_Y),
+                  BSP_OLED_WIDTH,
                   (uint16_t)(LCD_CHAR_HEIGHT + (LCD_TEXT_CLEAR_MARGIN_Y * 2U)),
-                  TFT_COLOR_BG);
+                  OLED_COLOR_BG);
     strncpy(line_buf, g_lines[line], BSP_OLED_LINE_CHARS);
     line_buf[BSP_OLED_LINE_CHARS] = '\0';
     
 #if (TFT_DRAW_ROW_FROM_END == 1U)
-    line_start_x = (uint16_t)(BSP_LCD_WIDTH - LCD_TEXT_START_X - LCD_CHAR_WIDTH);
+    line_start_x = (uint16_t)(BSP_OLED_WIDTH - LCD_TEXT_START_X - LCD_CHAR_WIDTH);
 #else
     line_start_x = LCD_TEXT_START_X;
 #endif
 
     lcd_draw_text_dir(line_start_x,
-                      y_pos[line],
+                      line_y,
                       line_buf,
                       LCD_TEXT_SCALE,
-                      TFT_COLOR_FG,
+                      OLED_COLOR_FG,
                       TFT_DRAW_ROW_FROM_END);
 }
 
@@ -688,10 +708,10 @@ void bsp_oled_init(void)
     {
         lcd_init_932x();
     }
-    lcd_fill_rect(0U, 0U, 240U, 320U, TFT_COLOR_BG);
+    lcd_fill_rect(0U, 0U, TFT_PHYSICAL_WIDTH, TFT_PHYSICAL_HEIGHT, OLED_COLOR_BG);
     lcd_ctrl_write(TFT_PIN_BL, 1);
-    g_tg_canvas.width = BSP_LCD_WIDTH;
-    g_tg_canvas.height = BSP_LCD_HEIGHT;
+    g_tg_canvas.width = BSP_OLED_WIDTH;
+    g_tg_canvas.height = BSP_OLED_HEIGHT;
     g_tg_canvas.fill_rect = tg_lcd_fill_rect;
     g_tg_canvas.ctx = 0;
     g_lcd_ready = 1U;
@@ -721,7 +741,7 @@ void bsp_oled_clear(void)
 #if defined(USE_HAL_DRIVER)
     if (g_lcd_ready != 0U)
     {
-        tg_fill_rect(&g_tg_canvas, 0, 0, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, TFT_COLOR_BG);
+        lcd_fill_rect(0U, 0U, TFT_PHYSICAL_WIDTH, TFT_PHYSICAL_HEIGHT, OLED_COLOR_BG);
     }
 #endif
 }
@@ -818,7 +838,7 @@ void bsp_oled_draw_circle(uint16_t cx, uint16_t cy, uint16_t radius, uint16_t co
 
 void bsp_oled_draw_text_xy(uint16_t x, uint16_t y, const char *text, uint8_t scale, uint16_t color)
 {
-#if defined(USE_STDPERIPH_DRIVER) || defined(USE_HAL_DRIVER)
+#if defined(USE_HAL_DRIVER)
     if ((g_lcd_ready == 0U) || (text == 0))
     {
         return;
@@ -851,20 +871,20 @@ void bsp_oled_write_area_rgb565(uint16_t x,
         return;
     }
 
-    if ((x >= BSP_LCD_WIDTH) || (y >= BSP_LCD_HEIGHT))
+    if ((x >= BSP_OLED_WIDTH) || (y >= BSP_OLED_HEIGHT))
     {
         return;
     }
 
     clipped_w = w;
     clipped_h = h;
-    if ((uint32_t)x + (uint32_t)clipped_w > (uint32_t)BSP_LCD_WIDTH)
+    if ((uint32_t)x + (uint32_t)clipped_w > (uint32_t)BSP_OLED_WIDTH)
     {
-        clipped_w = (uint16_t)(BSP_LCD_WIDTH - x);
+        clipped_w = (uint16_t)(BSP_OLED_WIDTH - x);
     }
-    if ((uint32_t)y + (uint32_t)clipped_h > (uint32_t)BSP_LCD_HEIGHT)
+    if ((uint32_t)y + (uint32_t)clipped_h > (uint32_t)BSP_OLED_HEIGHT)
     {
-        clipped_h = (uint16_t)(BSP_LCD_HEIGHT - y);
+        clipped_h = (uint16_t)(BSP_OLED_HEIGHT - y);
     }
 
     lcd_set_window(x,
@@ -924,7 +944,7 @@ void bsp_oled_refresh(void)
 
 int bsp_oled_process(void)
 {
-#if defined(USE_STDPERIPH_DRIVER) || defined(USE_HAL_DRIVER)
+#if defined(USE_HAL_DRIVER)
     if ((!g_refresh_pending) || (!g_lcd_ready))
     {
         return 0;
@@ -981,6 +1001,10 @@ const char *bsp_oled_mock_get_line(uint8_t line)
 
     return g_lines[line];
 }
+
+
+
+#endif
 
 
 

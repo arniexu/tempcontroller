@@ -55,9 +55,6 @@ typedef struct
 } param_nv_record_t;
 
 
-static void read_record_from_fallback(unsigned int slot, param_nv_record_t *out);
-static int write_record_to_fallback(unsigned int slot, const param_nv_record_t *rec);
-
 #if (APP_PARAM_STORE_USE_SPIFLASH == 1U)
 static int read_record_from_spiflash(uint32_t addr, param_nv_record_t *out)
 {
@@ -67,6 +64,18 @@ static int read_record_from_spiflash(uint32_t addr, param_nv_record_t *out)
 static int write_record_to_spiflash(uint32_t addr, const param_nv_record_t *rec)
 {
     return hw_spiflash_write(addr, (const uint8_t *)rec, (uint32_t)sizeof(param_nv_record_t));
+}
+#endif
+
+#if (APP_PARAM_STORE_USE_EEPROM == 1U)
+static int read_record_from_eeprom(uint16_t addr, param_nv_record_t *out)
+{
+    return hw_eeprom_read(addr, (uint8_t *)out, (uint16_t)sizeof(param_nv_record_t));
+}
+
+static int write_record_to_eeprom(uint16_t addr, const param_nv_record_t *rec)
+{
+    return hw_eeprom_write(addr, (const uint8_t *)rec, (uint16_t)sizeof(param_nv_record_t));
 }
 #endif
 
@@ -257,81 +266,6 @@ static int erase_page_if_written(uint32_t addr)
 }
 #endif
 
-static void read_record_from_fallback(unsigned int slot, param_nv_record_t *out)
-{
-#if defined(USE_HAL_DRIVER)
-    if (slot == 0U)
-    {
-    //@TODO:
-    #if (APP_PARAM_STORE_USE_EEPROM == 1U)
-    static int read_record_from_eeprom(uint16_t addr, param_nv_record_t *out)
-    {
-        return hw_eeprom_read(addr, (uint8_t *)out, (uint16_t)sizeof(param_nv_record_t));
-    }
-
-    static int write_record_to_eeprom(uint16_t addr, const param_nv_record_t *rec)
-    {
-        return hw_eeprom_write(addr, (const uint8_t *)rec, (uint16_t)sizeof(param_nv_record_t));
-    }
-    #endif
-
-        read_record_from_flash(PARAM_STORE_PAGE_A_ADDR, out);
-    }
-    else
-    {
-        read_record_from_flash(PARAM_STORE_PAGE_B_ADDR, out);
-    }
-#else
-    memset(out, 0xFF, sizeof(*out));
-    if (slot == 0U)
-    {
-        if (g_nv_page_a_written)
-        {
-            memcpy(out, g_nv_page_a, sizeof(*out));
-        }
-    }
-    else if (g_nv_page_b_written)
-    {
-        memcpy(out, g_nv_page_b, sizeof(*out));
-    }
-#endif
-}
-
-static int write_record_to_fallback(unsigned int slot, const param_nv_record_t *rec)
-{
-#if defined(USE_HAL_DRIVER)
-    if (slot == 0U)
-    {
-        if (program_record_to_flash(PARAM_STORE_PAGE_A_ADDR, rec))
-        {
-            return erase_page_if_written(PARAM_STORE_PAGE_B_ADDR);
-        }
-    }
-    else
-    {
-        if (program_record_to_flash(PARAM_STORE_PAGE_B_ADDR, rec))
-        {
-            return erase_page_if_written(PARAM_STORE_PAGE_A_ADDR);
-        }
-    }
-    return 0;
-#else
-    if (slot == 0U)
-    {
-        memcpy(g_nv_page_a, rec, sizeof(*rec));
-        g_nv_page_a_written = 1;
-        g_nv_page_b_written = 0;
-    }
-    else
-    {
-        memcpy(g_nv_page_b, rec, sizeof(*rec));
-        g_nv_page_b_written = 1;
-        g_nv_page_a_written = 0;
-    }
-    return 1;
-#endif
-}
-
 static int load_from_nv(app_params_t *params, uint32_t *seq_out)
 {
     param_nv_record_t a;
@@ -346,14 +280,8 @@ static int load_from_nv(app_params_t *params, uint32_t *seq_out)
     memset(&b, 0xFF, sizeof(b));
     spiflash_a_ok = read_record_from_spiflash(PARAM_STORE_SPIFLASH_SLOT_A_ADDR, &a);
     spiflash_b_ok = read_record_from_spiflash(PARAM_STORE_SPIFLASH_SLOT_B_ADDR, &b);
-    if (!spiflash_a_ok)
-    {
-        read_record_from_fallback(0U, &a);
-    }
-    if (!spiflash_b_ok)
-    {
-        read_record_from_fallback(1U, &b);
-    }
+    (void)spiflash_a_ok;
+    (void)spiflash_b_ok;
 #elif (APP_PARAM_STORE_USE_EEPROM == 1U)
     int eeprom_a_ok;
     int eeprom_b_ok;
@@ -362,14 +290,8 @@ static int load_from_nv(app_params_t *params, uint32_t *seq_out)
     memset(&b, 0xFF, sizeof(b));
     eeprom_a_ok = read_record_from_eeprom(PARAM_STORE_EEPROM_SLOT_A_ADDR, &a);
     eeprom_b_ok = read_record_from_eeprom(PARAM_STORE_EEPROM_SLOT_B_ADDR, &b);
-    if (!eeprom_a_ok)
-    {
-        read_record_from_fallback(0U, &a);
-    }
-    if (!eeprom_b_ok)
-    {
-        read_record_from_fallback(1U, &b);
-    }
+    (void)eeprom_a_ok;
+    (void)eeprom_b_ok;
 #elif defined(USE_HAL_DRIVER)
     read_record_from_flash(PARAM_STORE_PAGE_A_ADDR, &a);
     read_record_from_flash(PARAM_STORE_PAGE_B_ADDR, &b);
@@ -431,14 +353,8 @@ static void save_to_nv(const app_params_t *params)
     memset(&b, 0xFF, sizeof(b));
     spiflash_a_ok = read_record_from_spiflash(PARAM_STORE_SPIFLASH_SLOT_A_ADDR, &a);
     spiflash_b_ok = read_record_from_spiflash(PARAM_STORE_SPIFLASH_SLOT_B_ADDR, &b);
-    if (!spiflash_a_ok)
-    {
-        read_record_from_fallback(0U, &a);
-    }
-    if (!spiflash_b_ok)
-    {
-        read_record_from_fallback(1U, &b);
-    }
+    (void)spiflash_a_ok;
+    (void)spiflash_b_ok;
 #elif (APP_PARAM_STORE_USE_EEPROM == 1U)
     int eeprom_a_ok;
     int eeprom_b_ok;
@@ -447,14 +363,8 @@ static void save_to_nv(const app_params_t *params)
     memset(&b, 0xFF, sizeof(b));
     eeprom_a_ok = read_record_from_eeprom(PARAM_STORE_EEPROM_SLOT_A_ADDR, &a);
     eeprom_b_ok = read_record_from_eeprom(PARAM_STORE_EEPROM_SLOT_B_ADDR, &b);
-    if (!eeprom_a_ok)
-    {
-        read_record_from_fallback(0U, &a);
-    }
-    if (!eeprom_b_ok)
-    {
-        read_record_from_fallback(1U, &b);
-    }
+    (void)eeprom_a_ok;
+    (void)eeprom_b_ok;
 #elif defined(USE_HAL_DRIVER)
     read_record_from_flash(PARAM_STORE_PAGE_A_ADDR, &a);
     read_record_from_flash(PARAM_STORE_PAGE_B_ADDR, &b);
@@ -497,32 +407,20 @@ static void save_to_nv(const app_params_t *params)
 #if (APP_PARAM_STORE_USE_SPIFLASH == 1U)
     if (!a_valid || (b_valid && (b.seq > a.seq)))
     {
-        if (!write_record_to_spiflash(PARAM_STORE_SPIFLASH_SLOT_A_ADDR, &rec))
-        {
-            (void)write_record_to_fallback(0U, &rec);
-        }
+        (void)write_record_to_spiflash(PARAM_STORE_SPIFLASH_SLOT_A_ADDR, &rec);
     }
     else
     {
-        if (!write_record_to_spiflash(PARAM_STORE_SPIFLASH_SLOT_B_ADDR, &rec))
-        {
-            (void)write_record_to_fallback(1U, &rec);
-        }
+        (void)write_record_to_spiflash(PARAM_STORE_SPIFLASH_SLOT_B_ADDR, &rec);
     }
 #elif (APP_PARAM_STORE_USE_EEPROM == 1U)
     if (!a_valid || (b_valid && (b.seq > a.seq)))
     {
-        if (!write_record_to_eeprom(PARAM_STORE_EEPROM_SLOT_A_ADDR, &rec))
-        {
-            (void)write_record_to_fallback(0U, &rec);
-        }
+        (void)write_record_to_eeprom(PARAM_STORE_EEPROM_SLOT_A_ADDR, &rec);
     }
     else
     {
-        if (!write_record_to_eeprom(PARAM_STORE_EEPROM_SLOT_B_ADDR, &rec))
-        {
-            (void)write_record_to_fallback(1U, &rec);
-        }
+        (void)write_record_to_eeprom(PARAM_STORE_EEPROM_SLOT_B_ADDR, &rec);
     }
 #elif defined(USE_HAL_DRIVER)
     if (!a_valid || (b_valid && (b.seq > a.seq)))

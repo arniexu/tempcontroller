@@ -4,7 +4,7 @@
 
 #if (APP_USE_LVGL_UI == 1U)
 
-#include "bsp_oled.h"
+#include "bsp_lcd_8080.h"
 #include "hw_platform_port.h"
 #include "lvgl.h"
 #include "ui_lvgl_view.h"

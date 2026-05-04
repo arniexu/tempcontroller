@@ -41,7 +41,7 @@ project:
         - file: ../../Drivers/BSP/bsp_buzzer.c
         - file: ../../Drivers/BSP/bsp_eeprom.c
         - file: ../../Drivers/BSP/bsp_key.c
-        - file: ../../Drivers/BSP/bsp_oled.c
+        - file: ../../Drivers/BSP/bsp_lcd_8080.c
         - file: ../../Drivers/BSP/tiny_graphics.c
         - file: ../../Drivers/BSP/bsp_relay.c
         - file: ../../Drivers/BSP/bsp_rtc.c

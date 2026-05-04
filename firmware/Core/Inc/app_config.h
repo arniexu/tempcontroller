@@ -4,7 +4,7 @@
 #include "../../ProjectConfig/project_config_select.h"
 #include "../../ProjectConfig/bsp_config_select.h"
 
-#if defined(USE_STDPERIPH_DRIVER) || defined(USE_HAL_DRIVER)
+#if defined(USE_HAL_DRIVER)
 #if !defined(APP_BUILD_DEBUG) && !defined(APP_BUILD_RELEASE)
 #error "Keil hardware targets must define exactly one of APP_BUILD_DEBUG or APP_BUILD_RELEASE."
 #endif
@@ -26,13 +26,20 @@
 #define APP_HW_DRIVER_TEST_DISPLAY      (0U)
 #endif
 
+#if !defined(APP_DISPLAY_DRIVER_LCD_8080) && !defined(APP_DISPLAY_DRIVER_OLED_I2C_96X96)
+#define APP_DISPLAY_DRIVER_LCD_8080
+#endif
+
+#if defined(APP_DISPLAY_DRIVER_LCD_8080) && defined(APP_DISPLAY_DRIVER_OLED_I2C_96X96)
+#error "Exactly one display driver must be enabled."
+#endif
+
 #if (APP_BUILD_RELEASE == 1U) && (APP_HW_DRIVER_TEST_DISPLAY == 1U)
 #error "Display driver hardware tests must not be compiled into release builds."
 #endif
 
 /*
- * When project is built for STM32F103 target, define USE_STDPERIPH_DRIVER
- * or USE_HAL_DRIVER in compiler symbols to enable hardware BSP implementation.
+ * Hardware BSP implementation is enabled when USE_HAL_DRIVER is defined.
  */
 
 #if !defined(APP_TEMP_ALARM_THRESHOLD_C)

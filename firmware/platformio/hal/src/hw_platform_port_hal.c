@@ -3,7 +3,7 @@
 #include "bsp_buzzer.h"
 #include "bsp_eeprom.h"
 #include "bsp_key.h"
-#include "bsp_oled.h"
+#include "bsp_lcd_8080.h"
 #include "bsp_relay.h"
 #include "bsp_rtc.h"
 #include "bsp_spiflash.h"

@@ -3,7 +3,7 @@
 
 #include "project_config_select.h"
 
-#if defined(USE_HAL_DRIVER) || defined(USE_STDPERIPH_DRIVER)
+#if defined(USE_HAL_DRIVER)
 #define BSP_BUZZER_HW_CONFIG_ENABLE    (1U)
 #define BSP_RELAY_HW_CONFIG_ENABLE     (1U)
 #define BSP_KEY_HW_CONFIG_ENABLE       (1U)

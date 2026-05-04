@@ -4,7 +4,7 @@
 
 #include "app_config.h"
 #include "bsp_key.h"
-#include "bsp_oled.h"
+#include "bsp_lcd_8080.h"
 #include "bsp_rtc.h"
 #include "log_service.h"
 #include "test_framework.h"

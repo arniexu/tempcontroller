@@ -28,6 +28,13 @@
 7. os: 当前仅支持 RTOS，不支持 Linux。
 8. service: 业务服务层（Core），通过 hw_* 端口使用硬件能力，不包含 BSP/寄存器实现细节。
 
+### 0.1 技能域（强制）
+1. RTOS: 具备任务模型、优先级、同步机制、时序分析与实时性风险识别能力。
+2. STM32CubeMX: 具备时钟树、外设初始化、引脚复用与生成代码边界管理能力。
+3. IDE: 具备 Keil/VS Code/PlatformIO 的构建、调试、下载与问题定位能力。
+4. 开源软件解决方案: 具备选型、许可证合规、维护活跃度与替代成本评估能力。
+5. 交付要求: 涉及以上技能域的决策必须给出依据、风险与回退方案。
+
 ### 1. 分层与端口边界（强制）
 1. 业务层不直接 include 或调用 BSP、HAL、寄存器细节；硬件访问统一走 hw_* 端口。
 2. BSP 层仅负责外设访问与时序/中断，不承载控制策略。
@@ -74,7 +81,7 @@
 1. AGENT_AUTHORING_EXPERT@1.0.0
 2. KEIL_BUILD@1.1.0
 3. PLATFORMIO_BUILD_EXPERT@1.1.0
-4. STM32_EMBEDDED_ENGINEER@1.1.0
+4. STM32_ENG@2.1.0
 5. TEMPCON@1.1.0
 6. UI_DESIGNER@1.1.0
 7. WATER3P_STATIC@1.1.0

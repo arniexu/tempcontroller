@@ -21,7 +21,7 @@ try {
       ../Drivers/BSP/bsp_eeprom.c `
       ../Drivers/BSP/bsp_spiflash.c `
       ../Drivers/BSP/bsp_key.c `
-      ../Drivers/BSP/bsp_oled.c `
+      ../Drivers/BSP/bsp_lcd_8080.c `
       ../Drivers/BSP/tiny_graphics.c `
       ../Drivers/BSP/bsp_rtc.c `
       ../Drivers/BSP/bsp_relay.c `

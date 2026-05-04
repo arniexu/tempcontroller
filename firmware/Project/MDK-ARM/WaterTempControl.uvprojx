@@ -407,9 +407,9 @@
               <FilePath>..\..\Drivers\BSP\bsp_key.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_oled.c</FileName>
+              <FileName>bsp_lcd_8080.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\Drivers\BSP\bsp_oled.c</FilePath>
+              <FilePath>..\..\Drivers\BSP\bsp_lcd_8080.c</FilePath>
             </File>
             <File>
               <FileName>tiny_graphics.c</FileName>
@@ -1629,9 +1629,9 @@
               <FilePath>..\..\Drivers\BSP\bsp_key.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_oled.c</FileName>
+              <FileName>bsp_lcd_8080.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\Drivers\BSP\bsp_oled.c</FilePath>
+              <FilePath>..\..\Drivers\BSP\bsp_lcd_8080.c</FilePath>
             </File>
             <File>
               <FileName>tiny_graphics.c</FileName>

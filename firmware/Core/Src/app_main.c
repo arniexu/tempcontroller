@@ -1172,7 +1172,7 @@ void app_main_loop(void)
         return;
     }
 
-#if !defined(USE_STDPERIPH_DRIVER) && !defined(USE_HAL_DRIVER)
+#if !defined(USE_HAL_DRIVER)
     scheduler_tick_1ms();
 #endif
 

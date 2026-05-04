@@ -14,7 +14,7 @@ Open WaterTempControl.uvproj in Keil uVision.
 Use High-density target settings and make sure:
 
 - Device: STM32F103RC
-- Defines: USE_STDPERIPH_DRIVER, STM32F10X_HD
+- Defines: USE_HAL_DRIVER, STM32F10X_HD
 
 ## 3) Include paths
 
@@ -22,9 +22,9 @@ Add these include paths in C/C++ settings:
 
 - ..\..\Core\Inc
 - ..\..\Drivers\BSP
-- ..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\CMSIS\CM3\CoreSupport
-- ..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x
-- ..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\STM32F10x_StdPeriph_Driver\inc
+- ..\..\ThirdParty\STM32CubeF1\Drivers\STM32F1xx_HAL_Driver\Inc
+- ..\..\ThirdParty\STM32CubeF1\Drivers\CMSIS\Include
+- ..\..\ThirdParty\STM32CubeF1\Drivers\CMSIS\Device\ST\STM32F1xx\Include
 
 ## 4) Add files to groups
 
@@ -34,8 +34,7 @@ See SourceList.txt for exact source list.
 
 Ensure project contains:
 
-- ..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\system_stm32f10x.c
-- ..\..\ThirdParty\stm32f10x-stdperiph-lib\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\startup\arm\startup_stm32f10x_hd.s
+- HAL/CMSIS startup and system files for STM32F103 target
 
 ## 6) Remove template demo files
 
