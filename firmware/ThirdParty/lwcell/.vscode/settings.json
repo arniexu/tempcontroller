@@ -1,0 +1,31 @@
+{
+    "files.associations": {
+        "lwevt_types.h": "c",
+        "lwevt_type.h": "c",
+        "lwevt.h": "c",
+        "string.h": "c",
+        "lwevt_opt.h": "c",
+        "lwcell_private.h": "c",
+        "lwcell.h": "c",
+        "lwcell_includes.h": "c",
+        "lwcell_opt.h": "c",
+        "lwcell_device_info.h": "c",
+        "LWCELL_TYPES.h": "c",
+        "lwcell_int.h": "c",
+        "lwcell_mem.h": "c",
+        "lwcell_sim.h": "c",
+        "lwcell_buff.h": "c",
+        "lwcell_input.h": "c",
+        "lwcell_parser.h": "c",
+        "lwcell_debug.h": "c",
+        "lwcell_sms.h": "c",
+        "lwcell_threads.h": "c",
+        "lwcell_unicode.h": "c",
+        "lwcell_sys.h": "c",
+        "lwcell_mqtt_client_api.h": "c",
+        "lwcell_mqtt_client.h": "c",
+        "lwcell_phonebook.h": "c",
+        "lwcell_opts.h": "c"
+    },
+    "esbonio.sphinx.confDir": ""
+}
