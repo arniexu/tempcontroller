@@ -315,3 +315,120 @@ static void process_nav_key(ui_key_event_t key)
 3. 替换报警页与探头异常页（安全相关优先）。
 4. 最后替换运行详情、自检结果、导出页。
 5. 每步替换后都执行 `ui_service` 相关测试并实机确认显示布局。
+
+---
+
+## 5. 无按键阶段接入模板（mock 输入）
+
+本阶段先不处理按键事件，只做显示状态机和页面绘制验证。
+
+```c
+typedef struct
+{
+    uint8_t splash_timeout;
+    uint8_t post_ok;
+    uint8_t post_degraded;
+    uint8_t alarm_on;
+    uint8_t sensor_fault;
+    uint8_t view_tick;
+
+    float t_top;
+    float t_mid;
+    float t_bot;
+    float t_fused;
+    float set_temp;
+    float alarm_threshold;
+    uint16_t log_count;
+} ui_mock_input_t;
+
+static ui_mock_input_t g_mock;
+```
+
+```c
+static void ui_mock_step_pages(void)
+{
+    if (g_mock.view_tick == 0U)
+    {
+        return;
+    }
+
+    g_mock.view_tick = 0U;
+    switch (g_ui.page)
+    {
+    case UI_PAGE_HOME:
+        g_ui.page = UI_PAGE_SET_TEMP;
+        break;
+    case UI_PAGE_SET_TEMP:
+        g_ui.page = UI_PAGE_PID;
+        break;
+    case UI_PAGE_PID:
+        g_ui.page = UI_PAGE_ALARM;  /* 非告警时显示运行详情页 */
+        break;
+    case UI_PAGE_ALARM:
+        g_ui.page = UI_PAGE_EXPORT;
+        break;
+    case UI_PAGE_EXPORT:
+    default:
+        g_ui.page = UI_PAGE_HOME;
+        break;
+    }
+}
+
+static void ui_apply_mock_input(void)
+{
+    if (g_mock.splash_timeout != 0U)
+    {
+        g_ui.splash_ticks = 0U;
+        g_ui.page = UI_PAGE_SCHEDULE; /* 自检结果页 */
+        g_mock.splash_timeout = 0U;
+    }
+
+    if (g_ui.page == UI_PAGE_SCHEDULE)
+    {
+        if (g_mock.post_degraded != 0U)
+        {
+            g_ui.page = UI_PAGE_INFO; /* 探头异常页 */
+            g_mock.post_degraded = 0U;
+        }
+        else if (g_mock.post_ok != 0U)
+        {
+            g_ui.page = UI_PAGE_HOME;
+            g_mock.post_ok = 0U;
+        }
+    }
+
+    if (g_mock.alarm_on != 0U)
+    {
+        g_ui.last_alarm_on = 1;
+        g_ui.page = UI_PAGE_ALARM; /* 告警态显示超温报警页 */
+        return;
+    }
+
+    g_ui.last_alarm_on = 0;
+    if (g_mock.sensor_fault != 0U)
+    {
+        g_ui.last_temp.sensor_fault = true;
+        g_ui.page = UI_PAGE_INFO;
+        return;
+    }
+
+    g_ui.last_temp.sensor_fault = false;
+    ui_mock_step_pages();
+}
+```
+
+```c
+void ui_service_tick_200ms(app_params_t *params, const temp_snapshot_t *temp, float pid_out, int heater_on)
+{
+    /* 1) 先同步业务量测值 */
+    /* 2) 再应用 mock 状态机输入 */
+    /* 3) 最后按当前页 render */
+    (void)params;
+    (void)temp;
+    (void)pid_out;
+    (void)heater_on;
+
+    ui_apply_mock_input();
+    render_page();
+}
+```

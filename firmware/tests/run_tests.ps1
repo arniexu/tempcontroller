@@ -13,6 +13,7 @@ try {
       ../Core/Src/heater_ctrl.c `
       ../Core/Src/temp_manager.c `
       ../Core/Src/schedule_service.c `
+      ../Core/Src/ui_key_input.c `
       ../Core/Src/ui_service.c `
       ../Core/Src/protocol_export.c `
       ../Core/Src/app_main.c `

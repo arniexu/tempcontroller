@@ -6,6 +6,7 @@
 #include "hw_platform_port.h"
 #include "log_service.h"
 #include "tune_service.h"
+#include "ui_key_input.h"
 
 #define UI_SPLASH_TICKS             (8U)
 
@@ -26,18 +27,6 @@ typedef struct
     ui_page_t page;
     int editing;
     unsigned int pid_field;
-    ui_key_event_t pending_key;
-    ui_key_event_t queue[8];
-    unsigned int q_head;
-    unsigned int q_tail;
-    struct
-    {
-        int prev_pressed;
-        unsigned int hold_ticks;
-        int long_fired;
-        int short_fired;
-        unsigned int repeat_ticks;
-    } key_track[HW_KEY_COUNT];
     app_mode_t last_mode;
     temp_snapshot_t last_temp;
     app_params_t last_params;
@@ -72,30 +61,6 @@ typedef enum
     UI_REDRAW_FULL,
     UI_REDRAW_SETTINGS_CARD
 } ui_redraw_mode_t;
-
-static int queue_push(ui_key_event_t key)
-{
-    unsigned int next = (g_ui.q_head + 1U) % (unsigned int)(sizeof(g_ui.queue) / sizeof(g_ui.queue[0]));
-    if (next == g_ui.q_tail)
-    {
-        /* Drop the oldest event so newest key events are not lost under bursts. */
-        g_ui.q_tail = (g_ui.q_tail + 1U) % (unsigned int)(sizeof(g_ui.queue) / sizeof(g_ui.queue[0]));
-    }
-    g_ui.queue[g_ui.q_head] = key;
-    g_ui.q_head = next;
-    return 1;
-}
-
-static int queue_pop(ui_key_event_t *key)
-{
-    if ((key == 0) || (g_ui.q_tail == g_ui.q_head))
-    {
-        return 0;
-    }
-    *key = g_ui.queue[g_ui.q_tail];
-    g_ui.q_tail = (g_ui.q_tail + 1U) % (unsigned int)(sizeof(g_ui.queue) / sizeof(g_ui.queue[0]));
-    return 1;
-}
 
 static float clampf(float v, float min_v, float max_v)
 {
@@ -637,128 +602,6 @@ static ui_redraw_mode_t process_key_event(app_params_t *params, ui_key_event_t k
     }
 
     return redraw_mode;
-}
-
-static void poll_keys_to_events(void)
-{
-    unsigned int i;
-
-    for (i = 0U; i < (unsigned int)HW_KEY_COUNT; ++i)
-    {
-        int pressed = hw_key_get_state((hw_key_id_t)i) ? 1 : 0;
-
-        if (pressed)
-        {
-            if (!g_ui.key_track[i].prev_pressed)
-            {
-                g_ui.key_track[i].prev_pressed = 1;
-                g_ui.key_track[i].hold_ticks = 1U;
-                g_ui.key_track[i].long_fired = 0;
-                g_ui.key_track[i].short_fired = 0;
-                g_ui.key_track[i].repeat_ticks = 0U;
-            }
-            else
-            {
-                g_ui.key_track[i].hold_ticks++;
-            }
-
-            /* Fallback for noisy/sticky lines: emit one short-key event on hold. */
-            if ((!g_ui.key_track[i].short_fired) && (g_ui.key_track[i].hold_ticks >= 3U))
-            {
-                if (i == (unsigned int)HW_KEY_SET)
-                {
-                    (void)queue_push(UI_KEY_SET);
-                    g_ui.key_track[i].short_fired = 1;
-                }
-                else if (i == (unsigned int)HW_KEY_UP)
-                {
-                    (void)queue_push(UI_KEY_UP);
-                    g_ui.key_track[i].short_fired = 1;
-                }
-                else if (i == (unsigned int)HW_KEY_DOWN)
-                {
-                    (void)queue_push(UI_KEY_DOWN);
-                    g_ui.key_track[i].short_fired = 1;
-                }
-            }
-
-            if (i == (unsigned int)HW_KEY_SET)
-            {
-                if ((!g_ui.key_track[i].long_fired) && (g_ui.key_track[i].hold_ticks >= 10U))
-                {
-                    (void)queue_push(UI_KEY_SET_LONG);
-                    g_ui.key_track[i].long_fired = 1;
-                }
-            }
-            else if (i == (unsigned int)HW_KEY_DOWN)
-            {
-                if ((!g_ui.key_track[i].long_fired) && (g_ui.key_track[i].hold_ticks >= 10U))
-                {
-                    (void)queue_push(UI_KEY_BACK);
-                    g_ui.key_track[i].long_fired = 1;
-                }
-
-                if ((!g_ui.key_track[i].long_fired) && (g_ui.key_track[i].hold_ticks >= 5U))
-                {
-                    g_ui.key_track[i].repeat_ticks++;
-                    if (g_ui.key_track[i].repeat_ticks >= 2U)
-                    {
-                        (void)queue_push(UI_KEY_DOWN_REPEAT);
-                        g_ui.key_track[i].repeat_ticks = 0U;
-                    }
-                }
-            }
-            else if (i == (unsigned int)HW_KEY_UP)
-            {
-                if (g_ui.key_track[i].hold_ticks >= 5U)
-                {
-                    g_ui.key_track[i].repeat_ticks++;
-                    if (g_ui.key_track[i].repeat_ticks >= 2U)
-                    {
-                        (void)queue_push(UI_KEY_UP_REPEAT);
-                        g_ui.key_track[i].repeat_ticks = 0U;
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (g_ui.key_track[i].prev_pressed)
-            {
-                if (i == (unsigned int)HW_KEY_SET)
-                {
-                    if ((!g_ui.key_track[i].long_fired) && (!g_ui.key_track[i].short_fired))
-                    {
-                        (void)queue_push(UI_KEY_SET);
-                    }
-                }
-                else if (i == (unsigned int)HW_KEY_UP)
-                {
-                    if (!g_ui.key_track[i].short_fired)
-                    {
-                        (void)queue_push(UI_KEY_UP);
-                    }
-                }
-                else if (i == (unsigned int)HW_KEY_DOWN)
-                {
-                    if ((!g_ui.key_track[i].long_fired) && (!g_ui.key_track[i].short_fired))
-                    {
-                        (void)queue_push(UI_KEY_DOWN);
-                    }
-                }
-                else if (i == (unsigned int)HW_KEY_BACK)
-                {
-                    (void)queue_push(UI_KEY_BACK);
-                }
-
-                g_ui.key_track[i].prev_pressed = 0;
-                g_ui.key_track[i].hold_ticks = 0U;
-                g_ui.key_track[i].long_fired = 0;
-                g_ui.key_track[i].short_fired = 0;
-                g_ui.key_track[i].repeat_ticks = 0U;
-            }
-        }
-    }
 }
 
 static const char *mode_text(app_mode_t mode)
@@ -1364,20 +1207,6 @@ void ui_service_init(void)
     g_ui.page = UI_PAGE_HOME;
     g_ui.editing = 0;
     g_ui.pid_field = 0U;
-    g_ui.pending_key = UI_KEY_NONE;
-    g_ui.q_head = 0U;
-    g_ui.q_tail = 0U;
-    {
-        unsigned int i;
-        for (i = 0U; i < (unsigned int)HW_KEY_COUNT; ++i)
-        {
-            g_ui.key_track[i].prev_pressed = 0;
-            g_ui.key_track[i].hold_ticks = 0U;
-            g_ui.key_track[i].long_fired = 0;
-            g_ui.key_track[i].short_fired = 0;
-            g_ui.key_track[i].repeat_ticks = 0U;
-        }
-    }
     g_ui.last_mode = APP_MODE_IDLE;
     g_ui.last_temp.t1 = 0.0f;
     g_ui.last_temp.t2 = 0.0f;
@@ -1407,6 +1236,7 @@ void ui_service_init(void)
     }
 
     hw_key_init();
+    ui_key_input_init();
     hw_oled_init();
     hw_oled_clear();
     hw_oled_refresh();
@@ -1425,14 +1255,9 @@ void ui_service_tick_100ms(app_params_t *params)
         g_ui.info_reset_arm_ticks--;
     }
 
-    poll_keys_to_events();
-    if (g_ui.pending_key != UI_KEY_NONE)
-    {
-        (void)queue_push(g_ui.pending_key);
-        g_ui.pending_key = UI_KEY_NONE;
-    }
+    ui_key_input_poll_100ms();
 
-    while (queue_pop(&key))
+    while (ui_key_input_pop_event(&key))
     {
         ui_redraw_mode_t redraw_mode = process_key_event(params, key);
 
@@ -1477,7 +1302,7 @@ void ui_service_tick_200ms(app_mode_t mode, const temp_snapshot_t *temp, const a
 
 void ui_service_inject_key_event(ui_key_event_t key)
 {
-    (void)queue_push(key);
+    ui_key_input_inject_event(key);
 }
 
 ui_page_t ui_service_get_page(void)
