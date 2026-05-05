@@ -7,6 +7,7 @@
 #include "bsp_lcd_8080.h"
 #include "bsp_rtc.h"
 #include "log_service.h"
+#include "tune_service.h"
 #include "test_framework.h"
 
 int test_ui_service_run(void)
@@ -14,6 +15,7 @@ int test_ui_service_run(void)
     app_params_t p;
     temp_snapshot_t t;
     temp_snapshot_t log_temp;
+    const tune_runtime_t *rt;
     unsigned int i;
 
     p.set_temp_c = 45.0f;
@@ -82,16 +84,149 @@ int test_ui_service_run(void)
     ui_service_inject_key_event(UI_KEY_SET);
     ui_service_tick_100ms(&p);
     TEST_ASSERT_EQ_INT(ui_service_is_editing(), 1);
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 0);
+
+    ui_service_inject_key_event(UI_KEY_DOWN);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_NEAR_FLOAT(p.set_temp_c, 59.5f, 0.01f);
+
+    ui_service_inject_key_event(UI_KEY_DOWN_REPEAT);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_NEAR_FLOAT(p.set_temp_c, 59.0f, 0.01f);
+
+    ui_service_inject_key_event(UI_KEY_UP_REPEAT);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_NEAR_FLOAT(p.set_temp_c, 59.5f, 0.01f);
+
+    ui_service_inject_key_event(UI_KEY_BACK);
+    ui_service_tick_100ms(&p);
     TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 1);
 
     ui_service_inject_key_event(UI_KEY_UP);
     ui_service_tick_100ms(&p);
-    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 2);
     TEST_ASSERT_NEAR_FLOAT(p.kp, 5.0f, 0.01f);
     TEST_ASSERT_NEAR_FLOAT(p.ki, 0.15f, 0.01f);
     TEST_ASSERT_NEAR_FLOAT(p.kd, 10.0f, 0.01f);
 
+    ui_service_tick_200ms(APP_MODE_IDLE, &t, &p, 0.0f, 0, 0);
+    TEST_ASSERT_TRUE(strstr(bsp_oled_mock_get_line(3U), "GENTLE") != 0);
+
+    ui_service_inject_key_event(UI_KEY_BACK);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 0);
+
+    ui_service_inject_key_event(UI_KEY_SET_LONG);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT(ui_service_is_editing(), 0);
+
+    ui_service_inject_key_event(UI_KEY_SET_LONG);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT(ui_service_is_editing(), 1);
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 0);
+
     ui_service_inject_key_event(UI_KEY_SET);
+    ui_service_tick_100ms(&p);
+    rt = tune_service_get_runtime();
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 0);
+    TEST_ASSERT_EQ_INT((int)rt->step_index, 0);
+
+    ui_service_inject_key_event(UI_KEY_UP);
+    ui_service_tick_100ms(&p);
+    rt = tune_service_get_runtime();
+    TEST_ASSERT_EQ_INT((int)rt->step_index, 1);
+
+    ui_service_inject_key_event(UI_KEY_UP_REPEAT);
+    ui_service_tick_100ms(&p);
+    rt = tune_service_get_runtime();
+    TEST_ASSERT_EQ_INT((int)rt->step_index, 2);
+
+    ui_service_inject_key_event(UI_KEY_BACK);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 1);
+
+    rt = tune_service_get_runtime();
+    i = (unsigned int)rt->issue;
+    ui_service_inject_key_event(UI_KEY_UP);
+    ui_service_tick_100ms(&p);
+    rt = tune_service_get_runtime();
+    TEST_ASSERT_TRUE((unsigned int)rt->issue != i);
+
+    ui_service_inject_key_event(UI_KEY_BACK);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 2);
+
+    tune_service_set_issue(TUNE_ISSUE_SLOW);
+    ui_service_inject_key_event(UI_KEY_SET_LONG);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_NEAR_FLOAT(p.kp, 5.2f, 0.01f);
+
+    ui_service_inject_key_event(UI_KEY_BACK);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 3);
+
+    ui_service_inject_key_event(UI_KEY_BACK);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 0);
+
+    ui_service_inject_key_event(UI_KEY_SET);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 0);
+
+    ui_service_inject_key_event(UI_KEY_UP_REPEAT);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_NEAR_FLOAT(p.kp, 5.3f, 0.01f);
+
+    for (i = 0U; i < 5U; ++i)
+    {
+        ui_service_inject_key_event(UI_KEY_BACK);
+        ui_service_tick_100ms(&p);
+    }
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 5);
+
+    ui_service_inject_key_event(UI_KEY_DOWN_REPEAT);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_TRUE(tune_service_get_profile()->ki_min >= 0.0f);
+
+    ui_service_inject_key_event(UI_KEY_BACK);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 0);
+
+    ui_service_inject_key_event(UI_KEY_UP);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_NEAR_FLOAT(p.kp, 5.4f, 0.01f);
+
+    ui_service_inject_key_event(UI_KEY_SET_LONG);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 0);
+
+    for (i = 0U; i < 2U; ++i)
+    {
+        ui_service_inject_key_event(UI_KEY_BACK);
+        ui_service_tick_100ms(&p);
+    }
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 2);
+
+    for (i = 0U; i < 600U; ++i)
+    {
+        ui_service_inject_key_event(UI_KEY_UP_REPEAT);
+        ui_service_tick_100ms(&p);
+    }
+    TEST_ASSERT_NEAR_FLOAT(tune_service_get_profile()->kd_max, 30.0f, 0.01f);
+
+    for (i = 0U; i < 2U; ++i)
+    {
+        ui_service_inject_key_event(UI_KEY_BACK);
+        ui_service_tick_100ms(&p);
+    }
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 4);
+
+    ui_service_inject_key_event(UI_KEY_BACK);
+    ui_service_tick_100ms(&p);
+    TEST_ASSERT_EQ_INT((int)ui_service_get_pid_field(), 0);
+
+    ui_service_inject_key_event(UI_KEY_SET);
+    ui_service_tick_100ms(&p);
+    ui_service_inject_key_event(UI_KEY_SET_LONG);
     ui_service_tick_100ms(&p);
     TEST_ASSERT_EQ_INT(ui_service_is_editing(), 0);
 

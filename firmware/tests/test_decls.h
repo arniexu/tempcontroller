@@ -11,6 +11,7 @@ int test_log_service_run(void);
 int test_heater_ctrl_run(void);
 int test_temp_manager_run(void);
 int test_schedule_service_run(void);
+int test_tune_service_run(void);
 int test_ui_service_run(void);
 int test_protocol_export_run(void);
 int test_app_main_run(void);

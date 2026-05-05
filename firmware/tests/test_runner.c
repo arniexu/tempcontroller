@@ -24,6 +24,7 @@ int main(void)
         {"heater_ctrl", test_heater_ctrl_run},
         {"temp_manager", test_temp_manager_run},
         {"schedule_service", test_schedule_service_run},
+        {"tune_service", test_tune_service_run},
         {"ui_service", test_ui_service_run},
         {"protocol_export", test_protocol_export_run},
         {"app_main", test_app_main_run}

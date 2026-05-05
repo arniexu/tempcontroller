@@ -3,24 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>水温控制界面预览</title>
+  <title>OLED 96x96 温控器界面</title>
   <style>
     :root {
-      --bg: #0d1117;
-      --panel: #121821;
-      --panel-2: #1a2330;
-      --stroke: #263244;
-      --text: #edf2f7;
-      --muted: #8f9baa;
-      --accent: #4ad7d1;
-      --warm: #ff8a3d;
-      --good: #8dd55f;
-      --alert: #ff5f57;
-      --chrome: #0a0e13;
-      --shadow: 0 24px 60px rgba(0, 0, 0, 0.38);
-      --radius: 26px;
-      --lcd-w: 240px;
-      --lcd-h: 320px;
+      --bg: #101217;
+      --panel: #171b22;
+      --bezel: #0c0f14;
+      --oled: #8cf08c;
+      --oled-dim: rgba(140, 240, 140, 0.55);
+      --oled-ghost: rgba(140, 240, 140, 0.16);
+      --crt: rgba(140, 240, 140, 0.07);
+      --size: 384px;
     }
 
     * {
@@ -30,663 +23,895 @@
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      display: grid;
+      place-items: center;
       background:
-        radial-gradient(circle at top left, rgba(74, 215, 209, 0.16), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(255, 138, 61, 0.16), transparent 22%),
-        linear-gradient(180deg, #0a0d12, #141a22 60%, #0b1016);
-      color: var(--text);
-      padding: 28px;
+        radial-gradient(circle at 20% 10%, #1b222d 0, transparent 35%),
+        radial-gradient(circle at 90% 90%, #1b2c1b 0, transparent 30%),
+        linear-gradient(180deg, #0d1016, #141923 60%, #0e1117);
+      color: #d8f3d8;
+      font-family: "Share Tech Mono", "JetBrains Mono", "Consolas", monospace;
+      padding: 24px;
     }
 
-    .wrap {
-      max-width: 1500px;
-      margin: 0 auto;
+    .layout {
+      display: grid;
+      gap: 14px;
+      justify-items: center;
     }
 
-    .hero {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 20px;
-      margin-bottom: 28px;
-      padding: 0 4px;
-    }
-
-    .hero h1 {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-    }
-
-    .hero p {
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .badge-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .badge {
-      padding: 8px 12px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 999px;
-      background: rgba(18, 24, 33, 0.68);
-      color: var(--muted);
+    .title {
       font-size: 12px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
-    }
-
-    .card {
-      padding: 18px;
-      border-radius: 28px;
-      background: rgba(10, 14, 19, 0.64);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(8px);
-    }
-
-    .card h2 {
-      margin: 0 0 6px;
-      font-size: 14px;
-      letter-spacing: 0.12em;
-      color: var(--text);
-    }
-
-    .card p {
-      margin: 0 0 16px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.5;
+      color: #b6d5b6;
+      opacity: 0.9;
     }
 
     .device {
-      position: relative;
-      width: calc(var(--lcd-w) + 26px);
-      margin: 0 auto;
-      padding: 13px;
-      border-radius: 32px;
-      background: linear-gradient(180deg, #212c38, #090c11 24%, #141a22 100%);
+      width: calc(var(--size) + 30px);
+      padding: 14px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, #2b313a, #151921 26%, #10141b);
+      border: 1px solid #313846;
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.08),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.03),
-        0 18px 36px rgba(0, 0, 0, 0.45);
-    }
-
-    .device::before {
-      content: "";
-      position: absolute;
-      top: 7px;
-      left: 50%;
-      width: 58px;
-      height: 4px;
-      transform: translateX(-50%);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.12);
+        0 18px 40px rgba(0, 0, 0, 0.5);
     }
 
     .screen {
       position: relative;
-      width: var(--lcd-w);
-      height: var(--lcd-h);
+      width: var(--size);
+      height: var(--size);
+      background: var(--bezel);
+      border: 1px solid #252b36;
+      border-radius: 8px;
       overflow: hidden;
-      border-radius: 22px;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 28px),
-        linear-gradient(180deg, #0b1016, #0f141b 100%);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      image-rendering: pixelated;
+      box-shadow:
+        inset 0 0 0 1px #0a0d12,
+        inset 0 0 24px rgba(140, 240, 140, 0.08);
     }
 
-    .scanlines::after {
-      content: "";
+    .pixels,
+    .scan {
       position: absolute;
       inset: 0;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.028) 0, rgba(255, 255, 255, 0.028) 1px, transparent 1px, transparent 4px);
-      opacity: 0.18;
       pointer-events: none;
     }
 
-    .safe {
+    .pixels {
+      background-image:
+        linear-gradient(var(--crt) 1px, transparent 1px),
+        linear-gradient(90deg, var(--crt) 1px, transparent 1px);
+      background-size: calc(var(--size) / 96 * 1px) calc(var(--size) / 96 * 1px);
+      opacity: 0.75;
+    }
+
+    .scan {
+      background: linear-gradient(180deg, transparent 0%, rgba(140, 240, 140, 0.05) 50%, transparent 100%);
+      animation: sweep 5s linear infinite;
+    }
+
+    @keyframes sweep {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
+    }
+
+    .ui {
       position: absolute;
       inset: 0;
-      padding: 24px;
-    }
-
-    .title-sm {
-      font-size: 11px;
-      line-height: 14px;
-      color: var(--muted);
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-    }
-
-    .title-lg {
-      font-size: 21px;
-      line-height: 25px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-    }
-
-    .rule {
-      height: 2px;
-      width: 192px;
-      margin-top: 14px;
-      background: linear-gradient(90deg, var(--accent), rgba(74, 215, 209, 0.16));
-    }
-
-    .big-label {
-      position: absolute;
-      left: 28px;
-      top: 30px;
-      color: var(--muted);
-      font-size: 12px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-
-    .big-temp {
-      position: absolute;
-      left: 28px;
-      top: 68px;
-      font-size: 72px;
-      line-height: 70px;
-      font-weight: 800;
-      letter-spacing: -0.06em;
-      color: var(--warm);
-    }
-
-    .unit {
-      font-size: 34px;
-      vertical-align: 18px;
-      margin-left: 4px;
-      letter-spacing: -0.04em;
-    }
-
-    .divider {
-      position: absolute;
-      left: 24px;
-      top: 180px;
-      width: 192px;
-      height: 2px;
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .row {
-      position: absolute;
-      left: 28px;
-      right: 28px;
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-    }
-
-    .row .k {
-      color: var(--muted);
-      font-size: 14px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .row .v {
-      font-size: 28px;
-      line-height: 32px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-    }
-
-    .footer-note {
-      position: absolute;
-      left: 28px;
-      bottom: 44px;
-      font-size: 15px;
-      line-height: 20px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .footer-sub {
-      position: absolute;
-      left: 28px;
-      bottom: 22px;
-      color: var(--muted);
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .chip {
-      position: absolute;
-      right: 24px;
-      top: 24px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      line-height: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .shell-title {
-      position: absolute;
-      left: 24px;
-      top: 24px;
-      font-size: 26px;
-      line-height: 26px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .shell-sub {
-      position: absolute;
-      left: 26px;
-      top: 56px;
-      color: var(--muted);
-      font-size: 11px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-    }
-
-    .shell-rule {
-      position: absolute;
-      left: 24px;
-      top: 82px;
-      width: 192px;
-      height: 2px;
-      background: linear-gradient(90deg, var(--accent), rgba(74, 215, 209, 0.1));
-    }
-
-    .value-card {
-      position: absolute;
-      left: 20px;
-      top: 106px;
-      width: 200px;
-      height: 110px;
-      border-radius: 20px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    }
-
-    .value-card.tall {
-      height: 88px;
-    }
-
-    .card-label {
-      position: absolute;
-      left: 18px;
-      top: 16px;
-      color: var(--muted);
-      font-size: 12px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-    }
-
-    .card-value {
-      position: absolute;
-      left: 18px;
-      top: 44px;
-      font-size: 54px;
-      line-height: 54px;
-      font-weight: 800;
-      letter-spacing: -0.05em;
-    }
-
-    .card-value.medium {
-      font-size: 40px;
-      line-height: 42px;
-    }
-
-    .status-line {
-      position: absolute;
-      left: 28px;
-      color: var(--text);
-      font-size: 14px;
-      line-height: 18px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .status-line.muted {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .warm {
-      color: var(--warm);
-    }
-
-    .good {
-      color: var(--good);
-    }
-
-    .accent {
-      color: var(--accent);
-    }
-
-    .alert {
-      color: var(--alert);
-    }
-
-    .center-stack {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-    }
-
-    .center-stack .brand {
-      font-size: 48px;
-      line-height: 46px;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-    }
-
-    .center-stack .subbrand {
-      margin-top: 18px;
-      font-size: 14px;
-      line-height: 18px;
-      color: var(--muted);
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-
-    .center-stack .bar {
-      width: 148px;
-      height: 4px;
-      margin: 24px 0 0;
-      border-radius: 999px;
-      background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), var(--accent), var(--warm));
-    }
-
-    .sensor-strip {
-      position: absolute;
-      left: 20px;
-      right: 20px;
-      top: 196px;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .sensor-item {
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      background: rgba(255, 255, 255, 0.03);
-      padding: 7px 6px;
-      text-align: center;
-    }
-
-    .sensor-item .name {
-      color: var(--muted);
-      font-size: 10px;
-      line-height: 12px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    .sensor-item .value {
-      margin-top: 4px;
-      font-size: 16px;
-      line-height: 16px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-
-    .hint-symbol {
-      position: absolute;
-      right: 22px;
-      bottom: 16px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 13px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-    }
-
-    .kv-box {
-      position: absolute;
-      left: 20px;
-      right: 20px;
-      top: 102px;
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.03);
-      padding: 10px 12px;
-    }
-
-    .kv-line {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      padding: 5px 0;
-      border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
-    }
-
-    .kv-line:last-child {
-      border-bottom: 0;
-    }
-
-    .kv-k {
-      color: var(--muted);
+      grid-template-rows: 13% 9% 1fr 14%;
+      padding: 10px;
+      color: var(--oled);
       font-size: 11px;
-      letter-spacing: 0.1em;
+      line-height: 1;
       text-transform: uppercase;
+      letter-spacing: 0.03em;
     }
 
-    .kv-v {
-      font-size: 15px;
+    .hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--oled-dim);
+      font-size: 9px;
+    }
+
+    .tabs {
+      display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      border: 1px solid var(--oled-dim);
+      height: 100%;
+    }
+
+    .tab {
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      user-select: none;
+      color: var(--oled-dim);
+      border-right: 1px solid var(--oled-dim);
+    }
+
+    .tab:last-child {
+      border-right: none;
+    }
+
+    .tab.active {
+      background: var(--oled);
+      color: #031503;
       font-weight: 700;
-      letter-spacing: -0.01em;
+    }
+
+    .body {
+      margin-top: 6px;
+      border: 1px solid var(--oled-dim);
+      padding: 6px;
+      display: grid;
+      grid-auto-rows: minmax(18px, auto);
+      gap: 4px;
+      align-content: start;
+    }
+
+    .line {
+      display: grid;
+      grid-template-columns: 38% 62%;
+      align-items: center;
+      min-height: 18px;
+      color: var(--oled-dim);
+    }
+
+    .line .label {
+      opacity: 0.95;
+    }
+
+    .line .value {
+      justify-self: stretch;
+      text-align: left;
+      padding: 2px 4px;
+      min-height: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--oled);
+      border: 1px solid transparent;
+    }
+
+    .line .value.blink {
+      animation: blink-limit 0.32s steps(2, end);
+    }
+
+    @keyframes blink-limit {
+      0% { background: var(--oled); color: #031503; }
+      100% { background: transparent; color: var(--oled); }
+    }
+
+    .line.selected .value {
+      background: var(--oled);
+      color: #031503;
+      border-color: var(--oled);
+      font-weight: 700;
+    }
+
+    .line.locked .value {
+      color: var(--oled-dim);
+    }
+
+    .scene-hint {
+      color: var(--oled-dim);
+      font-size: 9px;
+      margin-top: 2px;
+      letter-spacing: 0.02em;
+    }
+
+    .footer {
+      margin-top: 6px;
+      border: 1px solid var(--oled-dim);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 9px;
+      color: var(--oled-dim);
+    }
+
+    .footer .hint.warn {
+      color: var(--oled);
+      font-weight: 700;
+    }
+
+    .footer .inv {
+      background: var(--oled);
+      color: #031503;
+      padding: 1px 3px;
+      font-weight: 700;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    button {
+      border: 1px solid #3a4656;
+      background: linear-gradient(180deg, #252c38, #1a202b);
+      color: #d0e8d0;
+      font-family: inherit;
+      font-size: 11px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      border-radius: 6px;
+      padding: 6px 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #5b6f87;
+    }
+
+    .guide {
+      font-size: 11px;
+      color: #a7b9a7;
+      text-align: center;
+      max-width: 700px;
+      line-height: 1.55;
+    }
+
+    .guide code {
+      color: #d8f3d8;
+      background: #11161d;
+      border: 1px solid #2f3847;
+      border-radius: 4px;
+      padding: 1px 4px;
+      font-family: inherit;
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <section class="hero">
-      <div>
-        <h1>液晶页面视觉定稿预览</h1>
-        <p>按二百四十乘三百二十实机尺寸绘制，每张图对应一个固件页面，先定设计再落代码。</p>
-      </div>
-      <div class="badge-row">
-        <span class="badge">二百四十乘三百二十</span>
-        <span class="badge">三探头测温</span>
-        <span class="badge">安全优先</span>
-        <span class="badge">低内存占用</span>
-        <span class="badge">大字号读数</span>
+  <main class="layout">
+    <div class="title">OLED 96x96 数码风界面草案</div>
+
+    <section class="device">
+      <div class="screen">
+        <div class="pixels"></div>
+        <div class="scan"></div>
+
+        <div class="ui" id="uiRoot">
+          <div class="hdr">
+            <span>温控器</span>
+            <span id="clockText">12:30</span>
+          </div>
+
+          <div class="tabs" id="tabs"></div>
+
+          <div class="body" id="body"></div>
+
+          <div class="footer">
+            <span class="hint" id="footerHint"><span class="inv">INV</span> 确认</span>
+            <span id="modeTag">NOR</span>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="grid">
-      <article class="card">
-        <h2>启动页</h2>
-        <p>开机 1~3 秒显示品牌与系统身份，随后进入自检结果页。</p>
-        <div class="device">
-          <div class="screen scanlines">
-            <div class="center-stack">
-              <div class="brand">水温</div>
-              <div class="brand warm">控制</div>
-              <div class="bar"></div>
-              <div class="subbrand">固定容积三点测温</div>
-            </div>
-          </div>
-        </div>
-      </article>
+    <div class="toolbar">
+      <button id="btnTab">切换</button>
+      <button id="btnPrev">上</button>
+      <button id="btnNext">下</button>
+      <button id="btnMinus">-</button>
+      <button id="btnPlus">+</button>
+    </div>
 
-      <article class="card">
-        <h2>首页</h2>
-        <p>首页仅保留主温度、目标值和运行状态，三点温度移至详情页查看。</p>
-        <div class="device">
-          <div class="screen scanlines">
-            <div class="big-label">融合温度</div>
-            <div class="chip">加热中</div>
-            <div class="big-temp">58.2<span class="unit">度</span></div>
-            <div class="divider" style="top: 186px;"></div>
-            <div class="row" style="top: 196px;">
-              <span class="k">目标</span>
-              <span class="v good">60.0度</span>
-            </div>
-            <div class="footer-note" style="bottom: 56px;">加热开启 / 稳定运行</div>
-            <div class="footer-sub" style="bottom: 36px;">安全余量 1.0度</div>
-            <div class="hint-symbol">◀ ▶</div>
-          </div>
-        </div>
-      </article>
+    <p class="guide">
+      5 键设备流程：模式键切换 普通/引导/专家；上/下移动焦点；加/减调整当前项；模式键长按用于专家分页。
+      <br />
+      引导模式按“步骤 - 现象 - 动作 - 结果”推进；普通模式设置 <code>TGT</code> 和 <code>SCN</code>；专家模式调节 <code>KP KI KD</code>、边界与 <code>TMIN/TMAX</code>。
+    </p>
+  </main>
 
-      <article class="card">
-        <h2>设定温度</h2>
-        <p>只保留目标温度编辑，附带当前融合温度与状态提示，避免误调。</p>
-        <div class="device">
-          <div class="screen scanlines">
-            <div class="shell-title">设定温度</div>
-            <div class="shell-sub">步进零点五度</div>
-            <div class="shell-rule"></div>
-            <div class="value-card">
-              <div class="card-label">目标值</div>
-              <div class="card-value good">60.0度</div>
-            </div>
-            <div class="status-line" style="top: 242px;">当前融合58.2度</div>
-            <div class="status-line muted" style="top: 264px;">设定保存 / 长按取消</div>
-            <div class="hint-symbol">OK ⤒</div>
-          </div>
-        </div>
-      </article>
+  <script>
+    const sceneProfiles = [
+      {
+        key: "FAST",
+        label: "快热大锅",
+        usage: "冷水起热 / 大水量",
+        kp: 10.0,
+        ki: 0.6,
+        kd: 20.0
+      },
+      {
+        key: "DAILY",
+        label: "日常保温",
+        usage: "反复开盖 / 日常使用",
+        kp: 8.0,
+        ki: 0.3,
+        kd: 15.0
+      },
+      {
+        key: "GENTLE",
+        label: "小杯低冲",
+        usage: "小容量 / 优先低超调",
+        kp: 5.0,
+        ki: 0.15,
+        kd: 10.0
+      }
+    ];
 
-      <article class="card">
-        <h2>控温参数快捷档</h2>
-        <p>面向用户只暴露档位，参数细节收敛到维护层，降低误操作风险。</p>
-        <div class="device">
-          <div class="screen scanlines">
-            <div class="shell-title">参数档位</div>
-            <div class="shell-sub">当前第二档 共三档</div>
-            <div class="shell-rule"></div>
-            <div class="value-card" style="height: 96px;">
-              <div class="card-label">当前档位</div>
-              <div class="card-value accent">平衡档</div>
-            </div>
-            <div class="status-line" style="top: 234px;">快热 / 平衡 / 保温</div>
-            <div class="status-line muted" style="top: 258px;">设定切换 / 长按退出</div>
-            <div class="hint-symbol">OK ◀</div>
-          </div>
-        </div>
-      </article>
+    const guideSteps = [
+      {
+        title: "预热检查",
+        metric: "升温斜率",
+        tips: {
+          "正常": "保持当前参数并继续观察",
+          "升温慢": "KP +0.2，确认加热输出未饱和",
+          "超调大": "先完成预热再判断超调",
+          "波动大": "先完成预热再判断波动",
+          "静差大": "预热阶段暂不处理静差"
+        }
+      },
+      {
+        title: "逼近目标",
+        metric: "峰值温度",
+        tips: {
+          "正常": "继续进入稳态观察",
+          "升温慢": "KP +0.2，必要时 KI +0.02",
+          "超调大": "KP -0.2 或 KD +0.02",
+          "波动大": "KP -0.1，降低逼近速度",
+          "静差大": "先等待进入稳态"
+        }
+      },
+      {
+        title: "稳态观察",
+        metric: "稳态误差",
+        tips: {
+          "正常": "误差合格，可准备验收",
+          "升温慢": "KP +0.1，观察 2 个周期",
+          "超调大": "KD +0.02，必要时 KI -0.01",
+          "波动大": "KI -0.02，增加微分抑制",
+          "静差大": "KI +0.02，必要时 KP +0.1"
+        }
+      },
+      {
+        title: "扰动恢复",
+        metric: "恢复时间",
+        tips: {
+          "正常": "可进入结果验收",
+          "升温慢": "KP +0.1 提升恢复速度",
+          "超调大": "KD +0.02 抑制二次过冲",
+          "波动大": "KP -0.1，增大滤波",
+          "静差大": "KI +0.01 缩短偏差消除"
+        }
+      },
+      {
+        title: "结果验收",
+        metric: "超调/误差",
+        tips: {
+          "正常": "保存为当前场景默认参数",
+          "升温慢": "返回前一步继续微调 KP",
+          "超调大": "返回前一步继续抑制过冲",
+          "波动大": "返回稳态观察降低抖动",
+          "静差大": "返回稳态观察补偿误差"
+        }
+      }
+    ];
 
-      <article class="card">
-        <h2>运行详情</h2>
-        <p>详情页承载三点温度和关键运行值，首页不再堆叠显示。</p>
-        <div class="device">
-          <div class="screen scanlines">
-            <div class="shell-title">运行详情</div>
-            <div class="shell-sub">三点温度与控制</div>
-            <div class="shell-rule"></div>
-            <div class="kv-box">
-              <div class="kv-line"><span class="kv-k">上中下</span><span class="kv-v">59.0/58.4/57.2</span></div>
-              <div class="kv-line"><span class="kv-k">控制输出</span><span class="kv-v">42%</span></div>
-              <div class="kv-line"><span class="kv-k">安全最高</span><span class="kv-v">59.0度</span></div>
-            </div>
-            <div class="status-line" style="top: 246px;">目标60.0度 / 融合58.2度</div>
-            <div class="status-line muted" style="top: 268px;">三点温度正常</div>
-            <div class="hint-symbol">◀ ▶</div>
-          </div>
-        </div>
-      </article>
+    const guideIssues = ["正常", "升温慢", "超调大", "波动大", "静差大"];
 
-      <article class="card">
-        <h2>超温报警</h2>
-        <p>异常态用高对比提醒，明确“为什么停热”和“如何恢复”。</p>
-        <div class="device">
-          <div class="screen scanlines">
-            <div class="shell-title alert">超温报警</div>
-            <div class="shell-sub">温度超过阈值</div>
-            <div class="shell-rule" style="background: linear-gradient(90deg, var(--alert), rgba(255, 95, 87, 0.1));"></div>
-            <div class="value-card" style="height: 96px; border-color: rgba(255, 95, 87, 0.45);">
-              <div class="card-label">安全最高</div>
-              <div class="card-value alert">61.4度</div>
-            </div>
-            <div class="status-line alert" style="top: 240px;">已强制停止加热</div>
-            <div class="status-line muted" style="top: 264px;">恢复阈值58.0度 持续60秒</div>
-            <div class="hint-symbol">OK</div>
-          </div>
-        </div>
-      </article>
+    const state = {
+      tab: 0,
+      expertPage: 0,
+      selected: 0,
+      flashKey: "",
+      flashUntil: 0,
+      footerTip: "",
+      footerTipUntil: 0,
+      normal: {
+        tgt: 60,
+        sceneIndex: 1
+      },
+      guide: {
+        stepIndex: 0,
+        issueIndex: 0,
+        result: "观察中"
+      },
+      expert: {
+        kp: 1.6,
+        ki: 0.42,
+        kd: 0.08,
+        kpMin: 0.5,
+        kpMax: 9.9,
+        kiMin: 0.0,
+        kiMax: 2.5,
+        kdMin: 0.0,
+        kdMax: 1.0,
+        tmin: 20,
+        tmax: 95
+      }
+    };
 
-      <article class="card">
-        <h2>探头异常</h2>
-        <p>单探头异常进入降级模式，页面提示限制条件和建议操作。</p>
-        <div class="device">
-          <div class="screen scanlines">
-            <div class="shell-title">探头故障</div>
-            <div class="shell-sub">降级运行模式</div>
-            <div class="shell-rule"></div>
-            <div class="kv-box">
-              <div class="kv-line"><span class="kv-k">故障项</span><span class="kv-v alert">下层探头离线</span></div>
-              <div class="kv-line"><span class="kv-k">运行模式</span><span class="kv-v warm">降级运行</span></div>
-              <div class="kv-line"><span class="kv-k">输出上限</span><span class="kv-v">55%</span></div>
-            </div>
-            <div class="status-line" style="top: 246px;">加热已受限 / 请检查连线</div>
-            <div class="status-line muted" style="top: 268px;">每5秒自动重试</div>
-            <div class="hint-symbol">OK</div>
-          </div>
-        </div>
-      </article>
+    const tabs = [
+      { key: "普通", label: "普通模式" },
+      { key: "引导", label: "引导整定" },
+      { key: "专家", label: "专家模式" }
+    ];
 
-      <article class="card">
-        <h2>自检结果页</h2>
-        <p>承接启动页，明确系统是否可运行，并给出限制项和下一步动作。</p>
-        <div class="device">
-          <div class="screen scanlines">
-            <div class="shell-title">上电自检</div>
-            <div class="shell-sub">启动检查结果</div>
-            <div class="shell-rule"></div>
-            <div class="kv-box">
-              <div class="kv-line"><span class="kv-k">参数区</span><span class="kv-v good">校验通过</span></div>
-              <div class="kv-line"><span class="kv-k">温度探头</span><span class="kv-v">2路可用</span></div>
-              <div class="kv-line"><span class="kv-k">运行结论</span><span class="kv-v warm">降级运行</span></div>
-            </div>
-            <div class="status-line" style="top: 246px;">限制 预约功能已禁用</div>
-            <div class="status-line muted" style="top: 268px;">检查结束后自动进入首页</div>
-            <div class="hint-symbol">OK</div>
-          </div>
-        </div>
-      </article>
+    function currentScene() {
+      return sceneProfiles[state.normal.sceneIndex];
+    }
 
-      <article class="card">
-        <h2>导出页</h2>
-        <p>日志页突出记录规模、导出命令和采样周期，方便追溯问题。</p>
-        <div class="device">
-          <div class="screen scanlines">
-            <div class="shell-title">日志导出</div>
-            <div class="shell-sub">串口输出</div>
-            <div class="shell-rule"></div>
-            <div class="value-card tall" style="height: 88px;">
-              <div class="card-label">日志条数</div>
-              <div class="card-value good">128</div>
-            </div>
-            <div class="status-line" style="top: 246px;">记录周期5秒</div>
-            <div class="status-line muted" style="top: 268px;">串口命令 日志导出</div>
-            <div class="hint-symbol">OK ⤓</div>
-          </div>
-        </div>
-      </article>
-    </section>
-  </div>
+    function flashRow(key) {
+      state.flashKey = key;
+      state.flashUntil = Date.now() + 320;
+    }
+
+    function showFooterTip(text, ms) {
+      state.footerTip = text;
+      state.footerTipUntil = Date.now() + (ms || 1200);
+    }
+
+    function clampPidToBounds() {
+      const prevKp = state.expert.kp;
+      const prevKi = state.expert.ki;
+      const prevKd = state.expert.kd;
+
+      state.expert.kp = clampFloat(state.expert.kp, state.expert.kpMin, state.expert.kpMax, 1);
+      state.expert.ki = clampFloat(state.expert.ki, state.expert.kiMin, state.expert.kiMax, 2);
+      state.expert.kd = clampFloat(state.expert.kd, state.expert.kdMin, state.expert.kdMax, 2);
+
+      const changed = [];
+      if (prevKp !== state.expert.kp) {
+        changed.push("KP");
+      }
+      if (prevKi !== state.expert.ki) {
+        changed.push("KI");
+      }
+      if (prevKd !== state.expert.kd) {
+        changed.push("KD");
+      }
+
+      if (changed.length > 0) {
+        flashRow(changed[0]);
+        showFooterTip(`已限幅 ${changed.join("/")}`, 1400);
+      }
+    }
+
+    function loadPidFromScene() {
+      const preset = currentScene();
+      state.expert.kp = preset.kp;
+      state.expert.ki = preset.ki;
+      state.expert.kd = preset.kd;
+      clampPidToBounds();
+    }
+
+    function currentGuideStep() {
+      return guideSteps[state.guide.stepIndex];
+    }
+
+    function currentGuideIssue() {
+      return guideIssues[state.guide.issueIndex];
+    }
+
+    function guideSuggestion() {
+      const step = currentGuideStep();
+      return step.tips[currentGuideIssue()];
+    }
+
+    function applyGuideSuggestion() {
+      const issue = currentGuideIssue();
+
+      if (issue === "升温慢") {
+        state.expert.kp = adjustFloatWithClamp("KP", state.expert.kp, 0.1, state.expert.kpMin, state.expert.kpMax, 1, 2);
+      } else if (issue === "超调大") {
+        state.expert.kp = adjustFloatWithClamp("KP", state.expert.kp, 0.1, state.expert.kpMin, state.expert.kpMax, 1, -2);
+        state.expert.kd = adjustFloatWithClamp("KD", state.expert.kd, 0.01, state.expert.kdMin, state.expert.kdMax, 2, 2);
+      } else if (issue === "波动大") {
+        state.expert.kp = adjustFloatWithClamp("KP", state.expert.kp, 0.1, state.expert.kpMin, state.expert.kpMax, 1, -1);
+        state.expert.ki = adjustFloatWithClamp("KI", state.expert.ki, 0.01, state.expert.kiMin, state.expert.kiMax, 2, -2);
+      } else if (issue === "静差大") {
+        state.expert.ki = adjustFloatWithClamp("KI", state.expert.ki, 0.01, state.expert.kiMin, state.expert.kiMax, 2, 2);
+      }
+
+      clampPidToBounds();
+      state.guide.result = issue === "正常" ? "参数保持" : `已执行 ${issue}`;
+      showFooterTip(state.guide.result, 1200);
+    }
+
+    function adjustFloatWithClamp(key, value, step, min, max, digits, delta) {
+      const raw = value + delta * step;
+      const next = clampFloat(raw, min, max, digits);
+      const roundedRaw = Number(raw.toFixed(digits));
+      if (next !== roundedRaw) {
+        flashRow(key);
+        showFooterTip(`${key} 达边界`, 1200);
+      }
+      return next;
+    }
+
+    function expertPages() {
+      return [
+        [
+          {
+            key: "KP",
+            label: "KP",
+            value: state.expert.kp.toFixed(1),
+            adjustable: true,
+            adjust(delta) {
+              state.expert.kp = adjustFloatWithClamp("KP", state.expert.kp, 0.1, state.expert.kpMin, state.expert.kpMax, 1, delta);
+            }
+          },
+          {
+            key: "KI",
+            label: "KI",
+            value: state.expert.ki.toFixed(2),
+            adjustable: true,
+            adjust(delta) {
+              state.expert.ki = adjustFloatWithClamp("KI", state.expert.ki, 0.01, state.expert.kiMin, state.expert.kiMax, 2, delta);
+            }
+          },
+          {
+            key: "KD",
+            label: "KD",
+            value: state.expert.kd.toFixed(2),
+            adjustable: true,
+            adjust(delta) {
+              state.expert.kd = adjustFloatWithClamp("KD", state.expert.kd, 0.01, state.expert.kdMin, state.expert.kdMax, 2, delta);
+            }
+          },
+          {
+            key: "KPL",
+            label: "KPL",
+            value: state.expert.kpMin.toFixed(1),
+            adjustable: true,
+            adjust(delta) {
+              state.expert.kpMin = adjustFloatWithClamp("KPL", state.expert.kpMin, 0.1, 0.0, state.expert.kpMax - 0.1, 1, delta);
+              clampPidToBounds();
+            }
+          },
+          {
+            key: "KPH",
+            label: "KPH",
+            value: state.expert.kpMax.toFixed(1),
+            adjustable: true,
+            adjust(delta) {
+              state.expert.kpMax = adjustFloatWithClamp("KPH", state.expert.kpMax, 0.1, state.expert.kpMin + 0.1, 20.0, 1, delta);
+              clampPidToBounds();
+            }
+          },
+          {
+            key: "KIL",
+            label: "KIL",
+            value: state.expert.kiMin.toFixed(2),
+            adjustable: true,
+            adjust(delta) {
+              state.expert.kiMin = adjustFloatWithClamp("KIL", state.expert.kiMin, 0.01, 0.0, state.expert.kiMax - 0.01, 2, delta);
+              clampPidToBounds();
+            }
+          }
+        ],
+        [
+          {
+            key: "KIH",
+            label: "KIH",
+            value: state.expert.kiMax.toFixed(2),
+            adjustable: true,
+            adjust(delta) {
+              state.expert.kiMax = adjustFloatWithClamp("KIH", state.expert.kiMax, 0.01, state.expert.kiMin + 0.01, 10.0, 2, delta);
+              clampPidToBounds();
+            }
+          },
+          {
+            key: "KDL",
+            label: "KDL",
+            value: state.expert.kdMin.toFixed(2),
+            adjustable: true,
+            adjust(delta) {
+              state.expert.kdMin = adjustFloatWithClamp("KDL", state.expert.kdMin, 0.01, 0.0, state.expert.kdMax - 0.01, 2, delta);
+              clampPidToBounds();
+            }
+          },
+          {
+            key: "KDH",
+            label: "KDH",
+            value: state.expert.kdMax.toFixed(2),
+            adjustable: true,
+            adjust(delta) {
+              state.expert.kdMax = adjustFloatWithClamp("KDH", state.expert.kdMax, 0.01, state.expert.kdMin + 0.01, 5.0, 2, delta);
+              clampPidToBounds();
+            }
+          },
+          {
+            key: "TMIN",
+            label: "TMIN",
+            value: `${state.expert.tmin}C`,
+            adjustable: true,
+            adjust(delta) {
+              state.expert.tmin = clampInt(state.expert.tmin + delta, 0, state.expert.tmax - 1);
+              if (state.normal.tgt < state.expert.tmin) {
+                state.normal.tgt = state.expert.tmin;
+                showFooterTip("TGT 已抬升", 1200);
+                flashRow("TMIN");
+              }
+            }
+          },
+          {
+            key: "TMAX",
+            label: "TMAX",
+            value: `${state.expert.tmax}C`,
+            adjustable: true,
+            adjust(delta) {
+              state.expert.tmax = clampInt(state.expert.tmax + delta, state.expert.tmin + 1, 120);
+              if (state.normal.tgt > state.expert.tmax) {
+                state.normal.tgt = state.expert.tmax;
+                showFooterTip("TGT 已限幅", 1200);
+                flashRow("TMAX");
+              }
+            }
+          }
+        ]
+      ];
+    }
+
+    function rowsForTab() {
+      if (state.tab === 0) {
+        const scene = currentScene();
+        return [
+          {
+            key: "TGT",
+            label: "TGT",
+            value: `${state.normal.tgt}C`,
+            adjustable: true,
+            adjust(delta) {
+              state.normal.tgt = clampInt(state.normal.tgt + delta, 30, 99);
+              if (state.normal.tgt > state.expert.tmax) {
+                state.expert.tmax = state.normal.tgt;
+                showFooterTip("TMAX 跟随 TGT", 1200);
+                flashRow("TGT");
+              }
+            }
+          },
+          {
+            key: "SCN",
+            label: "场景",
+            value: scene.label,
+            adjustable: true,
+            adjust(delta) {
+              const len = sceneProfiles.length;
+              state.normal.sceneIndex = (state.normal.sceneIndex + delta + len) % len;
+              loadPidFromScene();
+            },
+            hint: `${scene.usage} / K${state.expert.kp.toFixed(1)} I${state.expert.ki.toFixed(2)} D${state.expert.kd.toFixed(2)}`
+          }
+        ];
+      }
+
+      if (state.tab === 1) {
+        const step = currentGuideStep();
+        const issue = currentGuideIssue();
+        return [
+          {
+            key: "STEP",
+            label: "步骤",
+            value: `${state.guide.stepIndex + 1}/5 ${step.title}`,
+            adjustable: true,
+            adjust(delta) {
+              state.guide.stepIndex = clampInt(state.guide.stepIndex + delta, 0, guideSteps.length - 1);
+              state.guide.result = "观察中";
+              showFooterTip(`切到 ${currentGuideStep().title}`, 1200);
+            }
+          },
+          {
+            key: "MET",
+            label: "指标",
+            value: step.metric,
+            adjustable: false
+          },
+          {
+            key: "ISS",
+            label: "现象",
+            value: issue,
+            adjustable: true,
+            adjust(delta) {
+              const len = guideIssues.length;
+              state.guide.issueIndex = (state.guide.issueIndex + delta + len) % len;
+              state.guide.result = "观察中";
+            },
+            hint: guideSuggestion()
+          },
+          {
+            key: "ACT",
+            label: "动作",
+            value: issue === "正常" ? "保持" : "应用建议",
+            adjustable: true,
+            adjust() {
+              applyGuideSuggestion();
+            }
+          },
+          {
+            key: "PID",
+            label: "参数",
+            value: `K${state.expert.kp.toFixed(1)} I${state.expert.ki.toFixed(2)} D${state.expert.kd.toFixed(2)}`,
+            adjustable: false
+          },
+          {
+            key: "RES",
+            label: "结果",
+            value: state.guide.result,
+            adjustable: false,
+            hint: state.guide.stepIndex === guideSteps.length - 1 ? "通过后保存到当前场景" : "根据结果再进入下一步"
+          }
+        ];
+      }
+
+      const pages = expertPages();
+      if (state.expertPage >= pages.length) {
+        state.expertPage = 0;
+      }
+      return pages[state.expertPage];
+    }
+
+    function clampInt(v, min, max) {
+      return Math.max(min, Math.min(max, Math.round(v)));
+    }
+
+    function clampFloat(v, min, max, digits) {
+      const n = Math.max(min, Math.min(max, v));
+      return Number(n.toFixed(digits));
+    }
+
+    function switchTab() {
+      state.tab = (state.tab + 1) % tabs.length;
+      if (state.tab !== 2) {
+        state.expertPage = 0;
+      }
+      state.selected = 0;
+      render();
+    }
+
+    function switchExpertPage() {
+      if (state.tab !== 2) {
+        return;
+      }
+      state.expertPage = state.expertPage === 0 ? 1 : 0;
+      state.selected = 0;
+      showFooterTip(`专家分页 P${state.expertPage + 1}`, 1200);
+      render();
+    }
+
+    function moveSelection(step) {
+      const rows = rowsForTab();
+      const len = rows.length;
+      state.selected = (state.selected + step + len) % len;
+      render();
+    }
+
+    function adjustValue(delta) {
+      const rows = rowsForTab();
+      const row = rows[state.selected];
+      if (!row || !row.adjustable) {
+        return;
+      }
+      row.adjust(delta);
+      render();
+    }
+
+    function renderTabs() {
+      const tabsEl = document.getElementById("tabs");
+      tabsEl.innerHTML = "";
+
+      tabs.forEach((t, idx) => {
+        const el = document.createElement("div");
+        el.className = `tab ${idx === state.tab ? "active" : ""}`;
+        el.textContent = t.key;
+        el.title = t.label;
+        el.onclick = () => {
+          state.tab = idx;
+          state.selected = 0;
+          render();
+        };
+        tabsEl.appendChild(el);
+      });
+
+      const modeTag = document.getElementById("modeTag");
+      if (state.tab === 2) {
+        modeTag.textContent = `${tabs[state.tab].key} P${state.expertPage + 1}`;
+      } else {
+        modeTag.textContent = tabs[state.tab].key;
+      }
+    }
+
+    function renderRows() {
+      const bodyEl = document.getElementById("body");
+      const rows = rowsForTab();
+      if (state.selected >= rows.length) {
+        state.selected = 0;
+      }
+      bodyEl.innerHTML = "";
+
+      rows.forEach((r, idx) => {
+        const line = document.createElement("div");
+        line.className = `line ${idx === state.selected ? "selected" : ""}`;
+
+        const label = document.createElement("div");
+        label.className = "label";
+        label.textContent = r.label;
+
+        const value = document.createElement("div");
+        value.className = "value";
+        value.textContent = r.value;
+        if (state.flashKey === r.key && Date.now() < state.flashUntil) {
+          value.classList.add("blink");
+        }
+
+        line.appendChild(label);
+        line.appendChild(value);
+        line.onclick = () => {
+          state.selected = idx;
+          render();
+        };
+
+        bodyEl.appendChild(line);
+
+        if (r.hint) {
+          const hint = document.createElement("div");
+          hint.className = "scene-hint";
+          hint.textContent = r.hint;
+          bodyEl.appendChild(hint);
+        }
+      });
+    }
+
+    function renderClock() {
+      const d = new Date();
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      document.getElementById("clockText").textContent = `${hh}:${mm}`;
+    }
+
+    function render() {
+      renderTabs();
+      renderRows();
+      const hint = document.getElementById("footerHint");
+      const showWarn = state.footerTip && Date.now() < state.footerTipUntil;
+      if (showWarn) {
+        hint.textContent = state.footerTip;
+        hint.className = "hint warn";
+      } else {
+        hint.innerHTML = '<span class="inv">INV</span> 确认';
+        hint.className = "hint";
+      }
+      renderClock();
+    }
+
+    document.getElementById("btnTab").onclick = () => switchTab();
+    document.getElementById("btnTab").ondblclick = () => switchExpertPage();
+    document.getElementById("btnPrev").onclick = () => moveSelection(-1);
+    document.getElementById("btnNext").onclick = () => moveSelection(1);
+    document.getElementById("btnMinus").onclick = () => adjustValue(-1);
+    document.getElementById("btnPlus").onclick = () => adjustValue(1);
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "q" || e.key === "Q") {
+        switchTab();
+      } else if (e.key === "e" || e.key === "E") {
+        switchExpertPage();
+      } else if (e.key === "w" || e.key === "W" || e.key === "ArrowUp") {
+        moveSelection(-1);
+      } else if (e.key === "s" || e.key === "S" || e.key === "ArrowDown") {
+        moveSelection(1);
+      } else if (e.key === "a" || e.key === "A" || e.key === "ArrowLeft") {
+        adjustValue(-1);
+      } else if (e.key === "d" || e.key === "D" || e.key === "ArrowRight") {
+        adjustValue(1);
+      }
+    });
+
+    render();
+    setInterval(renderClock, 15000);
+  </script>
 </body>
 </html>

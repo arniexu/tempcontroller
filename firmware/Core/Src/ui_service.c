@@ -5,6 +5,7 @@
 
 #include "hw_platform_port.h"
 #include "log_service.h"
+#include "tune_service.h"
 
 #define UI_SPLASH_TICKS             (8U)
 
@@ -19,6 +20,9 @@
 
 typedef struct
 {
+    unsigned int tune_mode;
+    unsigned int tune_row;
+    unsigned int tune_expert_page;
     ui_page_t page;
     int editing;
     unsigned int pid_field;
@@ -48,6 +52,14 @@ typedef struct
 } ui_ctx_t;
 
 static ui_ctx_t g_ui;
+
+typedef enum
+{
+    UI_TUNE_MODE_NORMAL = 0,
+    UI_TUNE_MODE_GUIDE,
+    UI_TUNE_MODE_EXPERT,
+    UI_TUNE_MODE_COUNT
+} ui_tune_mode_t;
 
 static void render_page(void);
 #if defined(USE_HAL_DRIVER)
@@ -149,50 +161,231 @@ static ui_page_t browse_page_by_index(unsigned int idx)
     }
 }
 
-static void apply_pid_preset(app_params_t *params, unsigned int preset)
+static unsigned int tune_row_count(void)
 {
-    if (params == 0)
+    if (g_ui.tune_mode == (unsigned int)UI_TUNE_MODE_NORMAL)
+    {
+        return 2U;
+    }
+    if (g_ui.tune_mode == (unsigned int)UI_TUNE_MODE_GUIDE)
+    {
+        return 4U;
+    }
+    return (g_ui.tune_expert_page == 0U) ? 6U : 5U;
+}
+
+static void tune_cycle_mode(void)
+{
+    g_ui.tune_mode = (g_ui.tune_mode + 1U) % (unsigned int)UI_TUNE_MODE_COUNT;
+    g_ui.tune_row = 0U;
+}
+
+static void tune_next_row(void)
+{
+    unsigned int count = tune_row_count();
+    if (count == 0U)
+    {
+        g_ui.tune_row = 0U;
+        return;
+    }
+    g_ui.tune_row = (g_ui.tune_row + 1U) % count;
+}
+
+static void tune_toggle_expert_page(void)
+{
+    g_ui.tune_expert_page = (g_ui.tune_expert_page == 0U) ? 1U : 0U;
+    g_ui.tune_row = 0U;
+}
+
+static void tune_adjust_normal(app_params_t *params, int dir)
+{
+    unsigned int scene;
+    unsigned int scene_count;
+
+    if ((params == 0) || (dir == 0))
     {
         return;
     }
 
-    switch (preset % 3U)
+    if (g_ui.tune_row == 0U)
     {
-    case 0U: /* Fast heat */
-        params->kp = 10.0f;
-        params->ki = 0.6f;
-        params->kd = 20.0f;
+        params->set_temp_c = clampf(params->set_temp_c + (0.5f * (float)dir), 20.0f, 95.0f);
+        tune_service_clamp_params(params);
+        return;
+    }
+
+    scene = tune_service_get_scene();
+    scene_count = (unsigned int)tune_service_scene_count();
+    if (scene_count == 0U)
+    {
+        return;
+    }
+
+    if (dir > 0)
+    {
+        scene = (scene + 1U) % scene_count;
+    }
+    else
+    {
+        scene = (scene + scene_count - 1U) % scene_count;
+    }
+    tune_service_set_scene((uint8_t)scene);
+    tune_service_load_scene_defaults(params);
+}
+
+static void tune_adjust_guide(app_params_t *params, int dir)
+{
+    if (dir == 0)
+    {
+        return;
+    }
+
+    switch (g_ui.tune_row)
+    {
+    case 0U:
+        tune_service_step_change(dir);
         break;
-    case 1U: /* Balanced */
-        params->kp = 8.0f;
-        params->ki = 0.3f;
-        params->kd = 15.0f;
+    case 1U:
+        tune_service_issue_change(dir);
         break;
-    case 2U: /* Keep warm */
+    case 2U:
+        if (params != 0)
+        {
+            tune_service_apply_suggestion(params);
+        }
+        break;
     default:
-        params->kp = 5.0f;
-        params->ki = 0.15f;
-        params->kd = 10.0f;
         break;
     }
 }
 
-static unsigned int detect_pid_preset(const app_params_t *params)
+static void tune_adjust_expert(app_params_t *params, int dir)
 {
-    if (params == 0)
+    tune_pid_profile_t profile;
+
+    if ((params == 0) || (dir == 0))
     {
-        return 1U;
+        return;
     }
 
-    if ((params->kp >= 9.0f) && (params->ki >= 0.45f) && (params->kd >= 18.0f))
+    profile = *tune_service_get_profile();
+    if (g_ui.tune_expert_page == 0U)
     {
-        return 0U;
+        switch (g_ui.tune_row)
+        {
+        case 0U:
+            params->kp += 0.1f * (float)dir;
+            break;
+        case 1U:
+            params->ki += 0.01f * (float)dir;
+            break;
+        case 2U:
+            params->kd += 0.01f * (float)dir;
+            break;
+        case 3U:
+            profile.kp_min += 0.1f * (float)dir;
+            break;
+        case 4U:
+            profile.kp_max += 0.1f * (float)dir;
+            break;
+        case 5U:
+            profile.ki_min += 0.01f * (float)dir;
+            break;
+        default:
+            break;
+        }
     }
-    if ((params->kp <= 6.0f) && (params->ki <= 0.2f) && (params->kd <= 12.0f))
+    else
     {
-        return 2U;
+        switch (g_ui.tune_row)
+        {
+        case 0U:
+            profile.ki_max += 0.01f * (float)dir;
+            break;
+        case 1U:
+            profile.kd_min += 0.01f * (float)dir;
+            break;
+        case 2U:
+            profile.kd_max += 0.01f * (float)dir;
+            break;
+        case 3U:
+            profile.tmin_c += 1.0f * (float)dir;
+            break;
+        case 4U:
+            profile.tmax_c += 1.0f * (float)dir;
+            break;
+        default:
+            break;
+        }
     }
-    return 1U;
+
+    if (profile.kp_min < 0.0f)
+    {
+        profile.kp_min = 0.0f;
+    }
+    if (profile.ki_min < 0.0f)
+    {
+        profile.ki_min = 0.0f;
+    }
+    if (profile.kd_min < 0.0f)
+    {
+        profile.kd_min = 0.0f;
+    }
+    if (profile.kp_max > 20.0f)
+    {
+        profile.kp_max = 20.0f;
+    }
+    if (profile.ki_max > 10.0f)
+    {
+        profile.ki_max = 10.0f;
+    }
+    if (profile.kd_max > 30.0f)
+    {
+        profile.kd_max = 30.0f;
+    }
+    if (profile.tmin_c < 0.0f)
+    {
+        profile.tmin_c = 0.0f;
+    }
+    if (profile.tmax_c > 120.0f)
+    {
+        profile.tmax_c = 120.0f;
+    }
+
+    tune_service_set_profile(&profile);
+    tune_service_clamp_params(params);
+}
+
+static void adjust_param(app_params_t *params, int dir)
+{
+    if ((params == 0) || (dir == 0))
+    {
+        return;
+    }
+
+    switch (g_ui.page)
+    {
+    case UI_PAGE_SET_TEMP:
+        params->set_temp_c = clampf(params->set_temp_c + (0.5f * (float)dir), 20.0f, 60.0f);
+        break;
+    case UI_PAGE_PID:
+        if (g_ui.tune_mode == (unsigned int)UI_TUNE_MODE_NORMAL)
+        {
+            tune_adjust_normal(params, dir);
+        }
+        else if (g_ui.tune_mode == (unsigned int)UI_TUNE_MODE_GUIDE)
+        {
+            tune_adjust_guide(params, dir);
+        }
+        else
+        {
+            tune_adjust_expert(params, dir);
+        }
+        g_ui.pid_field = g_ui.tune_row;
+        break;
+    default:
+        break;
+    }
 }
 
 static int page_is_exception_locked(void)
@@ -252,34 +445,6 @@ static void page_prev(void)
 {
     unsigned int idx = browse_index(g_ui.page);
     g_ui.page = browse_page_by_index((idx + 4U) % 5U);
-}
-
-static void adjust_param(app_params_t *params, int dir)
-{
-    if ((params == 0) || (dir == 0))
-    {
-        return;
-    }
-
-    switch (g_ui.page)
-    {
-    case UI_PAGE_SET_TEMP:
-        params->set_temp_c = clampf(params->set_temp_c + (0.5f * (float)dir), 20.0f, 60.0f);
-        break;
-    case UI_PAGE_PID:
-        if (dir > 0)
-        {
-            g_ui.pid_field = (g_ui.pid_field + 1U) % 3U;
-        }
-        else
-        {
-            g_ui.pid_field = (g_ui.pid_field + 2U) % 3U;
-        }
-        apply_pid_preset(params, g_ui.pid_field);
-        break;
-    default:
-        break;
-    }
 }
 
 static void render_page_sync(app_params_t *params, ui_redraw_mode_t redraw_mode)
@@ -344,7 +509,10 @@ static ui_redraw_mode_t process_key_event(app_params_t *params, ui_key_event_t k
                 g_ui.editing = 1;
                 if (g_ui.page == UI_PAGE_PID)
                 {
-                    g_ui.pid_field = detect_pid_preset(params != 0 ? params : &g_ui.last_params);
+                    g_ui.tune_mode = (unsigned int)UI_TUNE_MODE_NORMAL;
+                    g_ui.tune_row = 0U;
+                    g_ui.tune_expert_page = 0U;
+                    g_ui.pid_field = 0U;
                 }
                 redraw_mode = UI_REDRAW_FULL;
             }
@@ -375,7 +543,10 @@ static ui_redraw_mode_t process_key_event(app_params_t *params, ui_key_event_t k
                 g_ui.editing = 1;
                 if (g_ui.page == UI_PAGE_PID)
                 {
-                    g_ui.pid_field = detect_pid_preset(params != 0 ? params : &g_ui.last_params);
+                    g_ui.tune_mode = (unsigned int)UI_TUNE_MODE_NORMAL;
+                    g_ui.tune_row = 0U;
+                    g_ui.tune_expert_page = 0U;
+                    g_ui.pid_field = 0U;
                 }
                 redraw_mode = UI_REDRAW_FULL;
             }
@@ -390,24 +561,75 @@ static ui_redraw_mode_t process_key_event(app_params_t *params, ui_key_event_t k
     {
     case UI_KEY_UP:
     case UI_KEY_UP_REPEAT:
-        adjust_param(params, +1);
-        redraw_mode = UI_REDRAW_SETTINGS_CARD;
+        if (g_ui.page == UI_PAGE_PID)
+        {
+            adjust_param(params, +1);
+            redraw_mode = UI_REDRAW_FULL;
+        }
+        else
+        {
+            adjust_param(params, +1);
+            redraw_mode = UI_REDRAW_SETTINGS_CARD;
+        }
         break;
     case UI_KEY_DOWN:
     case UI_KEY_DOWN_REPEAT:
-        adjust_param(params, -1);
-        redraw_mode = UI_REDRAW_SETTINGS_CARD;
+        if (g_ui.page == UI_PAGE_PID)
+        {
+            adjust_param(params, -1);
+            redraw_mode = UI_REDRAW_FULL;
+        }
+        else
+        {
+            adjust_param(params, -1);
+            redraw_mode = UI_REDRAW_SETTINGS_CARD;
+        }
         break;
     case UI_KEY_BACK:
-        g_ui.editing = 0;
+        if (g_ui.page == UI_PAGE_PID)
+        {
+            tune_next_row();
+            g_ui.pid_field = g_ui.tune_row;
+        }
+        else
+        {
+            g_ui.editing = 0;
+        }
         redraw_mode = UI_REDRAW_FULL;
         break;
     case UI_KEY_SET:
-        g_ui.editing = 0;
+        if (g_ui.page == UI_PAGE_PID)
+        {
+            tune_cycle_mode();
+            g_ui.pid_field = g_ui.tune_row;
+        }
+        else
+        {
+            g_ui.editing = 0;
+        }
         redraw_mode = UI_REDRAW_FULL;
         break;
     case UI_KEY_SET_LONG:
-        g_ui.editing = 0;
+        if (g_ui.page == UI_PAGE_PID)
+        {
+            if (g_ui.tune_mode == (unsigned int)UI_TUNE_MODE_EXPERT)
+            {
+                tune_toggle_expert_page();
+                g_ui.pid_field = g_ui.tune_row;
+            }
+            else if (g_ui.tune_mode == (unsigned int)UI_TUNE_MODE_GUIDE)
+            {
+                tune_service_apply_suggestion(params);
+            }
+            else
+            {
+                g_ui.editing = 0;
+            }
+        }
+        else
+        {
+            g_ui.editing = 0;
+        }
         redraw_mode = UI_REDRAW_FULL;
         break;
     default:
@@ -581,6 +803,21 @@ static const char *page_text(ui_page_t page)
     }
 }
 
+static const char *tune_mode_text(void)
+{
+    switch ((ui_tune_mode_t)g_ui.tune_mode)
+    {
+    case UI_TUNE_MODE_NORMAL:
+        return "NOR";
+    case UI_TUNE_MODE_GUIDE:
+        return "GUD";
+    case UI_TUNE_MODE_EXPERT:
+        return "EXP";
+    default:
+        return "NA";
+    }
+}
+
 #if defined(USE_HAL_DRIVER)
 static uint16_t ui_text_width(const char *text, uint8_t scale)
 {
@@ -715,7 +952,10 @@ static void render_value_card(uint16_t x,
 
 static void render_settings_value_card(void)
 {
-    char value_text[16];
+    char value_text[24];
+    const tune_runtime_t *rt = tune_service_get_runtime();
+    const tune_pid_profile_t *pf = tune_service_get_profile();
+    const tune_scene_info_t *scene = tune_service_get_scene_info(tune_service_get_scene());
 
     switch (g_ui.page)
     {
@@ -724,19 +964,102 @@ static void render_settings_value_card(void)
         render_value_card(20U, 106U, 200U, 110U, "TARGET", value_text, 5U, UI_LCD_GOOD);
         break;
     case UI_PAGE_PID:
-        if (g_ui.pid_field == 0U)
+        if (g_ui.tune_mode == (unsigned int)UI_TUNE_MODE_NORMAL)
         {
-            (void)snprintf(value_text, sizeof(value_text), "FAST");
+            if (g_ui.tune_row == 0U)
+            {
+                (void)snprintf(value_text, sizeof(value_text), "%.1fC", g_ui.last_params.set_temp_c);
+                render_value_card(20U, 106U, 200U, 96U, "TGT", value_text, 5U, UI_LCD_GOOD);
+            }
+            else
+            {
+                (void)snprintf(value_text, sizeof(value_text), "%s", (scene != 0) ? scene->code : "SCN");
+                render_value_card(20U, 106U, 200U, 96U, "PROFILE", value_text, 4U, UI_LCD_ACCENT);
+            }
         }
-        else if (g_ui.pid_field == 1U)
+        else if (g_ui.tune_mode == (unsigned int)UI_TUNE_MODE_GUIDE)
         {
-            (void)snprintf(value_text, sizeof(value_text), "BAL");
+            if (g_ui.tune_row == 0U)
+            {
+                (void)snprintf(value_text, sizeof(value_text), "%u/5", (unsigned int)(rt->step_index + 1U));
+                render_value_card(20U, 106U, 200U, 96U, "STEP", value_text, 5U, UI_LCD_ACCENT);
+            }
+            else if (g_ui.tune_row == 1U)
+            {
+                (void)snprintf(value_text, sizeof(value_text), "%s", tune_service_issue_text(rt->issue));
+                render_value_card(20U, 106U, 200U, 96U, "ISSUE", value_text, 3U, UI_LCD_WARM);
+            }
+            else if (g_ui.tune_row == 2U)
+            {
+                (void)snprintf(value_text, sizeof(value_text), "%s", tune_service_action_text(rt->action));
+                render_value_card(20U, 106U, 200U, 96U, "ACTION", value_text, 4U, UI_LCD_GOOD);
+            }
+            else
+            {
+                (void)snprintf(value_text, sizeof(value_text), "%s", rt->accept_ready ? "PASS" : "WATCH");
+                render_value_card(20U, 106U, 200U, 96U, "RESULT", value_text, 4U,
+                                  rt->accept_ready ? UI_LCD_GOOD : UI_LCD_PANEL_ALT);
+            }
         }
         else
         {
-            (void)snprintf(value_text, sizeof(value_text), "WARM");
+            if (g_ui.tune_expert_page == 0U)
+            {
+                switch (g_ui.tune_row)
+                {
+                case 0U:
+                    (void)snprintf(value_text, sizeof(value_text), "%.1f", g_ui.last_params.kp);
+                    render_value_card(20U, 106U, 200U, 96U, "KP", value_text, 5U, UI_LCD_ACCENT);
+                    break;
+                case 1U:
+                    (void)snprintf(value_text, sizeof(value_text), "%.2f", g_ui.last_params.ki);
+                    render_value_card(20U, 106U, 200U, 96U, "KI", value_text, 5U, UI_LCD_ACCENT);
+                    break;
+                case 2U:
+                    (void)snprintf(value_text, sizeof(value_text), "%.2f", g_ui.last_params.kd);
+                    render_value_card(20U, 106U, 200U, 96U, "KD", value_text, 5U, UI_LCD_ACCENT);
+                    break;
+                case 3U:
+                    (void)snprintf(value_text, sizeof(value_text), "%.1f", pf->kp_min);
+                    render_value_card(20U, 106U, 200U, 96U, "KPL", value_text, 5U, UI_LCD_PANEL_ALT);
+                    break;
+                case 4U:
+                    (void)snprintf(value_text, sizeof(value_text), "%.1f", pf->kp_max);
+                    render_value_card(20U, 106U, 200U, 96U, "KPH", value_text, 5U, UI_LCD_PANEL_ALT);
+                    break;
+                default:
+                    (void)snprintf(value_text, sizeof(value_text), "%.2f", pf->ki_min);
+                    render_value_card(20U, 106U, 200U, 96U, "KIL", value_text, 5U, UI_LCD_PANEL_ALT);
+                    break;
+                }
+            }
+            else
+            {
+                switch (g_ui.tune_row)
+                {
+                case 0U:
+                    (void)snprintf(value_text, sizeof(value_text), "%.2f", pf->ki_max);
+                    render_value_card(20U, 106U, 200U, 96U, "KIH", value_text, 5U, UI_LCD_PANEL_ALT);
+                    break;
+                case 1U:
+                    (void)snprintf(value_text, sizeof(value_text), "%.2f", pf->kd_min);
+                    render_value_card(20U, 106U, 200U, 96U, "KDL", value_text, 5U, UI_LCD_PANEL_ALT);
+                    break;
+                case 2U:
+                    (void)snprintf(value_text, sizeof(value_text), "%.2f", pf->kd_max);
+                    render_value_card(20U, 106U, 200U, 96U, "KDH", value_text, 5U, UI_LCD_PANEL_ALT);
+                    break;
+                case 3U:
+                    (void)snprintf(value_text, sizeof(value_text), "%.0fC", (double)pf->tmin_c);
+                    render_value_card(20U, 106U, 200U, 96U, "TMIN", value_text, 5U, UI_LCD_GOOD);
+                    break;
+                default:
+                    (void)snprintf(value_text, sizeof(value_text), "%.0fC", (double)pf->tmax_c);
+                    render_value_card(20U, 106U, 200U, 96U, "TMAX", value_text, 5U, UI_LCD_GOOD);
+                    break;
+                }
+            }
         }
-        render_value_card(20U, 106U, 200U, 96U, "PRESET", value_text, 5U, UI_LCD_ACCENT);
         break;
     default:
         break;
@@ -751,7 +1074,9 @@ static void render_status_line(uint16_t y, const char *text, uint16_t color)
 static void render_settings_page(void)
 {
     char value_text[16];
-    char footer[28];
+    char footer[32];
+    const tune_runtime_t *rt = tune_service_get_runtime();
+    const tune_scene_info_t *scene = tune_service_get_scene_info(tune_service_get_scene());
 
     switch (g_ui.page)
     {
@@ -766,24 +1091,35 @@ static void render_settings_page(void)
         break;
 
     case UI_PAGE_PID:
-        (void)snprintf(footer, sizeof(footer), "PRESET %u OF 3", (unsigned int)(g_ui.pid_field + 1U));
-        render_page_shell("PID PRESET", footer);
-        if (g_ui.pid_field == 0U)
+        (void)snprintf(footer, sizeof(footer), "MODE %s ROW %u", tune_mode_text(), (unsigned int)(g_ui.tune_row + 1U));
+        render_page_shell("PID TUNE", footer);
+        render_settings_value_card();
+        if (g_ui.tune_mode == (unsigned int)UI_TUNE_MODE_NORMAL)
         {
-            (void)snprintf(value_text, sizeof(value_text), "FAST");
+            (void)snprintf(value_text,
+                           sizeof(value_text),
+                           "%s %s",
+                           (scene != 0) ? scene->code : "SCN",
+                           (scene != 0) ? scene->usage : "NA");
+            render_status_line(246U, value_text, UI_LCD_TEXT);
+            render_status_line(272U, g_ui.editing ? "SET=MODE BACK=ROW" : "SET TO START", UI_LCD_PANEL_ALT);
+            render_hint_symbol("S R +/-");
         }
-        else if (g_ui.pid_field == 1U)
+        else if (g_ui.tune_mode == (unsigned int)UI_TUNE_MODE_GUIDE)
         {
-            (void)snprintf(value_text, sizeof(value_text), "BAL");
+            (void)snprintf(footer, sizeof(footer), "S%u %s", (unsigned int)(rt->step_index + 1U), tune_service_step_text(rt->step_index));
+            render_status_line(246U, footer, UI_LCD_TEXT);
+            render_status_line(268U, rt->advice_text, UI_LCD_PANEL_ALT);
+            render_hint_symbol("SET=MODE LONG=ACT");
         }
         else
         {
-            (void)snprintf(value_text, sizeof(value_text), "WARM");
+            (void)snprintf(footer, sizeof(footer), "P%u K%.1f I%.2f", (unsigned int)(g_ui.tune_expert_page + 1U),
+                           (double)g_ui.last_params.kp, (double)g_ui.last_params.ki);
+            render_status_line(246U, footer, UI_LCD_TEXT);
+            render_status_line(268U, "LONG SET PAGE / BACK ROW", UI_LCD_PANEL_ALT);
+            render_hint_symbol("S M B +/-");
         }
-        render_value_card(20U, 106U, 200U, 96U, "PRESET", value_text, 5U, UI_LCD_ACCENT);
-        render_status_line(246U, "FAST / BAL / WARM", UI_LCD_TEXT);
-        render_status_line(272U, g_ui.editing ? "SET SAVE / LONG EXIT" : "SET TO EDIT", UI_LCD_PANEL_ALT);
-        render_hint_symbol("OK <");
         break;
 
     default:
@@ -880,17 +1216,24 @@ static void render_page(void)
         (void)snprintf(line3, sizeof(line3), "SET %.1fC", g_ui.last_params.set_temp_c);
         break;
     case UI_PAGE_PID:
-        if (detect_pid_preset(&g_ui.last_params) == 0U)
+        (void)snprintf(line2, sizeof(line2), "MODE %s ROW %u", tune_mode_text(), (unsigned int)(g_ui.tune_row + 1U));
+        if (g_ui.tune_mode == (unsigned int)UI_TUNE_MODE_NORMAL)
         {
-            (void)snprintf(line3, sizeof(line3), "PRESET FAST");
-        }
-        else if (detect_pid_preset(&g_ui.last_params) == 2U)
-        {
-            (void)snprintf(line3, sizeof(line3), "PRESET WARM");
+            const tune_scene_info_t *scene = tune_service_get_scene_info(tune_service_get_scene());
+            (void)snprintf(line3,
+                           sizeof(line3),
+                           "%s %s",
+                           (scene != 0) ? scene->code : "SCN",
+                           (scene != 0) ? scene->usage : "NA");
         }
         else
         {
-            (void)snprintf(line3, sizeof(line3), "PRESET BAL");
+            (void)snprintf(line3,
+                           sizeof(line3),
+                           "K%.1f I%.2f D%.2f",
+                           (double)g_ui.last_params.kp,
+                           (double)g_ui.last_params.ki,
+                           (double)g_ui.last_params.kd);
         }
         break;
     case UI_PAGE_ALARM:
@@ -1013,6 +1356,11 @@ static void render_page(void)
 
 void ui_service_init(void)
 {
+    tune_service_init();
+
+    g_ui.tune_mode = (unsigned int)UI_TUNE_MODE_NORMAL;
+    g_ui.tune_row = 0U;
+    g_ui.tune_expert_page = 0U;
     g_ui.page = UI_PAGE_HOME;
     g_ui.editing = 0;
     g_ui.pid_field = 0U;
@@ -1109,6 +1457,8 @@ void ui_service_tick_200ms(app_mode_t mode, const temp_snapshot_t *temp, const a
     g_ui.last_pid_out = pid_out;
     g_ui.last_heater_on = heater_on;
     g_ui.last_alarm_on = alarm_on;
+
+    tune_service_update_observation(&g_ui.last_temp, &g_ui.last_params, pid_out, heater_on);
 
     update_exception_page_state();
 

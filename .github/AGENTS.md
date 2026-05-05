@@ -85,6 +85,7 @@
 5. TEMPCON@1.1.0
 6. UI_DESIGNER@1.1.0
 7. WATER3P_STATIC@1.1.0
+8. PID_ALGO_EXPERT@1.0.0
 
 ### 6. 代码变更审查（强制）
 1. 每次任务必须审查本次范围内的全部 code change，不得只抽样审查。

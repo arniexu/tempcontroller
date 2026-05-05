@@ -60,6 +60,7 @@ gcc -std=c11 -Wall -Wextra -Werror \
   ../Core/Src/heater_ctrl.c \
   ../Core/Src/temp_manager.c \
   ../Core/Src/schedule_service.c \
+  ../Core/Src/tune_service.c \
   ../Core/Src/ui_service.c \
   ../Core/Src/protocol_export.c \
   ../Core/Src/app_main.c \
@@ -71,7 +72,7 @@ gcc -std=c11 -Wall -Wextra -Werror \
   stubs/ui_lvgl_test_stub.c \
   test_scheduler.c test_pid.c test_alarm_service.c test_param_store.c \
   test_log_service.c test_heater_ctrl.c test_temp_manager.c test_schedule_service.c \
-  test_ui_service.c test_protocol_export.c test_app_main.c test_runner.c \
+  test_tune_service.c test_ui_service.c test_protocol_export.c test_app_main.c test_runner.c \
   -o module_tests.exe
 ```
 
@@ -79,6 +80,21 @@ Run:
 
 ```powershell
 .\module_tests.exe
+```
+
+## Single test entry
+
+Use the project-local single-test entry instead of a temporary main file:
+
+```powershell
+gcc -std=c11 -Wall -Wextra -Werror \
+  -I../Core/Inc -I. \
+  ../Core/Src/tune_service.c \
+  test_tune_service.c test_single_main.c \
+  -DHOST_SINGLE_TEST=test_tune_service_run \
+  -o test_tune_service.exe
+
+.\test_tune_service.exe
 ```
 
 ## Script shortcuts
