@@ -18,6 +18,9 @@ extern "C" {
 #define HAL_I2C_MODULE_ENABLED
 #define HAL_DMA_MODULE_ENABLED
 #define HAL_PWR_MODULE_ENABLED
+#define HAL_ETH_MODULE_ENABLED
+
+#include "stm32f4xx_hal_def.h"
 
 #include "stm32f4xx_hal_rcc.h"
 #include "stm32f4xx_hal_gpio.h"
@@ -34,6 +37,7 @@ extern "C" {
 #include "stm32f4xx_hal_uart.h"
 #include "stm32f4xx_hal_spi.h"
 #include "stm32f4xx_hal_i2c.h"
+#include "stm32f4xx_hal_eth.h"
 
 #if !defined(HSE_VALUE)
 #define HSE_VALUE    8000000U

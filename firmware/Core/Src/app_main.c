@@ -7,6 +7,7 @@
 #include "heater_ctrl.h"
 #include "hw_platform_port.h"
 #include "log_service.h"
+#include "network_service.h"
 #include "param_store.h"
 #include "pid_ctrl.h"
 #include "protocol_export.h"
@@ -60,6 +61,7 @@ typedef enum
     HW_SMOKE_STAGE_ACTUATORS,
     HW_SMOKE_STAGE_TEMP,
     HW_SMOKE_STAGE_SPIFLASH,
+    HW_SMOKE_STAGE_NETWORK,
     HW_SMOKE_STAGE_DONE
 } hw_smoke_stage_t;
 
@@ -119,6 +121,7 @@ static const char *hw_smoke_stage_to_str(hw_smoke_stage_t stage)
     case HW_SMOKE_STAGE_ACTUATORS: return "ACT";
     case HW_SMOKE_STAGE_TEMP: return "TEMP";
     case HW_SMOKE_STAGE_SPIFLASH: return "SPIFLASH";
+    case HW_SMOKE_STAGE_NETWORK: return "NETWORK";
     case HW_SMOKE_STAGE_DONE: return "DONE";
     default: return "UNKNOWN";
     }
@@ -648,7 +651,11 @@ static void run_all_hw_driver_smoke_test_loop(void)
                            (unsigned int)g_hw_smoke_spi_rx[7]);
             if (cmp_ok != 0)
             {
+#if (APP_USE_ETHERNET == 1U)
+                hw_smoke_next_stage(HW_SMOKE_STAGE_NETWORK, now_ms);
+#else
                 hw_smoke_next_stage(HW_SMOKE_STAGE_DONE, now_ms);
+#endif
             }
         }
 
@@ -683,6 +690,64 @@ static void run_all_hw_driver_smoke_test_loop(void)
             hw_smoke_refresh_blocking();
         }
         break;
+
+    case HW_SMOKE_STAGE_NETWORK:
+#if (APP_USE_ETHERNET == 1U)
+    {
+        network_status_t net_status;
+        int got_status = network_service_get_status(&net_status) ? 1 : 0;
+
+        if (g_hw_smoke_stage_entered == 0U)
+        {
+            g_hw_smoke_stage_entered = 1U;
+            debug_log_info("APP", "hw_smoke enter NETWORK");
+        }
+
+        (void)snprintf(line2,
+                       sizeof(line2),
+                       "R%d L%d %uM %s",
+                       got_status ? (net_status.ready ? 1 : 0) : 0,
+                       got_status ? (net_status.link_up ? 1 : 0) : 0,
+                       got_status ? (unsigned int)net_status.speed_mbps : 0U,
+                       (got_status && net_status.full_duplex) ? "FD" : "HD");
+        (void)snprintf(line3,
+                       sizeof(line3),
+                       (got_status && net_status.link_up) ? "SET PASS DN FAIL" : "RJ45? SET RETRY");
+
+        hw_oled_draw_text(0U, "HW SMOKE: NET");
+        hw_oled_draw_text(1U, "CHECK LINK UP");
+        hw_oled_draw_text(2U, line2);
+        hw_oled_draw_text(3U, line3);
+        hw_smoke_refresh_blocking();
+
+        if ((pressed_mask & 0x01U) != 0U)
+        {
+            if (got_status && net_status.link_up)
+            {
+                hw_smoke_record_result(1);
+                debug_log_info("APP", "hw_smoke NETWORK pass speed=%u duplex=%s",
+                               (unsigned int)net_status.speed_mbps,
+                               net_status.full_duplex ? "full" : "half");
+                hw_smoke_next_stage(HW_SMOKE_STAGE_DONE, now_ms);
+            }
+            else
+            {
+                debug_log_warn("APP", "hw_smoke NETWORK retry link_down");
+            }
+        }
+
+        if ((pressed_mask & 0x04U) != 0U)
+        {
+            hw_smoke_record_result(0);
+            debug_log_warn("APP", "hw_smoke NETWORK fail forced by operator");
+            hw_smoke_next_stage(HW_SMOKE_STAGE_DONE, now_ms);
+        }
+        break;
+    }
+#else
+        hw_smoke_next_stage(HW_SMOKE_STAGE_DONE, now_ms);
+        break;
+#endif
 
     case HW_SMOKE_STAGE_DONE:
         (void)snprintf(line2,
@@ -1091,6 +1156,10 @@ void app_main_init(void)
     hw_eeprom_init();
     hw_smoke_boot_stage("EEPROM OK", "FLASH INIT");
     hw_spiflash_init();
+#if (APP_USE_ETHERNET == 1U)
+    hw_smoke_boot_stage("FLASH OK", "NET INIT");
+    network_service_init();
+#endif
     hw_smoke_boot_stage("FLASH OK", "SMOKE TEST");
     g_hw_smoke_temp_port_inited = 0U;
     debug_log_info("APP", "debug hw smoke test mode");
@@ -1144,6 +1213,7 @@ void app_main_init(void)
         g_runtime_params = *params;
     }
     heater_ctrl_init(APP_PID_WINDOW_MS);
+    network_service_init();
 
     g_mode = APP_MODE_IDLE;
     g_prev_mode = g_mode;
@@ -1169,6 +1239,9 @@ void app_main_loop(void)
         run_all_hw_driver_smoke_test_loop();
         hw_eeprom_process();
         hw_spiflash_process();
+#if (APP_USE_ETHERNET == 1U)
+        network_service_process();
+#endif
         return;
     }
 
@@ -1285,6 +1358,7 @@ void app_main_loop(void)
     }
 
     protocol_export_process();
+    network_service_process();
     (void)hw_oled_process();
     hw_eeprom_process();
     sync_runtime_params_if_changed();

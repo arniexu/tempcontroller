@@ -23,6 +23,7 @@
 #define COMP_PARAM_STORE_EEPROM_ENABLE    (0U)
 #define COMP_PARAM_STORE_SPIFLASH_ENABLE  (1U)
 #define COMP_UI_LVGL_ENABLE               (1U)
+#define COMP_ETHERNET_ENABLE              (0U)
 
 /* Legacy APP_* compatibility mapping */
 #define APP_USE_MOCK_TEMP_SOURCE      (COMP_TEMP_SOURCE_MOCK_ENABLE)
@@ -37,6 +38,7 @@
 #define APP_TASK_CONTROL_PERIOD_MS    (1000U)
 
 #define APP_USE_LVGL_UI               (COMP_UI_LVGL_ENABLE)
+#define APP_USE_ETHERNET              (COMP_ETHERNET_ENABLE)
 #define APP_LVGL_TASK_PERIOD_MS       (20U)
 #define APP_LVGL_BUF_LINES            (8U)
 #define APP_LVGL_STARTUP_SELF_TEST    (1U)

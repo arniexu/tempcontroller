@@ -26,6 +26,10 @@
 #define APP_HW_DRIVER_TEST_DISPLAY      (0U)
 #endif
 
+#if !defined(APP_ETH_PHY_LAN8720AI)
+#define APP_ETH_PHY_LAN8720AI           (0U)
+#endif
+
 #if !defined(APP_DISPLAY_DRIVER_LCD_8080) && !defined(APP_DISPLAY_DRIVER_OLED_I2C_96X96)
 #define APP_DISPLAY_DRIVER_LCD_8080
 #endif
@@ -75,6 +79,9 @@
 #if !defined(COMP_UI_LVGL_ENABLE)
 #error "Project config must define COMP_UI_LVGL_ENABLE"
 #endif
+#if !defined(COMP_ETHERNET_ENABLE)
+#error "Project config must define COMP_ETHERNET_ENABLE"
+#endif
 #if !defined(APP_USE_MOCK_TEMP_SOURCE)
 #error "Project config must define APP_USE_MOCK_TEMP_SOURCE"
 #endif
@@ -89,6 +96,9 @@
 #endif
 #if !defined(APP_USE_LVGL_UI)
 #error "Project config must define APP_USE_LVGL_UI"
+#endif
+#if !defined(APP_USE_ETHERNET)
+#error "Project config must define APP_USE_ETHERNET"
 #endif
 #if !defined(APP_LVGL_TASK_PERIOD_MS)
 #error "Project config must define APP_LVGL_TASK_PERIOD_MS"
@@ -173,6 +183,15 @@
 #endif
 #endif
 
+#if (APP_ETH_PHY_LAN8720AI == 1U)
+#if !defined(BSP_ETH_PHY_ADDR)
+#error "BSP config must define BSP_ETH_PHY_ADDR"
+#endif
+#if !defined(BSP_ETH_AUTONEG_TIMEOUT_POLLS)
+#error "BSP config must define BSP_ETH_AUTONEG_TIMEOUT_POLLS"
+#endif
+#endif
+
 #if !defined(APP_UART_BAUDRATE)
 #define APP_UART_BAUDRATE             (BSP_UART_BAUDRATE)
 #endif
@@ -198,6 +217,18 @@
 
 #if ((COMP_TEMP_SOURCE_MOCK_ENABLE + COMP_SENSOR_DS18B20_ENABLE) != 1U)
 #error "Exactly one temperature source component must be enabled."
+#endif
+
+#if (APP_USE_ETHERNET != COMP_ETHERNET_ENABLE)
+#error "APP_USE_ETHERNET must be mapped from COMP_ETHERNET_ENABLE"
+#endif
+
+#if (COMP_ETHERNET_ENABLE == 1U) && (APP_ETH_PHY_LAN8720AI != 1U)
+#error "Ethernet is enabled but no supported PHY driver is selected."
+#endif
+
+#if (APP_USE_ETHERNET == 1U) && !defined(STM32F4xx) && !defined(STM32F407xx)
+#error "Ethernet/LwIP is currently supported only on STM32F4 HAL targets."
 #endif
 
 #if (APP_PARAM_STORE_USE_EEPROM + APP_PARAM_STORE_USE_SPIFLASH) > 1U
