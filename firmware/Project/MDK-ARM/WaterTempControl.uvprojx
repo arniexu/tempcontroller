@@ -412,9 +412,14 @@
               <FilePath>..\..\Drivers\BSP\bsp_lcd_8080.c</FilePath>
             </File>
             <File>
-              <FileName>tiny_graphics.c</FileName>
+              <FileName>bsp_lcd_font.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\Drivers\BSP\tiny_graphics.c</FilePath>
+              <FilePath>..\..\Drivers\BSP\bsp_lcd_font.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_systick.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\bsp_systick.c</FilePath>
             </File>
             <File>
               <FileName>bsp_buzzer.c</FileName>
@@ -462,6 +467,11 @@
               <FilePath>..\..\Core\Src\log_service.c</FilePath>
             </File>
             <File>
+              <FileName>network_service.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Core\Src\network_service.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Core\Src\main.c</FilePath>
@@ -495,6 +505,16 @@
               <FileName>temp_manager.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Core\Src\temp_manager.c</FilePath>
+            </File>
+            <File>
+              <FileName>tune_service.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Core\Src\tune_service.c</FilePath>
+            </File>
+            <File>
+              <FileName>ui_key_input.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Core\Src\ui_key_input.c</FilePath>
             </File>
             <File>
               <FileName>ui_service.c</FileName>
@@ -1634,9 +1654,14 @@
               <FilePath>..\..\Drivers\BSP\bsp_lcd_8080.c</FilePath>
             </File>
             <File>
-              <FileName>tiny_graphics.c</FileName>
+              <FileName>bsp_lcd_font.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\Drivers\BSP\tiny_graphics.c</FilePath>
+              <FilePath>..\..\Drivers\BSP\bsp_lcd_font.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_systick.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\bsp_systick.c</FilePath>
             </File>
             <File>
               <FileName>bsp_buzzer.c</FileName>
@@ -1684,6 +1709,11 @@
               <FilePath>..\..\Core\Src\log_service.c</FilePath>
             </File>
             <File>
+              <FileName>network_service.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Core\Src\network_service.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Core\Src\main.c</FilePath>
@@ -1717,6 +1747,16 @@
               <FileName>temp_manager.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Core\Src\temp_manager.c</FilePath>
+            </File>
+            <File>
+              <FileName>tune_service.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Core\Src\tune_service.c</FilePath>
+            </File>
+            <File>
+              <FileName>ui_key_input.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Core\Src\ui_key_input.c</FilePath>
             </File>
             <File>
               <FileName>ui_service.c</FileName>

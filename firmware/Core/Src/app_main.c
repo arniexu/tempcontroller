@@ -33,7 +33,7 @@ static uint32_t g_last_1ms_tick = 0U;
 #if (APP_USE_LVGL_UI == 1U)
 static uint32_t g_last_lvgl_task_ms = 0U;
 #endif
-static bool g_hw_driver_test_active = false;
+static bool g_hw_driver_test_active = true;
 
 typedef enum
 {
@@ -242,12 +242,12 @@ static void hw_smoke_show_lines(const char *l0,
 {
     uint8_t guard = 0U;
 
-    hw_oled_draw_text(0U, l0);
-    hw_oled_draw_text(1U, l1);
-    hw_oled_draw_text(2U, l2);
-    hw_oled_draw_text(3U, l3);
-    hw_oled_refresh();
-    while ((hw_oled_process() != 0) && (guard < 8U))
+    hw_display_draw_text(0U, l0);
+    hw_display_draw_text(1U, l1);
+    hw_display_draw_text(2U, l2);
+    hw_display_draw_text(3U, l3);
+    hw_display_refresh();
+    while ((hw_display_process() != 0) && (guard < 8U))
     {
         guard++;
     }
@@ -261,12 +261,12 @@ static void hw_smoke_boot_stage(const char *line1, const char *line2)
 {
     uint8_t guard = 0U;
 
-    hw_oled_draw_text(0U, "HW TEST BOOT");
-    hw_oled_draw_text(1U, line1);
-    hw_oled_draw_text(2U, line2);
-    hw_oled_draw_text(3U, "WAIT...");
-    hw_oled_refresh();
-    while ((hw_oled_process() != 0) && (guard < 8U))
+    hw_display_draw_text(0U, "HW TEST BOOT");
+    hw_display_draw_text(1U, line1);
+    hw_display_draw_text(2U, line2);
+    hw_display_draw_text(3U, "WAIT...");
+    hw_display_refresh();
+    while ((hw_display_process() != 0) && (guard < 8U))
     {
         guard++;
     }
@@ -276,8 +276,8 @@ static void hw_smoke_refresh_blocking(void)
 {
     uint8_t guard = 0U;
 
-    hw_oled_refresh();
-    while ((hw_oled_process() != 0) && (guard < 8U))
+    hw_display_refresh();
+    while ((hw_display_process() != 0) && (guard < 8U))
     {
         guard++;
     }
@@ -344,13 +344,13 @@ static void run_all_hw_driver_smoke_test_loop(void)
                        "T %lus/%lus",
                        (unsigned long)((now_ms - g_hw_smoke_stage_started_ms) / 1000U),
                        (unsigned long)(HW_SMOKE_DISPLAY_MS / 1000U));
-        hw_oled_draw_text(2U, line2);
+        hw_display_draw_text(2U, line2);
         hw_smoke_refresh_blocking();
         if ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_DISPLAY_MS)
         {
             hw_smoke_record_result(1);
             debug_log_info("APP", "hw_smoke DISPLAY pass");
-            hw_oled_clear();
+            hw_display_clear();
             hw_smoke_next_stage(HW_SMOKE_STAGE_KEYS, now_ms);
         }
         break;
@@ -403,17 +403,17 @@ static void run_all_hw_driver_smoke_test_loop(void)
                          ((g_hw_smoke_key_seen_mask & 0x01U) == 0U) &&
                          ((now_ms - g_hw_smoke_stage_started_ms) >= HW_SMOKE_KEY_DEGRADED_MS));
 
-        hw_oled_draw_text(0U, "HW SMOKE: KEYS");
+        hw_display_draw_text(0U, "HW SMOKE: KEYS");
         if (strcmp(g_hw_smoke_last_key_name, "NONE") == 0)
         {
-            hw_oled_draw_text(1U, "LAST NONE");
+            hw_display_draw_text(1U, "LAST NONE");
         }
         else
         {
             char key_line[24];
 
             (void)snprintf(key_line, sizeof(key_line), "LAST %s", g_hw_smoke_last_key_name);
-            hw_oled_draw_text(1U, key_line);
+            hw_display_draw_text(1U, key_line);
         }
         (void)snprintf(line2,
                        sizeof(line2),
@@ -431,8 +431,8 @@ static void run_all_hw_driver_smoke_test_loop(void)
                        (degraded_keys_ok != 0U) ? "UP BAD DN NEXT" :
                        ((g_hw_smoke_key_stuck_mask & 0x02U) != 0U) ? "UP STUCK? PA0" :
                        "PRESS ALL 3");
-        hw_oled_draw_text(2U, line2);
-        hw_oled_draw_text(3U, line3);
+        hw_display_draw_text(2U, line2);
+        hw_display_draw_text(3U, line3);
         hw_smoke_refresh_blocking();
 
         if (((g_hw_smoke_key_seen_mask & g_hw_smoke_key_required_mask) == g_hw_smoke_key_required_mask) &&
@@ -483,8 +483,8 @@ static void run_all_hw_driver_smoke_test_loop(void)
         ok0 = hw_temp_port_read_c(0U, &t0) ? 1 : 0;
         ok1 = hw_temp_port_read_c(1U, &t1) ? 1 : 0;
         ok2 = hw_temp_port_read_c(2U, &t2) ? 1 : 0;
-        hw_oled_draw_text(0U, "HW SMOKE: TEMP");
-        hw_oled_draw_text(1U, "LIVE CHANGE TEMP");
+        hw_display_draw_text(0U, "HW SMOKE: TEMP");
+        hw_display_draw_text(1U, "LIVE CHANGE TEMP");
         (void)snprintf(line2,
                        sizeof(line2),
                        "%s%.1f %s%.1f",
@@ -494,8 +494,8 @@ static void run_all_hw_driver_smoke_test_loop(void)
                        sizeof(line3),
                        "%s%.1f SET>NXT",
                        ok2 ? "C" : "-", t2);
-        hw_oled_draw_text(2U, line2);
-        hw_oled_draw_text(3U, line3);
+        hw_display_draw_text(2U, line2);
+        hw_display_draw_text(3U, line3);
         hw_smoke_refresh_blocking();
 
         if ((now_ms - g_hw_smoke_last_temp_log_ms) >= HW_SMOKE_TEMP_LOG_MS)
@@ -555,8 +555,8 @@ static void run_all_hw_driver_smoke_test_loop(void)
                            (unsigned int)g_hw_smoke_relay_on);
         }
 
-        hw_oled_draw_text(0U, "HW SMOKE: ACT");
-        hw_oled_draw_text(1U,
+        hw_display_draw_text(0U, "HW SMOKE: ACT");
+        hw_display_draw_text(1U,
                           ((g_hw_smoke_key_stuck_mask & 0x02U) != 0U) ? "SET BUZ DN RLY" : "SET BUZ UP RLY");
         (void)snprintf(line2,
                        sizeof(line2),
@@ -564,8 +564,8 @@ static void run_all_hw_driver_smoke_test_loop(void)
                        (unsigned int)g_hw_smoke_buzzer_on,
                        (unsigned int)g_hw_smoke_relay_on,
                        (unsigned int)g_hw_smoke_relay_on);
-        hw_oled_draw_text(2U, line2);
-        hw_oled_draw_text(3U,
+        hw_display_draw_text(2U, line2);
+        hw_display_draw_text(3U,
                           (((g_hw_smoke_key_stuck_mask & 0x02U) != 0U) &&
                            ((g_hw_smoke_buzzer_tested == 0U) || (g_hw_smoke_relay_tested == 0U))) ?
                               "TEST BUZ+RLY" :
@@ -683,10 +683,10 @@ static void run_all_hw_driver_smoke_test_loop(void)
                                ((g_hw_smoke_key_stuck_mask & 0x02U) != 0U) ? "SET WR DN SEL" : "SET WR DN NEW");
             }
 
-            hw_oled_draw_text(0U, "HW SMOKE: SPI");
-            hw_oled_draw_text(1U, line2);
-            hw_oled_draw_text(2U, preview);
-            hw_oled_draw_text(3U, line3);
+            hw_display_draw_text(0U, "HW SMOKE: SPI");
+            hw_display_draw_text(1U, line2);
+            hw_display_draw_text(2U, preview);
+            hw_display_draw_text(3U, line3);
             hw_smoke_refresh_blocking();
         }
         break;
@@ -714,10 +714,10 @@ static void run_all_hw_driver_smoke_test_loop(void)
                        sizeof(line3),
                        (got_status && net_status.link_up) ? "SET PASS DN FAIL" : "RJ45? SET RETRY");
 
-        hw_oled_draw_text(0U, "HW SMOKE: NET");
-        hw_oled_draw_text(1U, "CHECK LINK UP");
-        hw_oled_draw_text(2U, line2);
-        hw_oled_draw_text(3U, line3);
+        hw_display_draw_text(0U, "HW SMOKE: NET");
+        hw_display_draw_text(1U, "CHECK LINK UP");
+        hw_display_draw_text(2U, line2);
+        hw_display_draw_text(3U, line3);
         hw_smoke_refresh_blocking();
 
         if ((pressed_mask & 0x01U) != 0U)
@@ -859,27 +859,27 @@ static void run_display_driver_api_test(void)
     const uint16_t x1 = (uint16_t)(BSP_LCD_WIDTH - 5U);
     const uint16_t y1 = (uint16_t)(BSP_LCD_HEIGHT - 5U);
 
-    hw_oled_init();
-    hw_oled_clear();
-    hw_oled_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, BSP_LCD_COLOR_BLACK);
-    hw_oled_draw_rect(x0, y0, (uint16_t)(BSP_LCD_WIDTH - 8U), (uint16_t)(BSP_LCD_HEIGHT - 8U), BSP_LCD_COLOR_WHITE);
-    hw_oled_draw_line(x0, y0, x1, y0, 0xF800U);
-    hw_oled_draw_line(x1, y0, x1, y1, 0x07E0U);
-    hw_oled_draw_line(x0, y1, x1, y1, 0x001FU);
-    hw_oled_draw_line(x0, y0, x0, y1, 0xFFE0U);
-    hw_oled_fill_round_rect(12U, 16U, 96U, 48U, 10U, 0x0596U);
-    hw_oled_draw_line(0U, 0U, (uint16_t)(BSP_LCD_WIDTH - 1U), (uint16_t)(BSP_LCD_HEIGHT - 1U), BSP_LCD_COLOR_WHITE);
-    hw_oled_draw_line((uint16_t)(BSP_LCD_WIDTH - 1U), 0U, 0U, (uint16_t)(BSP_LCD_HEIGHT - 1U), 0xFD20U);
-    hw_oled_draw_circle(180U, 72U, 28U, 0x3666U);
-    hw_oled_draw_text_xy(20U, 96U, "DISPLAY", 3U, BSP_LCD_COLOR_WHITE);
-    hw_oled_draw_text_xy(20U, 128U, "DRIVER TEST", 3U, 0xFD20U);
-    hw_oled_draw_text_xy(20U, 176U, "API BORDER LINE", 2U, 0xC638U);
-    hw_oled_draw_text_xy(20U, 202U, "TEXT REFRESH", 2U, 0xC638U);
-    hw_oled_draw_text(0U, "DRV API TEST");
-    hw_oled_draw_text(1U, "BORDER 4 COLORS");
-    hw_oled_draw_text(2U, "TEXT+REFRESH");
-    hw_oled_draw_text(3U, "EXPECT PATTERN");
-    hw_oled_refresh();
+    hw_display_init();
+    hw_display_clear();
+    hw_display_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, BSP_LCD_COLOR_BLACK);
+    hw_display_draw_rect(x0, y0, (uint16_t)(BSP_LCD_WIDTH - 8U), (uint16_t)(BSP_LCD_HEIGHT - 8U), BSP_LCD_COLOR_WHITE);
+    hw_display_draw_line(x0, y0, x1, y0, 0xF800U);
+    hw_display_draw_line(x1, y0, x1, y1, 0x07E0U);
+    hw_display_draw_line(x0, y1, x1, y1, 0x001FU);
+    hw_display_draw_line(x0, y0, x0, y1, 0xFFE0U);
+    hw_display_fill_round_rect(12U, 16U, 96U, 48U, 10U, 0x0596U);
+    hw_display_draw_line(0U, 0U, (uint16_t)(BSP_LCD_WIDTH - 1U), (uint16_t)(BSP_LCD_HEIGHT - 1U), BSP_LCD_COLOR_WHITE);
+    hw_display_draw_line((uint16_t)(BSP_LCD_WIDTH - 1U), 0U, 0U, (uint16_t)(BSP_LCD_HEIGHT - 1U), 0xFD20U);
+    hw_display_draw_circle(180U, 72U, 28U, 0x3666U);
+    hw_display_draw_text_xy(20U, 96U, "DISPLAY", 3U, BSP_LCD_COLOR_WHITE);
+    hw_display_draw_text_xy(20U, 128U, "DRIVER TEST", 3U, 0xFD20U);
+    hw_display_draw_text_xy(20U, 176U, "API BORDER LINE", 2U, 0xC638U);
+    hw_display_draw_text_xy(20U, 202U, "TEXT REFRESH", 2U, 0xC638U);
+    hw_display_draw_text(0U, "DRV API TEST");
+    hw_display_draw_text(1U, "BORDER 4 COLORS");
+    hw_display_draw_text(2U, "TEXT+REFRESH");
+    hw_display_draw_text(3U, "EXPECT PATTERN");
+    hw_display_refresh();
 }
 
 static void run_display_driver_solid_color_step(uint8_t index)
@@ -906,14 +906,14 @@ static void run_display_driver_solid_color_step(uint8_t index)
     };
     uint8_t idx = (uint8_t)(index % 8U);
 
-    hw_oled_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, k_colors[idx]);
-    hw_oled_draw_rect(2U, 2U, (uint16_t)(BSP_LCD_WIDTH - 4U), (uint16_t)(BSP_LCD_HEIGHT - 4U), BSP_LCD_COLOR_WHITE);
+    hw_display_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, k_colors[idx]);
+    hw_display_draw_rect(2U, 2U, (uint16_t)(BSP_LCD_WIDTH - 4U), (uint16_t)(BSP_LCD_HEIGHT - 4U), BSP_LCD_COLOR_WHITE);
 
-    hw_oled_draw_text(0U, "SOLID SCREEN");
-    hw_oled_draw_text(1U, k_names[idx]);
-    hw_oled_draw_text(2U, "COLOR FILL TEST");
-    hw_oled_draw_text(3U, "CHECK FULL AREA");
-    hw_oled_refresh();
+    hw_display_draw_text(0U, "SOLID SCREEN");
+    hw_display_draw_text(1U, k_names[idx]);
+    hw_display_draw_text(2U, "COLOR FILL TEST");
+    hw_display_draw_text(3U, "CHECK FULL AREA");
+    hw_display_refresh();
 }
 
 static void run_display_driver_moving_block_step(void)
@@ -1044,11 +1044,11 @@ static void run_display_driver_moving_block_step(void)
         dirty_y = union_y0;
         dirty_w = (uint16_t)(union_x1 - union_x0 + 1U);
         dirty_h = (uint16_t)(union_y1 - union_y0 + 1U);
-        hw_oled_fill_rect(dirty_x, dirty_y, dirty_w, dirty_h, BSP_LCD_COLOR_BLACK);
+        hw_display_fill_rect(dirty_x, dirty_y, dirty_w, dirty_h, BSP_LCD_COLOR_BLACK);
     }
 
-    hw_oled_fill_rect(g_hw_test_block_x, g_hw_test_block_y, HW_TEST_BLOCK_W, HW_TEST_BLOCK_H, block_color);
-    hw_oled_draw_rect(g_hw_test_block_x, g_hw_test_block_y, HW_TEST_BLOCK_W, HW_TEST_BLOCK_H, BSP_LCD_COLOR_WHITE);
+    hw_display_fill_rect(g_hw_test_block_x, g_hw_test_block_y, HW_TEST_BLOCK_W, HW_TEST_BLOCK_H, block_color);
+    hw_display_draw_rect(g_hw_test_block_x, g_hw_test_block_y, HW_TEST_BLOCK_W, HW_TEST_BLOCK_H, BSP_LCD_COLOR_WHITE);
 
     g_hw_test_prev_block_x = g_hw_test_block_x;
     g_hw_test_prev_block_y = g_hw_test_block_y;
@@ -1065,10 +1065,10 @@ static void enter_display_driver_moving_block_scene(void)
     g_hw_test_block_dy = 3;
     g_hw_test_block_inited = false;
 
-    hw_oled_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, BSP_LCD_COLOR_BLACK);
-    hw_oled_draw_rect(2U, 2U, (uint16_t)(BSP_LCD_WIDTH - 4U), (uint16_t)(BSP_LCD_HEIGHT - 4U), BSP_LCD_COLOR_WHITE);
-    hw_oled_draw_text_xy(8U, 12U, "MOVING BLOCK 30FPS", 1U, 0xC638U);
-    hw_oled_draw_text_xy(8U, 26U, "DIRTY RECT TEST", 1U, 0xC638U);
+    hw_display_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, BSP_LCD_COLOR_BLACK);
+    hw_display_draw_rect(2U, 2U, (uint16_t)(BSP_LCD_WIDTH - 4U), (uint16_t)(BSP_LCD_HEIGHT - 4U), BSP_LCD_COLOR_WHITE);
+    hw_display_draw_text_xy(8U, 12U, "MOVING BLOCK 30FPS", 1U, 0xC638U);
+    hw_display_draw_text_xy(8U, 26U, "DIRTY RECT TEST", 1U, 0xC638U);
 }
 
 static void run_display_driver_hw_test_loop(void)
@@ -1092,11 +1092,11 @@ static void run_display_driver_hw_test_loop(void)
             g_hw_test_phase_started_ms = now_ms;
             g_hw_test_last_step_ms = 0U;
             enter_display_driver_moving_block_scene();
-            hw_oled_draw_text(0U, "MOVING BLOCK");
-            hw_oled_draw_text(1U, "PATH + BOUNCE");
-            hw_oled_draw_text(2U, "CHECK STABILITY");
-            hw_oled_draw_text(3U, "NO TEARING");
-            hw_oled_refresh();
+            hw_display_draw_text(0U, "MOVING BLOCK");
+            hw_display_draw_text(1U, "PATH + BOUNCE");
+            hw_display_draw_text(2U, "CHECK STABILITY");
+            hw_display_draw_text(3U, "NO TEARING");
+            hw_display_refresh();
         }
         return;
     }
@@ -1136,8 +1136,8 @@ void app_main_init(void)
 
     scheduler_init();
     debug_log_init();
-    hw_oled_init();
-    hw_oled_clear();
+    hw_display_init();
+    hw_display_clear();
     hw_smoke_boot_stage("OLED OK", "KEY INIT");
     hw_key_init();
     hw_smoke_boot_stage("KEY OK", "BUZZER INIT");
@@ -1235,8 +1235,8 @@ void app_main_loop(void)
 
     if (g_hw_driver_test_active)
     {
-        (void)hw_oled_process();
-        run_all_hw_driver_smoke_test_loop();
+        (void)hw_display_process();
+        // run_all_hw_driver_smoke_test_loop();
         hw_eeprom_process();
         hw_spiflash_process();
 #if (APP_USE_ETHERNET == 1U)
@@ -1359,7 +1359,7 @@ void app_main_loop(void)
 
     protocol_export_process();
     network_service_process();
-    (void)hw_oled_process();
+    (void)hw_display_process();
     hw_eeprom_process();
     sync_runtime_params_if_changed();
 }

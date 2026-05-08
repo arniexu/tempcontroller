@@ -201,7 +201,7 @@ int test_tune_service_run(void)
     rt = tune_service_get_runtime();
     TEST_ASSERT_EQ_INT((int)rt->issue, (int)TUNE_ISSUE_OUTPUT_SATURATED);
     TEST_ASSERT_EQ_INT((int)rt->action, (int)TUNE_ACTION_CHECK_HEATER);
-    TEST_ASSERT_TRUE(strcmp(rt->advice_text, "检查加热能力") == 0);
+    TEST_ASSERT_TRUE(strcmp(rt->advice_text, "Check heater output") == 0);
 
     init_params(&params);
     init_snapshot(&temp, 54.0f);
@@ -211,7 +211,7 @@ int test_tune_service_run(void)
     rt = tune_service_get_runtime();
     TEST_ASSERT_EQ_INT((int)rt->issue, (int)TUNE_ISSUE_SENSOR_FAULT);
     TEST_ASSERT_EQ_INT((int)rt->action, (int)TUNE_ACTION_CHECK_SENSOR);
-    TEST_ASSERT_TRUE(strcmp(rt->advice_text, "检查探头接线") == 0);
+    TEST_ASSERT_TRUE(strcmp(rt->advice_text, "Check sensor wiring") == 0);
 
     tune_service_init();
     tune_service_step_change(-1);

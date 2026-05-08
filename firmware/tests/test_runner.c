@@ -15,6 +15,7 @@ int main(void)
 
     const test_case_t cases[] = {
         {"bsp_oled_driver", test_bsp_oled_driver_run},
+        {"bsp_lcd_8080_driver", test_bsp_lcd_8080_driver_run},
         {"scheduler", test_scheduler_run},
         {"pid", test_pid_run},
         {"debug_log", test_debug_log_run},
@@ -26,6 +27,7 @@ int main(void)
         {"schedule_service", test_schedule_service_run},
         {"tune_service", test_tune_service_run},
         {"ui_service", test_ui_service_run},
+        {"ui_legacy_tabs_mock", test_ui_legacy_tabs_mock_run},
         {"protocol_export", test_protocol_export_run},
         {"app_main", test_app_main_run}
     };

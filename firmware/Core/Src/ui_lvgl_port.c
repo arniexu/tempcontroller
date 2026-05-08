@@ -29,18 +29,18 @@ static void ui_lvgl_port_run_self_test(void)
 
     for (i = 0UL; i < 3UL; ++i)
     {
-        bsp_oled_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, k_colors[i]);
-        bsp_oled_draw_rect(2U,
-                           2U,
-                           (uint16_t)(BSP_LCD_WIDTH - 4U),
-                           (uint16_t)(BSP_LCD_HEIGHT - 4U),
-                           0xFFFFU);
-        bsp_oled_draw_text_xy(10U, 10U, "SELF TEST", 2U, 0xFFFFU);
+        hw_display_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, k_colors[i]);
+        hw_display_draw_rect(2U,
+                             2U,
+                             (uint16_t)(BSP_LCD_WIDTH - 4U),
+                             (uint16_t)(BSP_LCD_HEIGHT - 4U),
+                             0xFFFFU);
+        hw_display_draw_text_xy(10U, 10U, "SELF TEST", 2U, 0xFFFFU);
         ui_lvgl_port_delay_frame();
     }
 
-    bsp_oled_clear();
-    bsp_oled_refresh();
+    hw_display_clear();
+    hw_display_refresh();
 }
 #endif
 
@@ -89,11 +89,11 @@ static void ui_lvgl_flush_cb(lv_display_t *disp,
 
     src_offset = (uint32_t)(y1 - area->y1) * (uint32_t)src_w + (uint32_t)(x1 - area->x1);
 
-    bsp_oled_write_area_rgb565((uint16_t)x1,
-                               (uint16_t)y1,
-                               (uint16_t)(x2 - x1 + 1),
-                               (uint16_t)(y2 - y1 + 1),
-                               ((const uint16_t *)px_map) + src_offset);
+    hw_display_write_area_rgb565((uint16_t)x1,
+                                 (uint16_t)y1,
+                                 (uint16_t)(x2 - x1 + 1),
+                                 (uint16_t)(y2 - y1 + 1),
+                                 ((const uint16_t *)px_map) + src_offset);
 
     lv_display_flush_ready(disp);
 }

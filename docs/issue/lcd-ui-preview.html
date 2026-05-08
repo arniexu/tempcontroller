@@ -13,7 +13,12 @@
       --oled-dim: rgba(140, 240, 140, 0.55);
       --oled-ghost: rgba(140, 240, 140, 0.16);
       --crt: rgba(140, 240, 140, 0.07);
-      --size: 384px;
+      --spec: #ff6a00;
+      --spec-dim: #ffc58c;
+      --spec-text-scale: 2;
+      --screen-w: 240px;
+      --screen-h: 320px;
+      --draw-scale: 3;
     }
 
     * {
@@ -49,7 +54,7 @@
     }
 
     .device {
-      width: calc(var(--size) + 30px);
+      width: calc(var(--screen-w) * var(--draw-scale) + 30px);
       padding: 14px;
       border-radius: 20px;
       background: linear-gradient(180deg, #2b313a, #151921 26%, #10141b);
@@ -61,8 +66,8 @@
 
     .screen {
       position: relative;
-      width: var(--size);
-      height: var(--size);
+      width: calc(var(--screen-w) * var(--draw-scale));
+      height: calc(var(--screen-h) * var(--draw-scale));
       background: var(--bezel);
       border: 1px solid #252b36;
       border-radius: 8px;
@@ -71,6 +76,36 @@
       box-shadow:
         inset 0 0 0 1px #0a0d12,
         inset 0 0 24px rgba(140, 240, 140, 0.08);
+    }
+
+    .lcd-canvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: var(--screen-w);
+      height: var(--screen-h);
+      transform-origin: left top;
+      transform: scale(var(--draw-scale));
+      z-index: 1;
+    }
+
+    .origin-mark {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 58px;
+      height: 18px;
+      font-size: 8px;
+      color: #200a00;
+      background: #ffb073;
+      border-right: 1px solid #ff6a00;
+      border-bottom: 1px solid #ff6a00;
+      display: grid;
+      place-items: center;
+      z-index: 7;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: none;
     }
 
     .pixels,
@@ -84,7 +119,7 @@
       background-image:
         linear-gradient(var(--crt) 1px, transparent 1px),
         linear-gradient(90deg, var(--crt) 1px, transparent 1px);
-      background-size: calc(var(--size) / 96 * 1px) calc(var(--size) / 96 * 1px);
+      background-size: calc(var(--screen-w) / 96) calc(var(--screen-h) / 96);
       opacity: 0.75;
     }
 
@@ -102,7 +137,7 @@
       position: absolute;
       inset: 0;
       display: grid;
-      grid-template-rows: 13% 9% 1fr 14%;
+      grid-template-rows: 11% 12% 9% 1fr 12%;
       padding: 10px;
       color: var(--oled);
       font-size: 11px;
@@ -117,6 +152,45 @@
       justify-content: space-between;
       color: var(--oled-dim);
       font-size: 9px;
+    }
+
+    .tempbar {
+      margin-top: 4px;
+      border: 1px solid var(--oled-dim);
+      padding: 4px 6px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .tempbar .temp-label {
+      color: var(--oled-dim);
+      font-size: 9px;
+      letter-spacing: 0.06em;
+    }
+
+    .tempbar .temp-value {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--oled);
+      text-shadow: 0 0 8px var(--oled-ghost);
+    }
+
+    .tempbar .overtemp {
+      font-size: 9px;
+      font-weight: 700;
+      border: 1px solid var(--oled-dim);
+      color: var(--oled-dim);
+      padding: 1px 4px;
+    }
+
+    .tempbar .overtemp.active {
+      color: #031503;
+      background: var(--oled);
+      border-color: var(--oled);
+      animation: blink-limit 0.5s steps(2, end) infinite;
     }
 
     .tabs {
@@ -270,33 +344,113 @@
       padding: 1px 4px;
       font-family: inherit;
     }
+
+    .coord-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 6;
+    }
+
+    .coord-dot {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      transform: translate(-2px, -2px);
+      background: var(--spec);
+      box-shadow: 0 0 0 1px #2a1000, 0 0 8px rgba(255, 106, 0, 0.75);
+    }
+
+    .coord-label {
+      position: absolute;
+      transform: translate(4px, -2px);
+      color: var(--spec);
+      font-size: calc(8px * var(--spec-text-scale));
+      font-weight: 700;
+      background: rgba(12, 15, 20, 0.88);
+      border: 1px solid rgba(255, 106, 0, 0.65);
+      padding: 1px 3px;
+      text-transform: none;
+      letter-spacing: 0;
+      white-space: nowrap;
+      text-shadow: 0 0 6px rgba(255, 106, 0, 0.5);
+    }
+
+    .spec-board {
+      width: calc(var(--screen-w) * var(--draw-scale) + 30px);
+      margin-top: 10px;
+      border: 1px solid #5c2a0d;
+      background: linear-gradient(180deg, #1b110b, #120d09);
+      box-shadow: inset 0 0 0 1px rgba(255, 106, 0, 0.2);
+      padding: 8px;
+    }
+
+    .spec-title {
+      color: var(--spec);
+      font-size: calc(11px * var(--spec-text-scale));
+      margin-bottom: 6px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .spec-text {
+      margin: 0;
+      color: var(--spec-dim);
+      font-size: calc(10px * var(--spec-text-scale));
+      line-height: 1.42;
+      white-space: pre-wrap;
+      text-transform: none;
+      letter-spacing: 0;
+      max-height: 360px;
+      overflow: auto;
+      font-family: "JetBrains Mono", "Consolas", monospace;
+    }
   </style>
 </head>
 <body>
   <main class="layout">
-    <div class="title">OLED 96x96 数码风界面草案</div>
+    <div class="title">OLED 240x320 数码风界面草案</div>
 
     <section class="device">
       <div class="screen">
-        <div class="pixels"></div>
-        <div class="scan"></div>
+        <div class="lcd-canvas" id="lcdCanvas">
+          <div class="pixels"></div>
+          <div class="scan"></div>
 
-        <div class="ui" id="uiRoot">
-          <div class="hdr">
-            <span>温控器</span>
-            <span id="clockText">12:30</span>
-          </div>
+          <div class="ui" id="uiRoot">
+            <div class="hdr">
+              <span>温控器</span>
+              <span id="clockText">12:30</span>
+            </div>
 
-          <div class="tabs" id="tabs"></div>
+            <div class="tempbar" id="tempBar">
+              <span class="temp-label">当前温度</span>
+              <span class="temp-value" id="curTempText">58.6C</span>
+              <span class="overtemp" id="overTempBadge">过温</span>
+            </div>
 
-          <div class="body" id="body"></div>
+            <div class="tabs" id="tabs"></div>
 
-          <div class="footer">
-            <span class="hint" id="footerHint"><span class="inv">INV</span> 确认</span>
-            <span id="modeTag">NOR</span>
+            <div class="body" id="body"></div>
+
+            <div class="footer">
+              <span class="hint" id="footerHint"><span class="inv">INV</span> 确认</span>
+              <span id="modeTag">NOR</span>
+            </div>
           </div>
         </div>
+
+        <div class="origin-mark">(0,0)</div>
+
+        <div class="coord-layer" id="coordLayer"></div>
       </div>
+    </section>
+
+    <section class="spec-board">
+      <div class="spec-title">坐标清单（原点：左上角，比例尺 1:0.2）</div>
+      <pre class="spec-text" id="specText"></pre>
     </section>
 
     <div class="toolbar">
@@ -418,6 +572,9 @@
         stepIndex: 0,
         issueIndex: 0,
         result: "观察中"
+      },
+      telemetry: {
+        currentTemp: 58.6
       },
       expert: {
         kp: 1.6,
@@ -763,6 +920,18 @@
       return Number(n.toFixed(digits));
     }
 
+    function updateTelemetry() {
+      const target = state.normal.tgt;
+      const now = state.telemetry.currentTemp;
+      const drift = (target - now) * 0.08;
+      const noise = (Math.random() - 0.5) * 0.3;
+      state.telemetry.currentTemp = clampFloat(now + drift + noise, 0, 130, 1);
+    }
+
+    function isOverTemp() {
+      return state.telemetry.currentTemp > state.expert.tmax;
+    }
+
     function switchTab() {
       state.tab = (state.tab + 1) % tabs.length;
       if (state.tab !== 2) {
@@ -839,10 +1008,14 @@
         const label = document.createElement("div");
         label.className = "label";
         label.textContent = r.label;
+        label.dataset.spec = `${r.key}-label`;
+        label.dataset.specType = "汉字";
 
         const value = document.createElement("div");
         value.className = "value";
         value.textContent = r.value;
+        value.dataset.spec = `${r.key}-value`;
+        value.dataset.specType = "色块+汉字";
         if (state.flashKey === r.key && Date.now() < state.flashUntil) {
           value.classList.add("blink");
         }
@@ -860,9 +1033,190 @@
           const hint = document.createElement("div");
           hint.className = "scene-hint";
           hint.textContent = r.hint;
+          hint.dataset.spec = `${r.key}-hint`;
+          hint.dataset.specType = "汉字";
           bodyEl.appendChild(hint);
         }
       });
+    }
+
+    function scale02(v) {
+      return Number((v * 0.2).toFixed(1));
+    }
+
+    function drawScale() {
+      const v = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--draw-scale"));
+      return Number.isFinite(v) && v > 0 ? v : 1;
+    }
+
+    function selectorTargets() {
+      const list = [
+        { sel: ".screen", key: "SCREEN", type: "线条+色块" },
+        { sel: ".origin-mark", key: "ORIGIN", type: "色块+汉字" },
+        { sel: ".hdr", key: "HDR", type: "线条+汉字" },
+        { sel: "#curTempText", key: "CUR_TEMP", type: "汉字" },
+        { sel: "#overTempBadge", key: "OVER_BADGE", type: "色块+汉字" },
+        { sel: "#tabs", key: "TABS", type: "线条+色块" },
+        { sel: "#body", key: "BODY", type: "线条+色块" },
+        { sel: "#footerHint", key: "FOOTER_HINT", type: "汉字" },
+        { sel: "#modeTag", key: "MODE_TAG", type: "汉字" },
+        { sel: ".footer", key: "FOOTER", type: "线条+色块" }
+      ];
+
+      const tabs = Array.from(document.querySelectorAll("#tabs .tab"));
+      tabs.forEach((el, i) => {
+        list.push({ el, key: `TAB-${i + 1}`, type: "色块+汉字" });
+      });
+
+      const labels = Array.from(document.querySelectorAll("#body [data-spec]"));
+      labels.forEach((el) => {
+        list.push({ el, key: el.dataset.spec || "ROW", type: el.dataset.specType || "汉字" });
+      });
+
+      return list;
+    }
+
+    function resolveElement(target) {
+      if (target.el) {
+        return target.el;
+      }
+      return document.querySelector(target.sel);
+    }
+
+    function formatRect(rect) {
+      return `(${rect.x},${rect.y}) ${rect.w}x${rect.h}`;
+    }
+
+    function collectElementSpecs() {
+      const screen = document.querySelector(".screen");
+      const screenRect = screen.getBoundingClientRect();
+      const scale = drawScale();
+      const targets = selectorTargets();
+      const rows = [];
+
+      targets.forEach((t) => {
+        const el = resolveElement(t);
+        if (!el) {
+          return;
+        }
+        const r = el.getBoundingClientRect();
+        const vx = Math.round(r.left - screenRect.left);
+        const vy = Math.round(r.top - screenRect.top);
+        const vw = Math.round(r.width);
+        const vh = Math.round(r.height);
+        const x = Math.round(vx / scale);
+        const y = Math.round(vy / scale);
+        const w = Math.round(vw / scale);
+        const h = Math.round(vh / scale);
+        rows.push({
+          key: t.key,
+          type: t.type,
+          vx,
+          vy,
+          vw,
+          vh,
+          x,
+          y,
+          w,
+          h,
+          sx: scale02(x),
+          sy: scale02(y),
+          sw: scale02(w),
+          sh: scale02(h),
+          el
+        });
+      });
+
+      return { rows, screenRect };
+    }
+
+    function collectChineseCharSpecs(screenRect) {
+      const scale = drawScale();
+      const textNodes = Array.from(document.querySelectorAll("#uiRoot .hdr span, #uiRoot .tempbar span, #tabs .tab, #body .label, #body .value, #body .scene-hint, #footerHint, #modeTag"));
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const chars = [];
+
+      textNodes.forEach((el, index) => {
+        const text = (el.textContent || "").trim();
+        if (!text) {
+          return;
+        }
+        const r = el.getBoundingClientRect();
+        const style = window.getComputedStyle(el);
+        const font = style.font || `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+        const fontSize = Number.parseFloat(style.fontSize) || 10;
+        ctx.font = font;
+
+        let cursor = 0;
+        Array.from(text).forEach((ch) => {
+          const w = ctx.measureText(ch).width;
+          if (/[\u4e00-\u9fff]/.test(ch)) {
+            const x = Math.round((r.left - screenRect.left) / scale + cursor);
+            const y = Math.round((r.top - screenRect.top) / scale);
+            const cw = Number(w.toFixed(1));
+            const chh = Number(fontSize.toFixed(1));
+            chars.push({
+              key: `字-${index + 1}`,
+              char: ch,
+              x,
+              y,
+              w: cw,
+              h: chh,
+              sx: scale02(x),
+              sy: scale02(y),
+              sw: scale02(cw),
+              sh: scale02(chh)
+            });
+          }
+          cursor += w;
+        });
+      });
+
+      return chars;
+    }
+
+    function renderCoordOverlay(specs) {
+      const layer = document.getElementById("coordLayer");
+      layer.innerHTML = "";
+
+      specs.slice(0, 28).forEach((s) => {
+        const dot = document.createElement("div");
+        dot.className = "coord-dot";
+        dot.style.left = `${s.vx}px`;
+        dot.style.top = `${s.vy}px`;
+        layer.appendChild(dot);
+
+        const label = document.createElement("div");
+        label.className = "coord-label";
+        label.style.left = `${s.vx}px`;
+        label.style.top = `${s.vy}px`;
+        label.textContent = `${s.key} (${s.x},${s.y})`;
+        layer.appendChild(label);
+      });
+    }
+
+    function renderSpecBoard() {
+      const specText = document.getElementById("specText");
+      const { rows, screenRect } = collectElementSpecs();
+      const charRows = collectChineseCharSpecs(screenRect);
+
+      const lines = [];
+      lines.push("关键图形/文本 起点坐标与长宽（LCD像素）");
+      lines.push("格式: 名称 | 类型 | 起点(x,y) | 尺寸(w,h) | 1:0.2后起点 | 1:0.2后尺寸");
+      rows.forEach((r) => {
+        lines.push(`${r.key} | ${r.type} | (${r.x},${r.y}) | ${r.w}x${r.h} | (${r.sx},${r.sy}) | ${r.sw}x${r.sh}`);
+      });
+
+      lines.push("");
+      lines.push("汉字单字长宽（当前可见页面）");
+      lines.push("格式: 汉字 | 起点(x,y) | 尺寸(w,h) | 1:0.2后起点 | 1:0.2后尺寸");
+      charRows.slice(0, 220).forEach((c) => {
+        lines.push(`${c.char} | (${c.x},${c.y}) | ${c.w}x${c.h} | (${c.sx},${c.sy}) | ${c.sw}x${c.sh}`);
+      });
+
+      specText.textContent = lines.join("\n");
+      renderCoordOverlay(rows);
     }
 
     function renderClock() {
@@ -872,12 +1226,31 @@
       document.getElementById("clockText").textContent = `${hh}:${mm}`;
     }
 
+    function renderTempBar() {
+      const tempEl = document.getElementById("curTempText");
+      const badgeEl = document.getElementById("overTempBadge");
+      const temp = state.telemetry.currentTemp;
+      const over = isOverTemp();
+
+      tempEl.textContent = `${temp.toFixed(1)}C`;
+
+      if (over) {
+        badgeEl.classList.add("active");
+      } else {
+        badgeEl.classList.remove("active");
+      }
+    }
+
     function render() {
       renderTabs();
       renderRows();
+      renderTempBar();
       const hint = document.getElementById("footerHint");
       const showWarn = state.footerTip && Date.now() < state.footerTipUntil;
-      if (showWarn) {
+      if (isOverTemp()) {
+        hint.textContent = `过温 ${state.telemetry.currentTemp.toFixed(1)}C > TMAX ${state.expert.tmax}C`;
+        hint.className = "hint warn";
+      } else if (showWarn) {
         hint.textContent = state.footerTip;
         hint.className = "hint warn";
       } else {
@@ -885,6 +1258,7 @@
         hint.className = "hint";
       }
       renderClock();
+      renderSpecBoard();
     }
 
     document.getElementById("btnTab").onclick = () => switchTab();
@@ -911,6 +1285,10 @@
     });
 
     render();
+    setInterval(() => {
+      updateTelemetry();
+      render();
+    }, 900);
     setInterval(renderClock, 15000);
   </script>
 </body>

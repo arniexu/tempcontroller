@@ -13,6 +13,8 @@ try {
       ../Core/Src/heater_ctrl.c `
       ../Core/Src/temp_manager.c `
       ../Core/Src/schedule_service.c `
+      ../Core/Src/tune_service.c `
+      ../Core/Src/network_service.c `
       ../Core/Src/ui_key_input.c `
       ../Core/Src/ui_service.c `
       ../Core/Src/protocol_export.c `
@@ -31,10 +33,19 @@ try {
       test_bsp_oled_driver.c `
       test_scheduler.c test_pid.c test_debug_log.c test_alarm_service.c test_param_store.c `
       test_log_service.c test_heater_ctrl.c test_temp_manager.c test_schedule_service.c `
-      test_ui_service.c test_protocol_export.c test_app_main.c test_runner.c `
+      test_tune_service.c `
+    test_ui_service.c test_ui_legacy_tabs_mock.c test_protocol_export.c test_app_main.c test_runner.c `
       -o module_tests.exe
 
+    if ($LASTEXITCODE -ne 0) {
+        throw "gcc failed with exit code $LASTEXITCODE"
+    }
+
     ./module_tests.exe
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "module_tests.exe failed with exit code $LASTEXITCODE"
+    }
 }
 finally {
     Pop-Location

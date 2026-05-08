@@ -1,12 +1,12 @@
-#include "app_config.h"
-
-#if defined(APP_DISPLAY_DRIVER_LCD_8080)
 
 #include "bsp_lcd_8080.h"
 
+#if defined(APP_DISPLAY_DRIVER_LCD_8080)
+
 #include <string.h>
 
-#include "tiny_graphics.h"
+#include "bsp_systick.h"
+#include "bsp_lcd_font.h"
 
 #if defined(USE_HAL_DRIVER)
 #include "stm32f1xx_hal.h"
@@ -29,14 +29,12 @@
 #define TFT_DRAW_ROW_FROM_END       (0U)
 #define TFT_TEXT_LOAD_Y_REVERSED    (1U)
 
-#define OLED_COLOR_BG               (BSP_OLED_COLOR_BLACK)
-#define OLED_COLOR_FG               (BSP_OLED_COLOR_WHITE)
+#define LCD_COLOR_BG               (BSP_LCD_COLOR_BLACK)
+#define LCD_COLOR_FG               (BSP_LCD_COLOR_WHITE)
 
 #define LCD_TEXT_SCALE              (1U)
-#define LCD_GLYPH_WIDTH             (5U)
-#define LCD_GLYPH_HEIGHT            (7U)
-#define LCD_CHAR_WIDTH              ((LCD_GLYPH_WIDTH * LCD_TEXT_SCALE) + 1U)
-#define LCD_CHAR_HEIGHT             (LCD_GLYPH_HEIGHT * LCD_TEXT_SCALE)
+#define LCD_CHAR_WIDTH              ((LCD_FONT_ASCII_WIDTH_5X7 * LCD_TEXT_SCALE) + 1U)
+#define LCD_CHAR_HEIGHT             (LCD_FONT_ASCII_HEIGHT_5X7 * LCD_TEXT_SCALE)
 #define LCD_TEXT_START_X            (1U)
 #define LCD_TEXT_CLEAR_MARGIN_Y     (1U)
 #define TFT_PHYSICAL_WIDTH          (240U)
@@ -101,103 +99,138 @@ static uint16_t g_lcd_id = 0U;
 static uint8_t g_lcd_ready = 0U;
 #endif
 
-static char g_lines[BSP_OLED_LINE_COUNT][BSP_OLED_LINE_CHARS + 1U];
-static char g_drawn_lines[BSP_OLED_LINE_COUNT][BSP_OLED_LINE_CHARS + 1U];
+static char g_lines[BSP_LCD_LINE_COUNT][BSP_LCD_LINE_CHARS + 1U];
+static char g_drawn_lines[BSP_LCD_LINE_COUNT][BSP_LCD_LINE_CHARS + 1U];
 static uint8_t g_refresh_pending = 0U;
 static uint8_t g_refresh_line = 0U;
 static uint8_t g_dirty_mask = 0U;
+static bsp_lcd_mock_op_t g_mock_ops[256];
+static uint16_t g_mock_op_count = 0U;
 
 #if defined(USE_HAL_DRIVER)
-static tg_canvas_t g_tg_canvas;
 static void lcd_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+static void lcd_draw_rect_primitive(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+static void lcd_draw_line_primitive(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color);
+static void lcd_draw_circle_primitive(uint16_t cx, uint16_t cy, uint16_t radius, uint16_t color);
+static void lcd_fill_round_rect_primitive(uint16_t x,
+                                          uint16_t y,
+                                          uint16_t w,
+                                          uint16_t h,
+                                          uint16_t radius,
+                                          uint16_t color);
 #endif
 
 #if defined(USE_HAL_DRIVER)
-static void glyph_5x7(char c, uint8_t out[5])
+static void lcd_draw_bitmap_rows(uint16_t x,
+                                 uint16_t y,
+                                 const uint16_t *rows,
+                                 uint8_t width,
+                                 uint8_t height,
+                                 uint8_t scale,
+                                 uint16_t color)
 {
-    uint8_t i;
+    uint8_t row;
 
-    for (i = 0U; i < 5U; ++i)
+    for (row = 0U; row < height; ++row)
     {
-        out[i] = 0x00U;
+        uint8_t col;
+        uint16_t row_bits = rows[row];
+
+        for (col = 0U; col < width; ++col)
+        {
+            uint16_t mask = (uint16_t)(1U << (uint16_t)((width - 1U) - col));
+
+            if ((row_bits & mask) != 0U)
+            {
+                lcd_fill_rect(x + ((uint16_t)col * scale),
+                              y + ((uint16_t)row * scale),
+                              scale,
+                              scale,
+                              color);
+            }
+        }
     }
+}
+#endif
 
-    if ((c >= '0') && (c <= '9'))
+
+
+static void lcd_build_frame(void)
+{
+}
+
+// move mock test into test folder and base all UI test on api inside hw_platform_port.h
+
+
+static void mock_record_draw_op(uint8_t kind,
+                                uint16_t x0,
+                                uint16_t y0,
+                                uint16_t x1,
+                                uint16_t y1,
+                                uint16_t x2,
+                                uint16_t y2,
+                                uint16_t color,
+                                uint8_t scale,
+                                const char *text)
+{
+    bsp_lcd_mock_op_t *op;
+
+    if (g_mock_op_count >= (uint16_t)(sizeof(g_mock_ops) / sizeof(g_mock_ops[0])))
     {
-        static const uint8_t digit[10][5] = {
-            {0x3EU, 0x51U, 0x49U, 0x45U, 0x3EU},
-            {0x00U, 0x42U, 0x7FU, 0x40U, 0x00U},
-            {0x62U, 0x51U, 0x49U, 0x49U, 0x46U},
-            {0x22U, 0x49U, 0x49U, 0x49U, 0x36U},
-            {0x18U, 0x14U, 0x12U, 0x7FU, 0x10U},
-            {0x2FU, 0x49U, 0x49U, 0x49U, 0x31U},
-            {0x3EU, 0x49U, 0x49U, 0x49U, 0x32U},
-            {0x01U, 0x71U, 0x09U, 0x05U, 0x03U},
-            {0x36U, 0x49U, 0x49U, 0x49U, 0x36U},
-            {0x26U, 0x49U, 0x49U, 0x49U, 0x3EU}
-        };
-        memcpy(out, digit[(unsigned int)(c - '0')], 5U);
         return;
     }
 
-    switch (c)
+    op = &g_mock_ops[g_mock_op_count++];
+    op->kind = kind;
+    op->x0 = x0;
+    op->y0 = y0;
+    op->x1 = x1;
+    op->y1 = y1;
+    op->x2 = x2;
+    op->y2 = y2;
+    op->color = color;
+    op->scale = scale;
+    op->text[0] = '\0';
+
+    if (text != 0)
     {
-    case 'A': out[0]=0x7EU; out[1]=0x11U; out[2]=0x11U; out[3]=0x11U; out[4]=0x7EU; break;
-    case 'B': out[0]=0x7FU; out[1]=0x49U; out[2]=0x49U; out[3]=0x49U; out[4]=0x36U; break;
-    case 'C': out[0]=0x3EU; out[1]=0x41U; out[2]=0x41U; out[3]=0x41U; out[4]=0x22U; break;
-    case 'D': out[0]=0x7FU; out[1]=0x41U; out[2]=0x41U; out[3]=0x22U; out[4]=0x1CU; break;
-    case 'E': out[0]=0x7FU; out[1]=0x49U; out[2]=0x49U; out[3]=0x49U; out[4]=0x41U; break;
-    case 'F': out[0]=0x7FU; out[1]=0x09U; out[2]=0x09U; out[3]=0x09U; out[4]=0x01U; break;
-    case 'G': out[0]=0x3EU; out[1]=0x41U; out[2]=0x49U; out[3]=0x49U; out[4]=0x3AU; break;
-    case 'H': out[0]=0x7FU; out[1]=0x08U; out[2]=0x08U; out[3]=0x08U; out[4]=0x7FU; break;
-    case 'I': out[0]=0x00U; out[1]=0x41U; out[2]=0x7FU; out[3]=0x41U; out[4]=0x00U; break;
-    case 'K': out[0]=0x7FU; out[1]=0x08U; out[2]=0x14U; out[3]=0x22U; out[4]=0x41U; break;
-    case 'L': out[0]=0x7FU; out[1]=0x40U; out[2]=0x40U; out[3]=0x40U; out[4]=0x40U; break;
-    case 'M': out[0]=0x7FU; out[1]=0x02U; out[2]=0x0CU; out[3]=0x02U; out[4]=0x7FU; break;
-    case 'N': out[0]=0x7FU; out[1]=0x04U; out[2]=0x08U; out[3]=0x10U; out[4]=0x7FU; break;
-    case 'O': out[0]=0x3EU; out[1]=0x41U; out[2]=0x41U; out[3]=0x41U; out[4]=0x3EU; break;
-    case 'P': out[0]=0x7FU; out[1]=0x09U; out[2]=0x09U; out[3]=0x09U; out[4]=0x06U; break;
-    case 'R': out[0]=0x7FU; out[1]=0x09U; out[2]=0x19U; out[3]=0x29U; out[4]=0x46U; break;
-    case 'S': out[0]=0x46U; out[1]=0x49U; out[2]=0x49U; out[3]=0x49U; out[4]=0x31U; break;
-    case 'T': out[0]=0x01U; out[1]=0x01U; out[2]=0x7FU; out[3]=0x01U; out[4]=0x01U; break;
-    case 'U': out[0]=0x3FU; out[1]=0x40U; out[2]=0x40U; out[3]=0x40U; out[4]=0x3FU; break;
-    case 'V': out[0]=0x1FU; out[1]=0x20U; out[2]=0x40U; out[3]=0x20U; out[4]=0x1FU; break;
-    case 'W': out[0]=0x3FU; out[1]=0x40U; out[2]=0x38U; out[3]=0x40U; out[4]=0x3FU; break;
-    case 'X': out[0]=0x63U; out[1]=0x14U; out[2]=0x08U; out[3]=0x14U; out[4]=0x63U; break;
-    case 'Y': out[0]=0x07U; out[1]=0x08U; out[2]=0x70U; out[3]=0x08U; out[4]=0x07U; break;
-    case 'Z': out[0]=0x61U; out[1]=0x51U; out[2]=0x49U; out[3]=0x45U; out[4]=0x43U; break;
-    case ' ': break;
-    case '+': out[0]=0x08U; out[1]=0x08U; out[2]=0x3EU; out[3]=0x08U; out[4]=0x08U; break;
-    case '.': out[2]=0x60U; break;
-    case ':': out[1]=0x36U; out[3]=0x36U; break;
-    case '-': out[1]=0x08U; out[2]=0x08U; out[3]=0x08U; break;
-    case '?': out[0]=0x02U; out[1]=0x01U; out[2]=0x59U; out[3]=0x09U; out[4]=0x06U; break;
-    case '>': out[0]=0x00U; out[1]=0x41U; out[2]=0x22U; out[3]=0x14U; out[4]=0x08U; break;
-    case '/': out[0]=0x20U; out[1]=0x10U; out[2]=0x08U; out[3]=0x04U; out[4]=0x02U; break;
-    case '*': out[0]=0x14U; out[1]=0x08U; out[2]=0x3EU; out[3]=0x08U; out[4]=0x14U; break;
-    default:
-        out[0]=0x7FU; out[1]=0x41U; out[2]=0x5DU; out[3]=0x41U; out[4]=0x7FU;
-        break;
+        strncpy(op->text, text, sizeof(op->text) - 1U);
+        op->text[sizeof(op->text) - 1U] = '\0';
     }
 }
 
-static void tg_glyph_5x7(char c, uint8_t *columns, uint8_t *width, uint8_t *height)
+void bsp_lcd_mock_reset_draw_ops(void)
 {
-    glyph_5x7(c, columns);
-    *width = LCD_GLYPH_WIDTH;
-    *height = LCD_GLYPH_HEIGHT;
+    g_mock_op_count = 0U;
 }
+
+uint16_t bsp_lcd_mock_draw_op_count(void)
+{
+    return g_mock_op_count;
+}
+
+int bsp_lcd_mock_get_draw_op(uint16_t index, bsp_lcd_mock_op_t *out)
+{
+    if ((index >= g_mock_op_count) || (out == 0))
+    {
+        return 0;
+    }
+
+    *out = g_mock_ops[index];
+    return 1;
+}
+
+#if defined(__GNUC__)
+#define BSP_LCD_MAYBE_UNUSED __attribute__((unused))
+#else
+#define BSP_LCD_MAYBE_UNUSED
 #endif
 
-static void oled_build_frame(void)
+static BSP_LCD_MAYBE_UNUSED uint16_t lcd_line_y(uint8_t line)
 {
-}
+    static const uint16_t y_pos[BSP_LCD_LINE_COUNT] = {4U, 20U, 36U, 52U};
 
-static uint16_t oled_line_y(uint8_t line)
-{
-    static const uint16_t y_pos[BSP_OLED_LINE_COUNT] = {4U, 20U, 36U, 52U};
-
-    if (line >= BSP_OLED_LINE_COUNT)
+    if (line >= BSP_LCD_LINE_COUNT)
     {
         return 0U;
     }
@@ -205,59 +238,16 @@ static uint16_t oled_line_y(uint8_t line)
     return y_pos[line];
 }
 
-#if defined(USE_HAL_DRIVER)
-static void tg_lcd_fill_rect(void *ctx,
-                             uint16_t x,
-                             uint16_t y,
-                             uint16_t w,
-                             uint16_t h,
-                             tg_color_t color)
+
+// 延时相关全部迁移到bsp_systick.c
+static void lcd_delay(unsigned int n)
 {
-    (void)ctx;
-    lcd_fill_rect(x, y, w, h, color);
+    bsp_delay_ms(n);
 }
 
 static void lcd_delay_cycles(unsigned int n)
 {
-    volatile unsigned int i;
-
-    for (i = 0U; i < n; ++i)
-    {
-        __NOP();
-    }
-}
-
-static void lcd_delay(unsigned int n)
-{
-    uint32_t start_tick;
-    uint32_t spin_guard;
-
-    if (n == 0U)
-    {
-        return;
-    }
-
-    /* Prefer the SysTick-backed HAL tick so Release optimization does not shrink
-     * LCD power-on delays below the controller's timing requirements. */
-    start_tick = HAL_GetTick();
-    spin_guard = n * 72000U;
-    while ((HAL_GetTick() - start_tick) < (uint32_t)n)
-    {
-        __NOP();
-        if (spin_guard == 0U)
-        {
-            break;
-        }
-        spin_guard--;
-    }
-
-    if ((HAL_GetTick() - start_tick) >= (uint32_t)n)
-    {
-        return;
-    }
-
-    /* Fallback for cases where the tick is not advancing yet. */
-    lcd_delay_cycles(n * 6000U);
+    bsp_delay_cycles(n);
 }
 
 static void lcd_ctrl_write(uint16_t pin, int high)
@@ -305,6 +295,7 @@ static void lcd_write_strobe(void)
 
 static uint16_t lcd_read_strobe(void)
 {
+    //@TODO: either draw in lcd or based on ncurse
     uint16_t value;
 
     lcd_ctrl_write(TFT_PIN_RD, 0);
@@ -384,7 +375,7 @@ static void lcd_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16
 #if (TFT_MIRROR_X_AROUND_CENTER == 1U)
     {
         uint16_t x_end = (uint16_t)(x + w - 1U);
-        draw_x = (uint16_t)((BSP_OLED_WIDTH - 1U) - x_end);
+        draw_x = (uint16_t)((BSP_LCD_WIDTH - 1U) - x_end);
     }
 #endif
 
@@ -399,6 +390,141 @@ static void lcd_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16
     }
 }
 
+static void lcd_draw_pixel(uint16_t x, uint16_t y, uint16_t color)
+{
+    lcd_fill_rect(x, y, 1U, 1U, color);
+}
+
+static void lcd_draw_rect_primitive(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
+{
+    if ((w == 0U) || (h == 0U))
+    {
+        return;
+    }
+
+    lcd_fill_rect(x, y, w, 1U, color);
+    if (h > 1U)
+    {
+        lcd_fill_rect(x, (uint16_t)(y + h - 1U), w, 1U, color);
+    }
+    if (h > 2U)
+    {
+        lcd_fill_rect(x, (uint16_t)(y + 1U), 1U, (uint16_t)(h - 2U), color);
+        if (w > 1U)
+        {
+            lcd_fill_rect((uint16_t)(x + w - 1U), (uint16_t)(y + 1U), 1U, (uint16_t)(h - 2U), color);
+        }
+    }
+}
+
+static void lcd_draw_line_primitive(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color)
+{
+    int x = (int)x0;
+    int y = (int)y0;
+    int tx1 = (int)x1;
+    int ty1 = (int)y1;
+    int dx = (tx1 >= x) ? (tx1 - x) : (x - tx1);
+    int sx = (x < tx1) ? 1 : -1;
+    int dy = -((ty1 >= y) ? (ty1 - y) : (y - ty1));
+    int sy = (y < ty1) ? 1 : -1;
+    int err = dx + dy;
+
+    while (1)
+    {
+        lcd_draw_pixel((uint16_t)x, (uint16_t)y, color);
+        if ((x == tx1) && (y == ty1))
+        {
+            break;
+        }
+        if ((2 * err) >= dy)
+        {
+            err += dy;
+            x += sx;
+        }
+        if ((2 * err) <= dx)
+        {
+            err += dx;
+            y += sy;
+        }
+    }
+}
+
+static void lcd_draw_circle_primitive(uint16_t cx, uint16_t cy, uint16_t radius, uint16_t color)
+{
+    int x = (int)radius;
+    int y = 0;
+    int err = 1 - x;
+
+    while (x >= y)
+    {
+        lcd_draw_pixel((uint16_t)(cx + x), (uint16_t)(cy + y), color);
+        lcd_draw_pixel((uint16_t)(cx + y), (uint16_t)(cy + x), color);
+        lcd_draw_pixel((uint16_t)(cx - y), (uint16_t)(cy + x), color);
+        lcd_draw_pixel((uint16_t)(cx - x), (uint16_t)(cy + y), color);
+        lcd_draw_pixel((uint16_t)(cx - x), (uint16_t)(cy - y), color);
+        lcd_draw_pixel((uint16_t)(cx - y), (uint16_t)(cy - x), color);
+        lcd_draw_pixel((uint16_t)(cx + y), (uint16_t)(cy - x), color);
+        lcd_draw_pixel((uint16_t)(cx + x), (uint16_t)(cy - y), color);
+
+        y++;
+        if (err < 0)
+        {
+            err += (2 * y) + 1;
+        }
+        else
+        {
+            x--;
+            err += (2 * (y - x)) + 1;
+        }
+    }
+}
+
+static void lcd_fill_round_rect_primitive(uint16_t x,
+                                          uint16_t y,
+                                          uint16_t w,
+                                          uint16_t h,
+                                          uint16_t radius,
+                                          uint16_t color)
+{
+    uint16_t r;
+    uint16_t yy;
+
+    if ((w == 0U) || (h == 0U))
+    {
+        return;
+    }
+
+    r = radius;
+    if ((r * 2U) > w)
+    {
+        r = (uint16_t)(w / 2U);
+    }
+    if ((r * 2U) > h)
+    {
+        r = (uint16_t)(h / 2U);
+    }
+
+    if (r == 0U)
+    {
+        lcd_fill_rect(x, y, w, h, color);
+        return;
+    }
+
+    lcd_fill_rect((uint16_t)(x + r), y, (uint16_t)(w - (2U * r)), h, color);
+
+    for (yy = 0U; yy < r; ++yy)
+    {
+        uint32_t t = ((uint32_t)r * (uint32_t)r) - ((uint32_t)(r - yy) * (uint32_t)(r - yy));
+        uint16_t dx = 0U;
+        while (((uint32_t)dx * (uint32_t)dx) < t)
+        {
+            ++dx;
+        }
+        lcd_fill_rect((uint16_t)(x + r - dx), (uint16_t)(y + yy), (uint16_t)(w - (2U * (r - dx))), 1U, color);
+        lcd_fill_rect((uint16_t)(x + r - dx), (uint16_t)(y + h - 1U - yy), (uint16_t)(w - (2U * (r - dx))), 1U, color);
+    }
+}
+
 static void lcd_draw_text_dir(uint16_t x,
                               uint16_t y,
                               const char *text,
@@ -407,7 +533,6 @@ static void lcd_draw_text_dir(uint16_t x,
                               uint8_t x_decreasing)
 {
     uint16_t cursor_x;
-    uint16_t advance;
     uint16_t i;
 
     if ((text == 0) || (scale == 0U))
@@ -415,76 +540,110 @@ static void lcd_draw_text_dir(uint16_t x,
         return;
     }
 
-    advance = (uint16_t)((LCD_GLYPH_WIDTH * scale) + 1U);
     cursor_x = x;
 
-    for (i = 0U; text[i] != '\0'; ++i)
+    for (i = 0U; text[i] != '\0';)
     {
+        uint16_t advance;
+        uint16_t codepoint = 0U;
+        uint16_t cjk_rows[LCD_FONT_CJK_HEIGHT_16X16];
+        uint8_t consumed = 1U;
+        int has_cjk = 0;
         uint8_t glyph[8];
         uint8_t glyph_w = 0U;
         uint8_t glyph_h = 0U;
         uint8_t col;
+        char ascii_ch = (char)'?';
 
-        tg_glyph_5x7(text[i], glyph, &glyph_w, &glyph_h);
-        for (col = 0U; col < glyph_w; ++col)
+        if (bsp_lcd_font_utf8_decode_one(&text[i], &codepoint, &consumed) == 0)
         {
-            uint8_t bits = glyph[col];
+            break;
+        }
+
+        if (codepoint >= 0x80U)
+        {
+            has_cjk = bsp_lcd_font_get_cjk_16x16(codepoint, cjk_rows);
+        }
+
+        if (has_cjk != 0)
+        {
+            lcd_draw_bitmap_rows(cursor_x,
+                                 y,
+                                 cjk_rows,
+                                 LCD_FONT_CJK_WIDTH_16X16,
+                                 LCD_FONT_CJK_HEIGHT_16X16,
+                                 scale,
+                                 color);
+            advance = (uint16_t)((LCD_FONT_CJK_WIDTH_16X16 * scale) + 1U);
+        }
+        else
+        {
+            if (codepoint < 0x80U)
+            {
+                ascii_ch = (char)codepoint;
+            }
+
+            bsp_lcd_font_get_ascii_5x7(ascii_ch, glyph, &glyph_w, &glyph_h);
+            for (col = 0U; col < glyph_w; ++col)
+            {
+                uint8_t bits = glyph[col];
 #if (TFT_TEXT_LOAD_Y_REVERSED == 1U)
-            int16_t row = (int16_t)glyph_h - 1;
+                int16_t row = (int16_t)glyph_h - 1;
 
-            while (row >= 0)
-            {
-                if ((bits & (1U << (uint8_t)row)) != 0U)
+                while (row >= 0)
                 {
-                    uint8_t run = 1U;
-
-                    while (((int16_t)row - (int16_t)run) >= 0 &&
-                           ((bits & (1U << (uint8_t)((int16_t)row - (int16_t)run))) != 0U))
+                    if ((bits & (1U << (uint8_t)row)) != 0U)
                     {
-                        ++run;
-                    }
+                        uint8_t run = 1U;
 
-                    tg_fill_rect(&g_tg_canvas,
-                                 cursor_x + ((uint16_t)col * scale),
-                                 y + ((uint16_t)(((int16_t)row - (int16_t)run) + 1) * scale),
-                                 scale,
-                                 (uint16_t)run * scale,
-                                 color);
-                    row = (int16_t)(row - (int16_t)run);
+                        while (((int16_t)row - (int16_t)run) >= 0 &&
+                               ((bits & (1U << (uint8_t)((int16_t)row - (int16_t)run))) != 0U))
+                        {
+                            ++run;
+                        }
+
+                        lcd_fill_rect(cursor_x + ((uint16_t)col * scale),
+                                      y + ((uint16_t)(((int16_t)row - (int16_t)run) + 1) * scale),
+                                      scale,
+                                      (uint16_t)run * scale,
+                                      color);
+                        row = (int16_t)(row - (int16_t)run);
+                    }
+                    else
+                    {
+                        --row;
+                    }
                 }
-                else
-                {
-                    --row;
-                }
-            }
 #else
-            uint8_t row = 0U;
+                uint8_t row = 0U;
 
-            while (row < glyph_h)
-            {
-                if ((bits & (1U << row)) != 0U)
+                while (row < glyph_h)
                 {
-                    uint8_t run = 1U;
-
-                    while (((uint8_t)(row + run) < glyph_h) && ((bits & (1U << (row + run))) != 0U))
+                    if ((bits & (1U << row)) != 0U)
                     {
-                        ++run;
-                    }
+                        uint8_t run = 1U;
 
-                    tg_fill_rect(&g_tg_canvas,
-                                 cursor_x + ((uint16_t)col * scale),
-                                 y + ((uint16_t)row * scale),
-                                 scale,
-                                 (uint16_t)run * scale,
-                                 color);
-                    row = (uint8_t)(row + run);
+                        while (((uint8_t)(row + run) < glyph_h) && ((bits & (1U << (row + run))) != 0U))
+                        {
+                            ++run;
+                        }
+
+                        lcd_fill_rect(cursor_x + ((uint16_t)col * scale),
+                                      y + ((uint16_t)row * scale),
+                                      scale,
+                                      (uint16_t)run * scale,
+                                      color);
+                        row = (uint8_t)(row + run);
+                    }
+                    else
+                    {
+                        ++row;
+                    }
                 }
-                else
-                {
-                    ++row;
-                }
-            }
 #endif
+            }
+
+            advance = (uint16_t)((glyph_w * scale) + 1U);
         }
 
         if (x_decreasing != 0U)
@@ -497,38 +656,40 @@ static void lcd_draw_text_dir(uint16_t x,
         }
         else
         {
-            if (cursor_x > (uint16_t)(BSP_OLED_WIDTH - advance))
+            if (cursor_x > (uint16_t)(BSP_LCD_WIDTH - advance))
             {
                 break;
             }
             cursor_x = (uint16_t)(cursor_x + advance);
         }
+
+        i = (uint16_t)(i + consumed);
     }
 }
 
 static void lcd_draw_text_line(uint8_t line)
 {
-    char line_buf[BSP_OLED_LINE_CHARS + 1U];
+    char line_buf[BSP_LCD_LINE_CHARS + 1U];
     uint16_t line_start_x;
     uint16_t line_y;
 
-    if (line >= BSP_OLED_LINE_COUNT)
+    if (line >= BSP_LCD_LINE_COUNT)
     {
         return;
     }
 
-    line_y = oled_line_y(line);
+    line_y = lcd_line_y(line);
 
     lcd_fill_rect(0U,
                   (uint16_t)(line_y - LCD_TEXT_CLEAR_MARGIN_Y),
-                  BSP_OLED_WIDTH,
+                  BSP_LCD_WIDTH,
                   (uint16_t)(LCD_CHAR_HEIGHT + (LCD_TEXT_CLEAR_MARGIN_Y * 2U)),
-                  OLED_COLOR_BG);
-    strncpy(line_buf, g_lines[line], BSP_OLED_LINE_CHARS);
-    line_buf[BSP_OLED_LINE_CHARS] = '\0';
+                  LCD_COLOR_BG);
+    strncpy(line_buf, g_lines[line], BSP_LCD_LINE_CHARS);
+    line_buf[BSP_LCD_LINE_CHARS] = '\0';
     
 #if (TFT_DRAW_ROW_FROM_END == 1U)
-    line_start_x = (uint16_t)(BSP_OLED_WIDTH - LCD_TEXT_START_X - LCD_CHAR_WIDTH);
+    line_start_x = (uint16_t)(BSP_LCD_WIDTH - LCD_TEXT_START_X - LCD_CHAR_WIDTH);
 #else
     line_start_x = LCD_TEXT_START_X;
 #endif
@@ -537,7 +698,7 @@ static void lcd_draw_text_line(uint8_t line)
                       line_y,
                       line_buf,
                       LCD_TEXT_SCALE,
-                      OLED_COLOR_FG,
+                      LCD_COLOR_FG,
                       TFT_DRAW_ROW_FROM_END);
 }
 
@@ -667,9 +828,8 @@ static void lcd_init_5408(void)
     lcd_write_reg(LCD_REG_3,   TFT_LCD_ENTRY_MODE);
     lcd_write_reg(LCD_REG_7,   0x0112U);
 }
-#endif
 
-void bsp_oled_init(void)
+void bsp_lcd_init(void)
 {
     unsigned int i;
 
@@ -708,136 +868,110 @@ void bsp_oled_init(void)
     {
         lcd_init_932x();
     }
-    lcd_fill_rect(0U, 0U, TFT_PHYSICAL_WIDTH, TFT_PHYSICAL_HEIGHT, OLED_COLOR_BG);
+    lcd_fill_rect(0U, 0U, TFT_PHYSICAL_WIDTH, TFT_PHYSICAL_HEIGHT, LCD_COLOR_BG);
     lcd_ctrl_write(TFT_PIN_BL, 1);
-    g_tg_canvas.width = BSP_OLED_WIDTH;
-    g_tg_canvas.height = BSP_OLED_HEIGHT;
-    g_tg_canvas.fill_rect = tg_lcd_fill_rect;
-    g_tg_canvas.ctx = 0;
     g_lcd_ready = 1U;
 #endif
 
-    for (i = 0U; i < BSP_OLED_LINE_COUNT; ++i)
+    for (i = 0U; i < BSP_LCD_LINE_COUNT; ++i)
     {
         g_lines[i][0] = '\0';
         g_drawn_lines[i][0] = '\0';
     }
 
-    g_dirty_mask = (uint8_t)((1U << BSP_OLED_LINE_COUNT) - 1U);
+    g_dirty_mask = (uint8_t)((1U << BSP_LCD_LINE_COUNT) - 1U);
+    bsp_lcd_mock_reset_draw_ops();
 }
 
-void bsp_oled_clear(void)
+void bsp_lcd_clear(void)
 {
     unsigned int i;
 
-    for (i = 0U; i < BSP_OLED_LINE_COUNT; ++i)
+    for (i = 0U; i < BSP_LCD_LINE_COUNT; ++i)
     {
         g_lines[i][0] = '\0';
         g_drawn_lines[i][0] = '\0';
     }
 
-    g_dirty_mask = (uint8_t)((1U << BSP_OLED_LINE_COUNT) - 1U);
+    g_dirty_mask = (uint8_t)((1U << BSP_LCD_LINE_COUNT) - 1U);
+    bsp_lcd_mock_reset_draw_ops();
 
 #if defined(USE_HAL_DRIVER)
     if (g_lcd_ready != 0U)
     {
-        lcd_fill_rect(0U, 0U, TFT_PHYSICAL_WIDTH, TFT_PHYSICAL_HEIGHT, OLED_COLOR_BG);
+        lcd_fill_rect(0U, 0U, TFT_PHYSICAL_WIDTH, TFT_PHYSICAL_HEIGHT, LCD_COLOR_BG);
     }
 #endif
 }
 
-void bsp_oled_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
+void bsp_lcd_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
 {
+    // mock_record_draw_op((uint8_t)BSP_lcd_OP_FILL_RECT, x, y, w, h, 0U, 0U, color, 0U, 0); // Disabled for real hardware
 #if defined(USE_HAL_DRIVER)
     if (g_lcd_ready == 0U)
     {
         return;
     }
 
-    tg_fill_rect(&g_tg_canvas, (int)x, (int)y, (int)w, (int)h, color);
-#else
-    (void)x;
-    (void)y;
-    (void)w;
-    (void)h;
-    (void)color;
+    lcd_fill_rect(x, y, w, h, color);
 #endif
 }
 
-void bsp_oled_draw_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
+void bsp_lcd_draw_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
 {
+    // mock_record_draw_op((uint8_t)BSP_lcd_OP_DRAW_RECT, x, y, w, h, 0U, 0U, color, 0U, 0); // Disabled for real hardware
 #if defined(USE_HAL_DRIVER)
     if (g_lcd_ready == 0U)
     {
         return;
     }
 
-    tg_draw_rect(&g_tg_canvas, (int)x, (int)y, (int)w, (int)h, color);
-#else
-    (void)x;
-    (void)y;
-    (void)w;
-    (void)h;
-    (void)color;
+    lcd_draw_rect_primitive(x, y, w, h, color);
 #endif
 }
 
-void bsp_oled_fill_round_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t radius, uint16_t color)
+void bsp_lcd_fill_round_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t radius, uint16_t color)
 {
+    // mock_record_draw_op((uint8_t)BSP_lcd_OP_FILL_ROUND_RECT, x, y, w, h, radius, 0U, color, 0U, 0); // Disabled for real hardware
 #if defined(USE_HAL_DRIVER)
     if (g_lcd_ready == 0U)
     {
         return;
     }
 
-    tg_fill_round_rect(&g_tg_canvas, (int)x, (int)y, (int)w, (int)h, (int)radius, color);
-#else
-    (void)x;
-    (void)y;
-    (void)w;
-    (void)h;
-    (void)radius;
-    (void)color;
+    lcd_fill_round_rect_primitive(x, y, w, h, radius, color);
 #endif
 }
 
-void bsp_oled_draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color)
+void bsp_lcd_draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color)
 {
+    // mock_record_draw_op((uint8_t)BSP_lcd_OP_DRAW_LINE, x0, y0, x1, y1, 0U, 0U, color, 0U, 0); // Disabled for real hardware
 #if defined(USE_HAL_DRIVER)
     if (g_lcd_ready == 0U)
     {
         return;
     }
 
-    tg_draw_line(&g_tg_canvas, (int)x0, (int)y0, (int)x1, (int)y1, color);
-#else
-    (void)x0;
-    (void)y0;
-    (void)x1;
-    (void)y1;
-    (void)color;
+    lcd_draw_line_primitive(x0, y0, x1, y1, color);
 #endif
 }
 
-void bsp_oled_draw_circle(uint16_t cx, uint16_t cy, uint16_t radius, uint16_t color)
+void bsp_lcd_draw_circle(uint16_t cx, uint16_t cy, uint16_t radius, uint16_t color)
 {
+    // mock_record_draw_op((uint8_t)BSP_lcd_OP_DRAW_CIRCLE, cx, cy, radius, 0U, 0U, 0U, color, 0U, 0); // Disabled for real hardware
 #if defined(USE_HAL_DRIVER)
     if (g_lcd_ready == 0U)
     {
         return;
     }
 
-    tg_draw_circle(&g_tg_canvas, (int)cx, (int)cy, (int)radius, color);
-#else
-    (void)cx;
-    (void)cy;
-    (void)radius;
-    (void)color;
+    lcd_draw_circle_primitive(cx, cy, radius, color);
 #endif
 }
 
-void bsp_oled_draw_text_xy(uint16_t x, uint16_t y, const char *text, uint8_t scale, uint16_t color)
+void bsp_lcd_draw_text_xy(uint16_t x, uint16_t y, const char *text, uint8_t scale, uint16_t color)
 {
+    // mock_record_draw_op((uint8_t)BSP_lcd_OP_DRAW_TEXT_XY, x, y, 0U, 0U, 0U, 0U, color, scale, text); // Disabled for real hardware
 #if defined(USE_HAL_DRIVER)
     if ((g_lcd_ready == 0U) || (text == 0))
     {
@@ -846,21 +980,16 @@ void bsp_oled_draw_text_xy(uint16_t x, uint16_t y, const char *text, uint8_t sca
 
     /* UI coordinate system uses left-to-right text progression on X axis. */
     lcd_draw_text_dir(x, y, text, scale, color, 0U);
-#else
-    (void)x;
-    (void)y;
-    (void)text;
-    (void)scale;
-    (void)color;
 #endif
 }
 
-void bsp_oled_write_area_rgb565(uint16_t x,
+void bsp_lcd_write_area_rgb565(uint16_t x,
                                 uint16_t y,
                                 uint16_t w,
                                 uint16_t h,
                                 const uint16_t *pixels)
 {
+    // mock_record_draw_op((uint8_t)BSP_lcd_OP_WRITE_AREA_RGB565, x, y, w, h, 0U, 0U, 0U, 0U, 0); // Disabled for real hardware
 #if defined(USE_HAL_DRIVER)
     uint16_t clipped_w;
     uint16_t clipped_h;
@@ -871,20 +1000,20 @@ void bsp_oled_write_area_rgb565(uint16_t x,
         return;
     }
 
-    if ((x >= BSP_OLED_WIDTH) || (y >= BSP_OLED_HEIGHT))
+    if ((x >= BSP_LCD_WIDTH) || (y >= BSP_LCD_HEIGHT))
     {
         return;
     }
 
     clipped_w = w;
     clipped_h = h;
-    if ((uint32_t)x + (uint32_t)clipped_w > (uint32_t)BSP_OLED_WIDTH)
+    if ((uint32_t)x + (uint32_t)clipped_w > (uint32_t)BSP_LCD_WIDTH)
     {
-        clipped_w = (uint16_t)(BSP_OLED_WIDTH - x);
+        clipped_w = (uint16_t)(BSP_LCD_WIDTH - x);
     }
-    if ((uint32_t)y + (uint32_t)clipped_h > (uint32_t)BSP_OLED_HEIGHT)
+    if ((uint32_t)y + (uint32_t)clipped_h > (uint32_t)BSP_LCD_HEIGHT)
     {
-        clipped_h = (uint16_t)(BSP_OLED_HEIGHT - y);
+        clipped_h = (uint16_t)(BSP_LCD_HEIGHT - y);
     }
 
     lcd_set_window(x,
@@ -897,29 +1026,24 @@ void bsp_oled_write_area_rgb565(uint16_t x,
     {
         lcd_write_data(pixels[count]);
     }
-#else
-    (void)x;
-    (void)y;
-    (void)w;
-    (void)h;
-    (void)pixels;
+
 #endif
 }
 
-void bsp_oled_draw_text(uint8_t line, const char *text)
+void bsp_lcd_draw_text(uint8_t line, const char *text)
 {
     size_t old_len;
 
-    if ((line >= BSP_OLED_LINE_COUNT) || (text == 0))
+    if ((line >= BSP_LCD_LINE_COUNT) || (text == 0))
     {
         return;
     }
 
     old_len = strlen(g_lines[line]);
-    strncpy(g_lines[line], text, BSP_OLED_LINE_CHARS);
-    g_lines[line][BSP_OLED_LINE_CHARS] = '\0';
+    strncpy(g_lines[line], text, BSP_LCD_LINE_CHARS);
+    g_lines[line][BSP_LCD_LINE_CHARS] = '\0';
 
-    if (strncmp(g_lines[line], g_drawn_lines[line], BSP_OLED_LINE_CHARS + 1U) != 0)
+    if (strncmp(g_lines[line], g_drawn_lines[line], BSP_LCD_LINE_CHARS + 1U) != 0)
     {
         g_dirty_mask = (uint8_t)(g_dirty_mask | (uint8_t)(1U << line));
     }
@@ -929,7 +1053,7 @@ void bsp_oled_draw_text(uint8_t line, const char *text)
     }
 }
 
-void bsp_oled_refresh(void)
+void bsp_lcd_refresh(void)
 {
     if (g_dirty_mask == 0U)
     {
@@ -937,12 +1061,12 @@ void bsp_oled_refresh(void)
         return;
     }
 
-    oled_build_frame();
+    lcd_build_frame();
     g_refresh_line = 0U;
     g_refresh_pending = 1U;
 }
 
-int bsp_oled_process(void)
+int bsp_lcd_process(void)
 {
 #if defined(USE_HAL_DRIVER)
     if ((!g_refresh_pending) || (!g_lcd_ready))
@@ -950,14 +1074,14 @@ int bsp_oled_process(void)
         return 0;
     }
 
-    while (g_refresh_line < BSP_OLED_LINE_COUNT)
+    while (g_refresh_line < BSP_LCD_LINE_COUNT)
     {
         uint8_t line_mask = (uint8_t)(1U << g_refresh_line);
 
         if ((g_dirty_mask & line_mask) != 0U)
         {
             lcd_draw_text_line(g_refresh_line);
-            strncpy(g_drawn_lines[g_refresh_line], g_lines[g_refresh_line], BSP_OLED_LINE_CHARS + 1U);
+            strncpy(g_drawn_lines[g_refresh_line], g_lines[g_refresh_line], BSP_LCD_LINE_CHARS + 1U);
             g_dirty_mask = (uint8_t)(g_dirty_mask & (uint8_t)(~line_mask));
             g_refresh_line++;
             break;
@@ -966,7 +1090,7 @@ int bsp_oled_process(void)
         g_refresh_line++;
     }
 
-    if (g_refresh_line >= BSP_OLED_LINE_COUNT)
+    if (g_refresh_line >= BSP_LCD_LINE_COUNT)
     {
         g_refresh_pending = 0U;
     }
@@ -978,7 +1102,7 @@ int bsp_oled_process(void)
     }
 
     g_refresh_line++;
-    if (g_refresh_line >= BSP_OLED_LINE_COUNT)
+    if (g_refresh_line >= BSP_LCD_LINE_COUNT)
     {
         g_refresh_pending = 0U;
     }
@@ -987,14 +1111,14 @@ int bsp_oled_process(void)
 #endif
 }
 
-int bsp_oled_is_busy(void)
+int bsp_lcd_is_busy(void)
 {
     return (g_refresh_pending != 0U) ? 1 : 0;
 }
 
-const char *bsp_oled_mock_get_line(uint8_t line)
+const char *bsp_lcd_mock_get_line(uint8_t line)
 {
-    if (line >= BSP_OLED_LINE_COUNT)
+    if (line >= BSP_LCD_LINE_COUNT)
     {
         return "";
     }

@@ -61,11 +61,11 @@ int test_param_store_run(void)
 
     param_store_init();
     param_store_load(&q);
-    TEST_ASSERT_NEAR_FLOAT(q.set_temp_c, 52.0f, 0.01f);
-    TEST_ASSERT_EQ_INT(q.schedule_enabled, 1U);
-    TEST_ASSERT_EQ_INT(q.schedule_start_min, 60U);
-    TEST_ASSERT_EQ_INT(q.schedule_end_min, 120U);
-    TEST_ASSERT_EQ_INT(q.log_period_s, 9U);
+    TEST_ASSERT_NEAR_FLOAT(q.set_temp_c, APP_TEMP_DEFAULT_SETPOINT_C, 0.01f);
+    TEST_ASSERT_EQ_INT(q.schedule_enabled, 0U);
+    TEST_ASSERT_EQ_INT(q.schedule_start_min, 480U);
+    TEST_ASSERT_EQ_INT(q.schedule_end_min, 600U);
+    TEST_ASSERT_EQ_INT(q.log_period_s, 1U);
     bsp_spiflash_mock_set_access_ok(1, 1);
 
     return 0;

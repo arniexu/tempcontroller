@@ -37,7 +37,7 @@ typedef struct
     unsigned int info_reset_arm_ticks;
     unsigned int splash_ticks;
     int render_cache_valid;
-    char rendered_lines[HW_OLED_LINE_COUNT][HW_OLED_LINE_CHARS + 1U];
+    char rendered_lines[HW_DISPLAY_LINE_COUNT][HW_DISPLAY_LINE_CHARS + 1U];
 } ui_ctx_t;
 
 static ui_ctx_t g_ui;
@@ -695,7 +695,7 @@ static void render_centered_text(uint16_t y, const char *text, uint8_t scale, ui
         x = (uint16_t)((BSP_LCD_WIDTH - text_w) / 2U);
     }
 
-    hw_oled_draw_text_xy(x, y, text, scale, color);
+    hw_display_draw_text_xy(x, y, text, scale, color);
 }
 
 static void render_chip(uint16_t x, uint16_t y, uint16_t w, const char *text)
@@ -703,31 +703,31 @@ static void render_chip(uint16_t x, uint16_t y, uint16_t w, const char *text)
     uint16_t text_x = (uint16_t)(x + 8U);
     uint16_t text_w = ui_text_width(text, 1U);
 
-    hw_oled_fill_round_rect(x, y, w, 18U, 8U, UI_LCD_PANEL);
-    hw_oled_draw_rect(x, y, w, 18U, UI_LCD_PANEL_ALT);
+    hw_display_fill_round_rect(x, y, w, 18U, 8U, UI_LCD_PANEL);
+    hw_display_draw_rect(x, y, w, 18U, UI_LCD_PANEL_ALT);
 
     if (text_w < (uint16_t)(w - 8U))
     {
         text_x = (uint16_t)(x + ((w - text_w) / 2U));
     }
 
-    hw_oled_draw_text_xy(text_x, (uint16_t)(y + 5U), text, 1U, UI_LCD_TEXT);
+    hw_display_draw_text_xy(text_x, (uint16_t)(y + 5U), text, 1U, UI_LCD_TEXT);
 }
 
 static void render_hint_symbol(const char *symbol)
 {
     if ((symbol != 0) && (symbol[0] != '\0'))
     {
-        hw_oled_draw_text_xy(188U, 304U, symbol, 1U, UI_LCD_PANEL_ALT);
+        hw_display_draw_text_xy(188U, 304U, symbol, 1U, UI_LCD_PANEL_ALT);
     }
 }
 
 static void render_startup_splash(void)
 {
-    hw_oled_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, UI_LCD_BG);
+    hw_display_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, UI_LCD_BG);
     render_centered_text(88U, "WATER", 5U, UI_LCD_TEXT);
     render_centered_text(142U, "TEMP", 5U, UI_LCD_WARM);
-    hw_oled_draw_line(46U, 202U, 194U, 202U, UI_LCD_ACCENT);
+    hw_display_draw_line(46U, 202U, 194U, 202U, UI_LCD_ACCENT);
     render_centered_text(230U, "3-POINT FUSED", 2U, UI_LCD_PANEL_ALT);
     render_centered_text(254U, "CONTROL", 2U, UI_LCD_PANEL_ALT);
 }
@@ -752,30 +752,30 @@ static void render_home_dashboard(void)
                                  (g_ui.last_temp.t1 > g_ui.last_temp.t3 ? g_ui.last_temp.t1 : g_ui.last_temp.t3) :
                                  (g_ui.last_temp.t2 > g_ui.last_temp.t3 ? g_ui.last_temp.t2 : g_ui.last_temp.t3))));
 
-    hw_oled_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, UI_LCD_BG);
+    hw_display_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, UI_LCD_BG);
 
-    hw_oled_draw_text_xy(26U, 26U, "FUSED TEMP", 2U, UI_LCD_TEXT);
+    hw_display_draw_text_xy(26U, 26U, "FUSED TEMP", 2U, UI_LCD_TEXT);
     render_chip(168U, 24U, 48U, chip_text);
-    hw_oled_draw_text_xy(28U, 78U, temp_big, 6U, UI_LCD_WARM);
+    hw_display_draw_text_xy(28U, 78U, temp_big, 6U, UI_LCD_WARM);
 
-    hw_oled_draw_line(24U, 182U, 216U, 182U, UI_LCD_PANEL_ALT);
-    hw_oled_draw_text_xy(28U, 200U, "SET", 2U, UI_LCD_TEXT);
-    hw_oled_draw_text_xy(96U, 196U, set_text, 3U, UI_LCD_GOOD);
+    hw_display_draw_line(24U, 182U, 216U, 182U, UI_LCD_PANEL_ALT);
+    hw_display_draw_text_xy(28U, 200U, "SET", 2U, UI_LCD_TEXT);
+    hw_display_draw_text_xy(96U, 196U, set_text, 3U, UI_LCD_GOOD);
 
-    hw_oled_draw_text_xy(28U, 254U, footer_note, 1U, g_ui.last_heater_on ? UI_LCD_TEXT : UI_LCD_PANEL_ALT);
-    hw_oled_draw_text_xy(28U, 276U, footer_sub, 1U, UI_LCD_PANEL_ALT);
+    hw_display_draw_text_xy(28U, 254U, footer_note, 1U, g_ui.last_heater_on ? UI_LCD_TEXT : UI_LCD_PANEL_ALT);
+    hw_display_draw_text_xy(28U, 276U, footer_sub, 1U, UI_LCD_PANEL_ALT);
     render_hint_symbol("< >");
 }
 
 static void render_page_shell(const char *title, const char *subtitle)
 {
-    hw_oled_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, UI_LCD_BG);
-    hw_oled_draw_text_xy(24U, 24U, title, 3U, UI_LCD_TEXT);
+    hw_display_fill_rect(0U, 0U, BSP_LCD_WIDTH, BSP_LCD_HEIGHT, UI_LCD_BG);
+    hw_display_draw_text_xy(24U, 24U, title, 3U, UI_LCD_TEXT);
     if ((subtitle != 0) && (subtitle[0] != '\0'))
     {
-        hw_oled_draw_text_xy(26U, 56U, subtitle, 1U, UI_LCD_PANEL_ALT);
+        hw_display_draw_text_xy(26U, 56U, subtitle, 1U, UI_LCD_PANEL_ALT);
     }
-    hw_oled_draw_line(24U, 82U, 216U, 82U, UI_LCD_ACCENT);
+    hw_display_draw_line(24U, 82U, 216U, 82U, UI_LCD_ACCENT);
 }
 
 static void render_value_card(uint16_t x,
@@ -787,10 +787,10 @@ static void render_value_card(uint16_t x,
                               uint8_t value_scale,
                               uint16_t accent_color)
 {
-    hw_oled_fill_round_rect(x, y, w, h, 20U, UI_LCD_PANEL);
-    hw_oled_draw_rect(x, y, w, h, UI_LCD_PANEL_ALT);
-    hw_oled_draw_text_xy((uint16_t)(x + 18U), (uint16_t)(y + 16U), label, 1U, UI_LCD_PANEL_ALT);
-    hw_oled_draw_text_xy((uint16_t)(x + 18U), (uint16_t)(y + 44U), value, value_scale, accent_color);
+    hw_display_fill_round_rect(x, y, w, h, 20U, UI_LCD_PANEL);
+    hw_display_draw_rect(x, y, w, h, UI_LCD_PANEL_ALT);
+    hw_display_draw_text_xy((uint16_t)(x + 18U), (uint16_t)(y + 16U), label, 1U, UI_LCD_PANEL_ALT);
+    hw_display_draw_text_xy((uint16_t)(x + 18U), (uint16_t)(y + 44U), value, value_scale, accent_color);
 }
 
 static void render_settings_value_card(void)
@@ -911,7 +911,7 @@ static void render_settings_value_card(void)
 
 static void render_status_line(uint16_t y, const char *text, uint16_t color)
 {
-    hw_oled_draw_text_xy(28U, y, text, 1U, color);
+    hw_display_draw_text_xy(28U, y, text, 1U, color);
 }
 
 static void render_settings_page(void)
@@ -1044,10 +1044,10 @@ static void render_info_page(void)
 
 static void render_page(void)
 {
-    char line0[HW_OLED_LINE_CHARS + 1U];
-    char line1[HW_OLED_LINE_CHARS + 1U];
-    char line2[HW_OLED_LINE_CHARS + 1U];
-    char line3[HW_OLED_LINE_CHARS + 1U];
+    char line0[HW_DISPLAY_LINE_CHARS + 1U];
+    char line1[HW_DISPLAY_LINE_CHARS + 1U];
+    char line2[HW_DISPLAY_LINE_CHARS + 1U];
+    char line3[HW_DISPLAY_LINE_CHARS + 1U];
 
     (void)snprintf(line0, sizeof(line0), "%s %s%s", mode_text(g_ui.last_mode), page_text(g_ui.page), g_ui.editing ? "*" : "");
     (void)snprintf(line1, sizeof(line1), "TC %.1f ST %.1f", g_ui.last_temp.t_ctrl, g_ui.last_params.set_temp_c);
@@ -1126,17 +1126,17 @@ static void render_page(void)
     }
 
     {
-        const char *new_lines[HW_OLED_LINE_COUNT] = { line0, line1, line2, line3 };
+        const char *new_lines[HW_DISPLAY_LINE_COUNT] = { line0, line1, line2, line3 };
         unsigned int i;
         int changed = (g_ui.splash_ticks > 0U) ? 1 : 0;
 
-        for (i = 0U; i < HW_OLED_LINE_COUNT; ++i)
+        for (i = 0U; i < HW_DISPLAY_LINE_COUNT; ++i)
         {
             if ((!g_ui.render_cache_valid) || (strcmp(g_ui.rendered_lines[i], new_lines[i]) != 0))
             {
-                strncpy(g_ui.rendered_lines[i], new_lines[i], HW_OLED_LINE_CHARS);
-                g_ui.rendered_lines[i][HW_OLED_LINE_CHARS] = '\0';
-                hw_oled_draw_text((uint8_t)i, g_ui.rendered_lines[i]);
+                strncpy(g_ui.rendered_lines[i], new_lines[i], HW_DISPLAY_LINE_CHARS);
+                g_ui.rendered_lines[i][HW_DISPLAY_LINE_CHARS] = '\0';
+                hw_display_draw_text((uint8_t)i, g_ui.rendered_lines[i]);
                 changed = 1;
             }
         }
@@ -1182,15 +1182,15 @@ static void render_page(void)
             }
             else
             {
-                hw_oled_clear();
-                for (i = 0U; i < HW_OLED_LINE_COUNT; ++i)
+                hw_display_clear();
+                for (i = 0U; i < HW_DISPLAY_LINE_COUNT; ++i)
                 {
-                    hw_oled_draw_text((uint8_t)i, g_ui.rendered_lines[i]);
+                    hw_display_draw_text((uint8_t)i, g_ui.rendered_lines[i]);
                 }
-                hw_oled_refresh();
+                hw_display_refresh();
             }
 #else
-            hw_oled_refresh();
+            hw_display_refresh();
 #endif
             g_ui.render_cache_valid = 1;
         }
@@ -1229,7 +1229,7 @@ void ui_service_init(void)
     g_ui.render_cache_valid = 0;
     {
         unsigned int i;
-        for (i = 0U; i < HW_OLED_LINE_COUNT; ++i)
+        for (i = 0U; i < HW_DISPLAY_LINE_COUNT; ++i)
         {
             g_ui.rendered_lines[i][0] = '\0';
         }
@@ -1237,9 +1237,9 @@ void ui_service_init(void)
 
     hw_key_init();
     ui_key_input_init();
-    hw_oled_init();
-    hw_oled_clear();
-    hw_oled_refresh();
+    hw_display_init();
+    hw_display_clear();
+    hw_display_refresh();
 }
 
 void ui_service_tick_100ms(app_params_t *params)

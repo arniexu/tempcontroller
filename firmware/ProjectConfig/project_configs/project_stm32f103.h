@@ -37,7 +37,11 @@
 #define APP_TASK_UI_PERIOD_MS         (200U)
 #define APP_TASK_CONTROL_PERIOD_MS    (1000U)
 
+#if (APP_BUILD_RELEASE == 1U)
+#define APP_USE_LVGL_UI               (0U)
+#else
 #define APP_USE_LVGL_UI               (COMP_UI_LVGL_ENABLE)
+#endif
 #define APP_USE_ETHERNET              (COMP_ETHERNET_ENABLE)
 #define APP_LVGL_TASK_PERIOD_MS       (20U)
 #define APP_LVGL_BUF_LINES            (8U)

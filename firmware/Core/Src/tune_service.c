@@ -66,14 +66,14 @@ static void update_action_and_advice(void)
     if (g_runtime.issue == TUNE_ISSUE_SENSOR_FAULT)
     {
         g_runtime.action = TUNE_ACTION_CHECK_SENSOR;
-        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "检查探头接线");
+        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "Check sensor wiring");
         return;
     }
 
     if (g_runtime.issue == TUNE_ISSUE_OUTPUT_SATURATED)
     {
         g_runtime.action = TUNE_ACTION_CHECK_HEATER;
-        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "检查加热能力");
+        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "Check heater output");
         return;
     }
 
@@ -81,7 +81,7 @@ static void update_action_and_advice(void)
         (g_runtime.issue == TUNE_ISSUE_OK))
     {
         g_runtime.action = TUNE_ACTION_ENTER_ACCEPT;
-        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "可保存到场景");
+        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "Ready to save scene");
         return;
     }
 
@@ -89,24 +89,24 @@ static void update_action_and_advice(void)
     {
     case TUNE_ISSUE_SLOW:
         g_runtime.action = TUNE_ACTION_KP_UP;
-        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "建议 KP +0.2");
+        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "Suggest KP +0.2");
         break;
     case TUNE_ISSUE_OVERSHOOT:
         g_runtime.action = TUNE_ACTION_KP_DOWN;
-        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "建议 KP -0.2");
+        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "Suggest KP -0.2");
         break;
     case TUNE_ISSUE_WAVE:
         g_runtime.action = TUNE_ACTION_KI_DOWN;
-        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "建议 KI -0.02");
+        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "Suggest KI -0.02");
         break;
     case TUNE_ISSUE_STEADY_ERROR:
         g_runtime.action = TUNE_ACTION_KI_UP;
-        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "建议 KI +0.02");
+        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "Suggest KI +0.02");
         break;
     case TUNE_ISSUE_OK:
     default:
         g_runtime.action = TUNE_ACTION_NONE;
-        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "保持观察");
+        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "Keep observing");
         break;
     }
 }
@@ -141,7 +141,7 @@ void tune_service_init(void)
     g_runtime.flow = TUNE_FLOW_PREHEAT;
     g_runtime.issue = TUNE_ISSUE_OK;
     g_runtime.action = TUNE_ACTION_NONE;
-    (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "保持观察");
+    (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "Keep observing");
     g_prev_t_ctrl = 0.0f;
     g_prev_error = 0.0f;
     g_prev_valid = 0;
@@ -243,7 +243,7 @@ void tune_service_issue_change(int dir)
 
 void tune_service_set_issue(tune_issue_t issue)
 {
-    if ((issue < TUNE_ISSUE_OK) || (issue >= TUNE_ISSUE_COUNT))
+    if (issue >= TUNE_ISSUE_COUNT)
     {
         return;
     }
@@ -320,7 +320,7 @@ void tune_service_update_observation(const temp_snapshot_t *temp,
     if (g_runtime.accept_ready)
     {
         g_runtime.action = TUNE_ACTION_ENTER_ACCEPT;
-        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "通过，建议保存");
+        (void)snprintf(g_runtime.advice_text, sizeof(g_runtime.advice_text), "Pass, save advised");
     }
     else
     {
@@ -403,17 +403,17 @@ const char *tune_service_step_text(uint8_t step_index)
     switch (step_index)
     {
     case 0U:
-        return "预热检查";
+        return "Preheat";
     case 1U:
-        return "逼近目标";
+        return "Approach";
     case 2U:
-        return "稳态观察";
+        return "Steady";
     case 3U:
-        return "扰动恢复";
+        return "Recover";
     case 4U:
-        return "结果验收";
+        return "Accept";
     default:
-        return "步骤未知";
+        return "Unknown";
     }
 }
 
@@ -422,21 +422,21 @@ const char *tune_service_issue_text(tune_issue_t issue)
     switch (issue)
     {
     case TUNE_ISSUE_OK:
-        return "正常";
+        return "OK";
     case TUNE_ISSUE_SLOW:
-        return "升温慢";
+        return "Slow";
     case TUNE_ISSUE_OVERSHOOT:
-        return "超调大";
+        return "Overshoot";
     case TUNE_ISSUE_WAVE:
-        return "波动大";
+        return "Wave";
     case TUNE_ISSUE_STEADY_ERROR:
-        return "静差大";
+        return "SteadyErr";
     case TUNE_ISSUE_OUTPUT_SATURATED:
-        return "输出饱和";
+        return "Saturated";
     case TUNE_ISSUE_SENSOR_FAULT:
-        return "探头异常";
+        return "SensorFault";
     default:
-        return "未知";
+        return "Unknown";
     }
 }
 
@@ -455,12 +455,12 @@ const char *tune_service_action_text(tune_action_t action)
     case TUNE_ACTION_KD_UP:
         return "KD +";
     case TUNE_ACTION_CHECK_HEATER:
-        return "查加热";
+        return "CheckHeat";
     case TUNE_ACTION_CHECK_SENSOR:
-        return "查探头";
+        return "CheckSens";
     case TUNE_ACTION_ENTER_ACCEPT:
-        return "可验收";
+        return "Accept";
     default:
-        return "保持";
+        return "Hold";
     }
 }

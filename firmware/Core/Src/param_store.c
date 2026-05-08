@@ -87,7 +87,7 @@ static int g_flush_pending = 0;
 static int g_crc_hw_inited = 0;
 #endif
 
-#if !defined(USE_HAL_DRIVER)
+#if !defined(USE_HAL_DRIVER) && (APP_PARAM_STORE_USE_SPIFLASH != 1U) && (APP_PARAM_STORE_USE_EEPROM != 1U)
 static uint8_t g_nv_page_a[sizeof(param_nv_record_t)];
 static uint8_t g_nv_page_b[sizeof(param_nv_record_t)];
 static int g_nv_page_a_written = 0;
@@ -182,7 +182,7 @@ static int param_record_valid(const param_nv_record_t *r)
     return (param_record_crc_hw(r) == r->crc32) ? 1 : 0;
 }
 
-#if defined(USE_HAL_DRIVER)
+#if defined(USE_HAL_DRIVER) && (APP_PARAM_STORE_USE_SPIFLASH != 1U) && (APP_PARAM_STORE_USE_EEPROM != 1U)
 static void read_record_from_flash(uint32_t addr, param_nv_record_t *out)
 {
     const uint8_t *src = (const uint8_t *)(uintptr_t)addr;

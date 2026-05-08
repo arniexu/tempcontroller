@@ -2,6 +2,7 @@
 #define TEST_DECLS_H
 
 int test_bsp_oled_driver_run(void);
+int test_bsp_lcd_8080_driver_run(void);
 int test_scheduler_run(void);
 int test_pid_run(void);
 int test_debug_log_run(void);
@@ -13,6 +14,7 @@ int test_temp_manager_run(void);
 int test_schedule_service_run(void);
 int test_tune_service_run(void);
 int test_ui_service_run(void);
+int test_ui_legacy_tabs_mock_run(void);
 int test_protocol_export_run(void);
 int test_app_main_run(void);
 
