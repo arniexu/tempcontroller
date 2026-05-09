@@ -1,7 +1,0 @@
-{
-    "debug.hideSlowPreLaunchWarning": true,
-    "debug.showInStatusBar": "never",
-    "clangd.arguments": [
-        "--compile-commands-dir=d:\\tempcontroller\\firmware\\Project\\MDK-ARM\\out\\WaterTempControl\\Target_1"
-    ]
-}

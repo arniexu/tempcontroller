@@ -1,0 +1,1 @@
+stm32f103rb_nucleo\startup_stm32f103xb.o: startup_stm32f103xb.s
