@@ -145,6 +145,9 @@ void SystemClock_Config(void)
   }
 
   SystemCoreClock = 64000000U;
+
+  /* Reconfigure SysTick after clock switch; keep HAL_GetTick at 1ms granularity. */
+  SysTick_Config(SystemCoreClock / 1000U);
 }
 
 #ifdef  USE_FULL_ASSERT
