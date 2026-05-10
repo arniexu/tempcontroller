@@ -18,6 +18,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "bsp_oled.h"
 
 /** @addtogroup STM32F1xx_HAL_Examples
   * @{
@@ -61,19 +62,36 @@ int main(void)
   /* Configure the system clock to 64 MHz */
   SystemClock_Config();
 
-    /* Initialize GPIO for two LEDs */
-    MX_GPIO_Init();
+  /* Initialize GPIO for two LEDs */
+  MX_GPIO_Init();
 
-    HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+
+
+  bsp_oled_init();
+  bsp_oled_clear();
+  bsp_oled_draw_text(0, "Hello, OLED HAL!");
+  bsp_oled_draw_text(1, "\xB9\xFA\xB6\xAB\xD7\xD4\xB6\xAF"); // "国东自动"(GB2312)
+  bsp_oled_draw_text(2, "Slider: ");
+  bsp_oled_draw_text(3, "Color Test");
+  bsp_oled_refresh();
 
 
   /* Infinite loop */
+  uint8_t slider = 0;
   while (1)
   {
     HAL_GPIO_TogglePin(LED0_GPIO_Port, LED0_Pin);
     HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-    DelayMs(250U);
+    char buf[24];
+    slider = (slider + 1) % 100;
+    snprintf(buf, sizeof(buf), "Slider: %d", slider);
+    bsp_oled_draw_text(2, buf);
+    bsp_oled_refresh();
+    while (bsp_oled_is_busy()) bsp_oled_process();
+    bsp_oled_fill_rect(180, 8, 40, 24, (slider & 1) ? 0xF800 : 0x07E0); // 红绿闪烁
+    DelayMs(150U);
   }
 }
 

@@ -9,7 +9,6 @@
 #define LCD_BL_ACTIVE_HIGH 1U
 #define LCD_932X_ENTRY_MODE 0x1018U
 #define LCD_932X_MIRROR_X   1U
-#define LCD_MIRROR_Y        1U
 
 #define LCD_COLOR_BLACK  0x0000U
 #define LCD_COLOR_WHITE  0xFFFFU
@@ -20,19 +19,7 @@
 #define LCD_COLOR_CYAN   0x07FFU
 #define LCD_COLOR_GRAY   0x8410U
 
-#define LCD_PIXEL_MODE_16BIT_NORMAL      0U
-#define LCD_PIXEL_MODE_16BIT_SWAP_BYTES  1U
-#define LCD_PIXEL_MODE_8BIT_LOW_LANE     2U
-#define LCD_PIXEL_MODE_8BIT_HIGH_LANE    3U
-
 void LCD_Init(void);
-void LCD_InitBare8080(void);
-void LCD_InitWithProfile(uint8_t profile);
-void LCD_SetBacklightRaw(uint8_t high_level);
-void LCD_SetRamWriteCmd(uint16_t cmd);
-uint16_t LCD_GetRamWriteCmd(void);
-void LCD_SetPixelWriteMode(uint8_t mode);
-uint8_t LCD_GetPixelWriteMode(void);
 void LCD_FillScreen(uint16_t color);
 void LCD_FillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
 void LCD_DrawPixel(uint16_t x, uint16_t y, uint16_t color);

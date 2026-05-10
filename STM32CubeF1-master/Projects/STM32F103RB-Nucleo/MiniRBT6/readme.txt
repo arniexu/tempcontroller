@@ -21,6 +21,11 @@
 
 @par Example Description
 
+Project note for this workspace:
+ - Keil project path: MiniRBT6/MDK-ARM/Project.uvprojx
+ - Main target name: 温控器
+ - Output image name: TempController
+
 This projects provides a reference template that can be used to build any firmware application.
 
 This projects is configured for STM32F103xB devices using STM32CubeF1 HAL and running on 

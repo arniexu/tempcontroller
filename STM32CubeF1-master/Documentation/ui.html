@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>温控器三页面坐标图</title>
+  <style>
+    :root {
+      --bg: #11151d;
+      --panel: #1b212c;
+      --bezel: #0a0e14;
+      --line: #6dd06d;
+      --line-dim: rgba(109, 208, 109, 0.68);
+      --text: #97ea97;
+      --inv-bg: #97ea97;
+      --inv-fg: #072007;
+      --screen-w: 240px;
+      --screen-h: 320px;
+      --scale: 2.2;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 18px;
+      background:
+        radial-gradient(circle at 15% 15%, #222c38 0, transparent 30%),
+        radial-gradient(circle at 85% 85%, #152615 0, transparent 30%),
+        linear-gradient(180deg, #0f131b, #171d28);
+      color: #d6efd6;
+      font-family: "JetBrains Mono", "Consolas", monospace;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(260px, 1fr));
+      gap: 14px;
+      align-items: start;
+    }
+
+    .card {
+      background: linear-gradient(180deg, #2a313d, #161c26);
+      border: 1px solid #3a4658;
+      border-radius: 14px;
+      padding: 10px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-name {
+      font-size: 12px;
+      margin-bottom: 8px;
+      letter-spacing: 0.06em;
+      color: #bfd9bf;
+      text-transform: uppercase;
+    }
+
+    .screen {
+      position: relative;
+      width: calc(var(--screen-w) * var(--scale));
+      height: calc(var(--screen-h) * var(--scale));
+      border: 1px solid #273240;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bezel);
+      box-shadow: inset 0 0 0 1px #0b1017;
+    }
+
+    .lcd {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: var(--screen-w);
+      height: var(--screen-h);
+      transform-origin: left top;
+      transform: scale(var(--scale));
+      color: var(--text);
+      font-size: 11px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .box {
+      position: absolute;
+      border: 1px solid var(--line-dim);
+    }
+
+    .txt {
+      position: absolute;
+      color: var(--text);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+    }
+
+    .tab {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      border-right: 1px solid var(--line-dim);
+      color: var(--line-dim);
+    }
+
+    .tab:last-child { border-right: none; }
+
+    .inv {
+      background: var(--inv-bg);
+      color: var(--inv-fg);
+      font-weight: 700;
+      border-color: var(--inv-bg);
+    }
+
+    .row {
+      position: absolute;
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      align-items: center;
+      border: 1px solid transparent;
+      color: var(--line-dim);
+      padding: 0 4px;
+    }
+
+    .row .v {
+      justify-self: stretch;
+      text-align: left;
+      color: var(--text);
+    }
+
+    .row.selected {
+      background: var(--inv-bg);
+      color: var(--inv-fg);
+      border-color: var(--inv-bg);
+      font-weight: 700;
+    }
+
+    .row.selected .v {
+      color: var(--inv-fg);
+    }
+
+    .keys {
+      margin-top: 10px;
+      display: grid;
+      justify-content: center;
+      grid-template-columns: 30px 30px 30px;
+      grid-template-rows: 30px 30px 30px;
+      gap: 6px;
+    }
+
+    .k {
+      border: 1px solid #4a566a;
+      border-radius: 6px;
+      background: linear-gradient(180deg, #222a37, #171e2a);
+    }
+
+    .k.up { grid-column: 2; grid-row: 1; }
+    .k.left { grid-column: 1; grid-row: 2; }
+    .k.ok { grid-column: 2; grid-row: 2; }
+    .k.right { grid-column: 3; grid-row: 2; }
+    .k.down { grid-column: 2; grid-row: 3; }
+
+    .note {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #b4c8b4;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 1100px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="title">按精确坐标绘制：3 个 Tab 页面（反选=选中，5 键占位）</div>
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const C = {
+      hdr: { x: 10, y: 10, w: 220, h: 20 },
+      tempBox: { x: 10, y: 36, w: 220, h: 34 },
+      tabs: { x: 10, y: 76, w: 220, h: 24 },
+      body: { x: 10, y: 106, w: 220, h: 168 },
+      footer: { x: 10, y: 282, w: 220, h: 28 },
+      rowH: 24
+    };
+
+    const tabs = ["普通", "引导", "专家"];
+
+    const pages = [
+      {
+        name: "Tab1 普通模式",
+        activeTab: 0,
+        selectedRow: 0,
+        temp: "58.6C",
+        rows: [
+          ["TGT", "60C"],
+          ["SCN", "日常保温"],
+          ["KP", "8.0"],
+          ["KI", "0.30"],
+          ["KD", "15.0"]
+        ],
+        footer: "INV 确认"
+      },
+      {
+        name: "Tab2 引导整定",
+        activeTab: 1,
+        selectedRow: 2,
+        temp: "61.2C",
+        rows: [
+          ["STEP", "2/5 逼近目标"],
+          ["MET", "峰值温度"],
+          ["ISS", "超调大"],
+          ["ACT", "应用建议"],
+          ["PID", "K7.8 I0.28 D15.2"],
+          ["RES", "观察中"]
+        ],
+        footer: "INV 执行动作"
+      },
+      {
+        name: "Tab3 专家模式",
+        activeTab: 2,
+        selectedRow: 1,
+        temp: "57.9C",
+        rows: [
+          ["KP", "1.6"],
+          ["KI", "0.42"],
+          ["KD", "0.08"],
+          ["TMIN", "20C"],
+          ["TMAX", "95C"]
+        ],
+        footer: "INV 写入参数"
+      }
+    ];
+
+    function px(v) { return `${v}px`; }
+
+    function putBox(root, c, cls = "") {
+      const d = document.createElement("div");
+      d.className = `box ${cls}`.trim();
+      d.style.left = px(c.x);
+      d.style.top = px(c.y);
+      d.style.width = px(c.w);
+      d.style.height = px(c.h);
+      root.appendChild(d);
+      return d;
+    }
+
+    function putText(root, x, y, txt, cls = "") {
+      const d = document.createElement("div");
+      d.className = `txt ${cls}`.trim();
+      d.style.left = px(x);
+      d.style.top = px(y);
+      d.textContent = txt;
+      root.appendChild(d);
+      return d;
+    }
+
+    function renderPage(page) {
+      const card = document.createElement("section");
+      card.className = "card";
+
+      const name = document.createElement("div");
+      name.className = "card-name";
+      name.textContent = page.name;
+      card.appendChild(name);
+
+      const screen = document.createElement("div");
+      screen.className = "screen";
+      card.appendChild(screen);
+
+      const lcd = document.createElement("div");
+      lcd.className = "lcd";
+      screen.appendChild(lcd);
+
+      putBox(lcd, C.hdr);
+      putText(lcd, 14, 14, "温控器");
+      putText(lcd, 188, 14, "12:30");
+
+      putBox(lcd, C.tempBox);
+      putText(lcd, 14, 46, "当前温度");
+      putText(lcd, 132, 45, page.temp, "inv");
+
+      const tabWrap = putBox(lcd, C.tabs);
+      const tabW = Math.floor(C.tabs.w / 3);
+      tabs.forEach((t, i) => {
+        const tab = document.createElement("div");
+        tab.className = "tab" + (i === page.activeTab ? " inv" : "");
+        tab.style.left = px(C.tabs.x + i * tabW);
+        tab.style.top = px(C.tabs.y);
+        tab.style.width = px(i === 2 ? C.tabs.w - tabW * 2 : tabW);
+        tab.style.height = px(C.tabs.h);
+        tab.textContent = t;
+        lcd.appendChild(tab);
+      });
+
+      putBox(lcd, C.body);
+      page.rows.forEach((r, i) => {
+        const row = document.createElement("div");
+        row.className = "row" + (i === page.selectedRow ? " selected" : "");
+        row.style.left = px(C.body.x + 2);
+        row.style.top = px(C.body.y + 2 + i * C.rowH);
+        row.style.width = px(C.body.w - 4);
+        row.style.height = px(C.rowH - 2);
+
+        const k = document.createElement("div");
+        k.textContent = r[0];
+        const v = document.createElement("div");
+        v.className = "v";
+        v.textContent = r[1];
+
+        row.appendChild(k);
+        row.appendChild(v);
+        lcd.appendChild(row);
+      });
+
+      putBox(lcd, C.footer);
+      putText(lcd, 14, 292, page.footer);
+      putText(lcd, 205, 292, "NOR");
+
+      const keys = document.createElement("div");
+      keys.className = "keys";
+      keys.innerHTML = `
+        <div class="k up"></div>
+        <div class="k left"></div>
+        <div class="k ok"></div>
+        <div class="k right"></div>
+        <div class="k down"></div>
+      `;
+      card.appendChild(keys);
+
+      const note = document.createElement("div");
+      note.className = "note";
+      note.textContent = "坐标固定绘制；反选区域即当前选中项；5 键仅占位（可后续替换图标/文字）。";
+      card.appendChild(note);
+
+      return card;
+    }
+
+    const grid = document.getElementById("grid");
+    pages.forEach((p) => grid.appendChild(renderPage(p)));
+  </script>
+</body>
+</html>

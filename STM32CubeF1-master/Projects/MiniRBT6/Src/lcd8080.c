@@ -247,6 +247,14 @@ static uint32_t LCD_ReadID9341(void)
 
 static void LCD_SetWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
+#if (LCD_MIRROR_Y == 1U)
+  uint16_t sy0 = (uint16_t)((LCD_HEIGHT - 1U) - y1);
+  uint16_t sy1 = (uint16_t)((LCD_HEIGHT - 1U) - y0);
+#else
+  uint16_t sy0 = y0;
+  uint16_t sy1 = y1;
+#endif
+
   if (g_lcd_bare_mode != 0U)
   {
     uint16_t sx0;
@@ -268,10 +276,10 @@ static void LCD_SetWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
     LCD_WriteData8((uint8_t)(x1 & 0x00FFU));
 
     LCD_WriteCmd(0x2BU);
-    LCD_WriteData8((uint8_t)(y0 >> 8));
-    LCD_WriteData8((uint8_t)(y0 & 0x00FFU));
-    LCD_WriteData8((uint8_t)(y1 >> 8));
-    LCD_WriteData8((uint8_t)(y1 & 0x00FFU));
+    LCD_WriteData8((uint8_t)(sy0 >> 8));
+    LCD_WriteData8((uint8_t)(sy0 & 0x00FFU));
+    LCD_WriteData8((uint8_t)(sy1 >> 8));
+    LCD_WriteData8((uint8_t)(sy1 & 0x00FFU));
 
     /* 932x-style GRAM window and cursor. */
     LCD_WriteCmd(0x50U);
@@ -279,13 +287,13 @@ static void LCD_SetWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
     LCD_WriteCmd(0x51U);
     LCD_WriteData16(sx1);
     LCD_WriteCmd(0x52U);
-    LCD_WriteData16(y0);
+    LCD_WriteData16(sy0);
     LCD_WriteCmd(0x53U);
-    LCD_WriteData16(y1);
+    LCD_WriteData16(sy1);
     LCD_WriteCmd(0x20U);
     LCD_WriteData16(sx0);
     LCD_WriteCmd(0x21U);
-    LCD_WriteData16(y0);
+    LCD_WriteData16(sy0);
 
     LCD_WriteCmd(g_lcd_ramwr_cmd);
   }
@@ -298,10 +306,10 @@ static void LCD_SetWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
     LCD_WriteData8((uint8_t)(x1 & 0x00FFU));
 
     LCD_WriteCmd(0x2BU);
-    LCD_WriteData8((uint8_t)(y0 >> 8));
-    LCD_WriteData8((uint8_t)(y0 & 0x00FFU));
-    LCD_WriteData8((uint8_t)(y1 >> 8));
-    LCD_WriteData8((uint8_t)(y1 & 0x00FFU));
+    LCD_WriteData8((uint8_t)(sy0 >> 8));
+    LCD_WriteData8((uint8_t)(sy0 & 0x00FFU));
+    LCD_WriteData8((uint8_t)(sy1 >> 8));
+    LCD_WriteData8((uint8_t)(sy1 & 0x00FFU));
 
     LCD_WriteCmd(g_lcd_ramwr_cmd);
   }
@@ -319,13 +327,13 @@ static void LCD_SetWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
     LCD_WriteCmd(0x51U);
     LCD_WriteData16(sx1);
     LCD_WriteCmd(0x52U);
-    LCD_WriteData16(y0);
+    LCD_WriteData16(sy0);
     LCD_WriteCmd(0x53U);
-    LCD_WriteData16(y1);
+    LCD_WriteData16(sy1);
     LCD_WriteCmd(0x20U);
     LCD_WriteData16(sx0);
     LCD_WriteCmd(0x21U);
-    LCD_WriteData16(y0);
+    LCD_WriteData16(sy0);
     LCD_WriteCmd(g_lcd_ramwr_cmd);
   }
 }
