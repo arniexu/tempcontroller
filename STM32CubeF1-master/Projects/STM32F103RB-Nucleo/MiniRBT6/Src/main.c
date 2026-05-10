@@ -18,6 +18,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "lcd8080.h"
 
 /** @addtogroup STM32F1xx_HAL_Examples
   * @{
@@ -34,6 +35,11 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void DelayMs(uint32_t delay_ms);
+static void RunStage1_BacklightPath(void);
+static void RunStage2_Profile1Write(void);
+static void RunStage3_Profile23Write(void);
+static void SetStageMarker(uint8_t stage);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -60,16 +66,131 @@ int main(void)
   /* Configure the system clock to 64 MHz */
   SystemClock_Config();
 
-    /* Initialize GPIO for two LEDs */
-    MX_GPIO_Init();
+  /* Initialize GPIO for two LEDs */
+  MX_GPIO_Init();
 
-    /* Set both LEDs ON (active-high) */
-    HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
 
 
   /* Infinite loop */
   while (1)
+  {
+    RunStage1_BacklightPath();
+    RunStage2_Profile1Write();
+    RunStage3_Profile23Write();
+  }
+}
+
+static void RunStage1_BacklightPath(void)
+{
+  uint32_t i;
+
+  SetStageMarker(1U);
+  LCD_InitWithProfile(1U);
+
+  /* Stage 1: only test BL path. Screen content is ignored in this stage. */
+  for (i = 0U; i < 3U; i++)
+  {
+    LCD_SetBacklightRaw(0U);
+    DelayMs(1500U);
+    LCD_SetBacklightRaw(1U);
+    DelayMs(1500U);
+  }
+}
+
+static void RunStage2_Profile1Write(void)
+{
+  static const uint16_t colors[] = {
+    LCD_COLOR_RED,
+    LCD_COLOR_GREEN,
+    LCD_COLOR_BLUE,
+    LCD_COLOR_BLACK
+  };
+  uint32_t i;
+
+  SetStageMarker(2U);
+  LCD_InitWithProfile(1U);
+  LCD_SetBacklightRaw(1U);
+
+  /* Stage 2: 9341 path write test. */
+  for (i = 0U; i < (sizeof(colors) / sizeof(colors[0])); i++)
+  {
+    LCD_FillScreen(colors[i]);
+    DelayMs(2000U);
+  }
+}
+
+static void RunStage3_Profile23Write(void)
+{
+  static const uint16_t colors[] = {
+    LCD_COLOR_BLUE,
+    LCD_COLOR_WHITE,
+    LCD_COLOR_BLACK
+  };
+  uint32_t i;
+
+  SetStageMarker(3U);
+
+  /* Stage 3A: 9325/5408 path write test. */
+  LCD_InitWithProfile(2U);
+  LCD_SetBacklightRaw(1U);
+  for (i = 0U; i < (sizeof(colors) / sizeof(colors[0])); i++)
+  {
+    LCD_FillScreen(colors[i]);
+    DelayMs(1800U);
+  }
+
+  /* Stage 3B: bare profile write test. */
+  LCD_InitWithProfile(3U);
+  LCD_SetBacklightRaw(1U);
+  for (i = 0U; i < (sizeof(colors) / sizeof(colors[0])); i++)
+  {
+    LCD_FillScreen(colors[i]);
+    DelayMs(1800U);
+  }
+}
+
+static void SetStageMarker(uint8_t stage)
+{
+  /* Clear separator so each stage starts with a visible gap. */
+  HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+  DelayMs(1000U);
+
+  /* Stage marker pulse count = stage index. */
+  while (stage-- > 0U)
+  {
+    HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+    DelayMs(350U);
+    HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+    DelayMs(350U);
+  }
+
+  switch (stage)
+  {
+    case 0U:
+      HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+      break;
+    case 1U:
+      HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+      break;
+    default:
+      HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+      break;
+  }
+}
+
+static void DelayMs(uint32_t delay_ms)
+{
+  uint32_t start_tick = HAL_GetTick();
+
+  while ((HAL_GetTick() - start_tick) < delay_ms)
   {
   }
 }

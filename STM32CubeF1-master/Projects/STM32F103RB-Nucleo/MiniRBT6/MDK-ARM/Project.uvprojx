@@ -16,8 +16,8 @@
         <TargetCommonOption>
           <Device>STM32F103RB</Device>
           <Vendor>STMicroelectronics</Vendor>
-          <PackID>Keil.STM32F1xx_DFP.2.3.0</PackID>
-          <PackURL>http://www.keil.com/pack/</PackURL>
+          <PackID>Keil.STM32F1xx_DFP.2.4.1</PackID>
+          <PackURL>https://www.keil.com/pack/</PackURL>
           <Cpu>IRAM(0x20000000-0x20004FFF) IROM(0x8000000-0x801FFFF) CLOCK(8000000) CPUTYPE("Cortex-M3")</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile></StartupFile>
@@ -324,6 +324,7 @@
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
             <uC99>1</uC99>
+            <uGnu>0</uGnu>
             <useXO>0</useXO>
             <v6Lang>0</v6Lang>
             <v6LangP>0</v6LangP>
@@ -336,7 +337,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xB</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;../../../../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../../../../Drivers/STM32F1xx_HAL_Driver/Inc</IncludePath>
+              <IncludePath>../Inc;../../../../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../../../../Drivers/STM32F1xx_HAL_Driver/Inc;../../../../Utilities/Fonts</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -411,9 +412,24 @@
               <FilePath>../Src/main.c</FilePath>
             </File>
             <File>
+              <FileName>lcd8080.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/lcd8080.c</FilePath>
+            </File>
+            <File>
+              <FileName>lcd_font_zh.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/lcd_font_zh.c</FilePath>
+            </File>
+            <File>
               <FileName>stm32f1xx_it.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/stm32f1xx_it.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_oled.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/bsp_oled.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -434,6 +450,11 @@
               <FileName>system_stm32f1xx.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/system_stm32f1xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>font16.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../../../../Utilities/Fonts/font16.c</FilePath>
             </File>
           </Files>
         </Group>

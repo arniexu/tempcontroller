@@ -29,6 +29,16 @@
 
 #define LED1_Pin        GPIO_PIN_2
 #define LED1_GPIO_Port  GPIOD
+
+/* 8080 LCD: PB0..PB15 are D0..D15, PC10..PC6 are BL/CS/RS/WR/RD */
+#define LCD_DATA_GPIO_Port GPIOB
+
+#define LCD_BL_Pin       GPIO_PIN_10
+#define LCD_CS_Pin       GPIO_PIN_9
+#define LCD_RS_Pin       GPIO_PIN_8
+#define LCD_WR_Pin       GPIO_PIN_7
+#define LCD_RD_Pin       GPIO_PIN_6
+#define LCD_CTRL_GPIO_Port GPIOC
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
