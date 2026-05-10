@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-#include "lcd8080.h"
+#include "bsp_lcd8080.h"
 #include "tinygfx.h"
 
 typedef enum

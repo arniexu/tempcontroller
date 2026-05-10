@@ -1,5 +1,5 @@
-#ifndef LCD8080_H
-#define LCD8080_H
+#ifndef BSP_LCD8080_H
+#define BSP_LCD8080_H
 
 #include "main.h"
 #include "fonts.h"

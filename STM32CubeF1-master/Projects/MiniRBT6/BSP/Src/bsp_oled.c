@@ -1,5 +1,5 @@
 #include "bsp_oled.h"
-#include "lcd8080.h"
+#include "bsp_lcd8080.h"
 #include <string.h>
 
 #define BSP_OLED_LINE_COUNT 4

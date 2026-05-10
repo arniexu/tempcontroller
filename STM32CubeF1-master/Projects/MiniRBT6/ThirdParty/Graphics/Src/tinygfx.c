@@ -1,6 +1,6 @@
 #include "tinygfx.h"
 
-#include "lcd8080.h"
+#include "bsp_lcd8080.h"
 #include "fonts.h"
 
 static uint16_t g_tgfx_w = LCD_WIDTH;
