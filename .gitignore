@@ -1,0 +1,23 @@
+# Keil uVision user/session files
+*.uvguix.*
+
+# Keil/ARMCC build artifacts
+*.axf
+*.o
+*.d
+*.crf
+*.dep
+*.lnp
+*.map
+*.htm
+*.build_log.htm
+*.lst
+
+# Common generated output folders in this repo
+**/MDK-ARM/TempController/
+**/MDK-ARM/STM32F103RB_Nucleo/
+
+# Debug logs and generated helper files
+**/MDK-ARM/JLinkLog.txt
+**/MDK-ARM/EventRecorderStub.scvd
+**/MDK-ARM/**/ExtDll.iex
