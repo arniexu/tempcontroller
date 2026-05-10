@@ -18,7 +18,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "lcd8080.h"
+#include "app_demo.h"
 
 /** @addtogroup STM32F1xx_HAL_Examples
   * @{
@@ -35,8 +35,6 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void DelayMs(uint32_t delay_ms);
-static void RunRamWriteProbe(uint16_t ramwr_cmd, uint8_t pixel_mode, GPIO_PinState led0, GPIO_PinState led1);
 static void Early_DisableJtag_KeepSwd(void);
 
 /* Private functions ---------------------------------------------------------*/
@@ -75,61 +73,14 @@ int main(void)
 
 
   /* Infinite loop */
-  LCD_InitWithProfile(0U);
-  LCD_SetBacklightRaw(1U);
+  App_Demo_Init();
+
+  HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
 
   while (1)
   {
-    RunRamWriteProbe(0x2CU, LCD_PIXEL_MODE_16BIT_NORMAL, GPIO_PIN_SET, GPIO_PIN_RESET);
-    RunRamWriteProbe(0x2CU, LCD_PIXEL_MODE_16BIT_SWAP_BYTES, GPIO_PIN_RESET, GPIO_PIN_SET);
-    RunRamWriteProbe(0x2CU, LCD_PIXEL_MODE_8BIT_LOW_LANE, GPIO_PIN_SET, GPIO_PIN_SET);
-    RunRamWriteProbe(0x2CU, LCD_PIXEL_MODE_8BIT_HIGH_LANE, GPIO_PIN_RESET, GPIO_PIN_RESET);
-
-    RunRamWriteProbe(0x22U, LCD_PIXEL_MODE_16BIT_NORMAL, GPIO_PIN_SET, GPIO_PIN_RESET);
-    RunRamWriteProbe(0x22U, LCD_PIXEL_MODE_16BIT_SWAP_BYTES, GPIO_PIN_RESET, GPIO_PIN_SET);
-    RunRamWriteProbe(0x22U, LCD_PIXEL_MODE_8BIT_LOW_LANE, GPIO_PIN_SET, GPIO_PIN_SET);
-    RunRamWriteProbe(0x22U, LCD_PIXEL_MODE_8BIT_HIGH_LANE, GPIO_PIN_RESET, GPIO_PIN_RESET);
-  }
-}
-
-static void RunRamWriteProbe(uint16_t ramwr_cmd, uint8_t pixel_mode, GPIO_PinState led0, GPIO_PinState led1)
-{
-  static const uint16_t colors[] = {
-    LCD_COLOR_RED,
-    LCD_COLOR_GREEN,
-    LCD_COLOR_BLUE,
-    LCD_COLOR_WHITE,
-    LCD_COLOR_BLACK
-  };
-  uint32_t i;
-
-  LCD_SetRamWriteCmd(ramwr_cmd);
-  LCD_SetPixelWriteMode(pixel_mode);
-  HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, led0);
-  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, led1);
-
-  /* 5 colors x 800 ms: quick visual judge if GRAM writes are valid. */
-  for (i = 0U; i < (sizeof(colors) / sizeof(colors[0])); i++)
-  {
-    /* Keep LED state latched for the whole phase, re-apply each round for diagnosis. */
-    HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, led0);
-    HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, led1);
-
-    LCD_FillScreen(LCD_COLOR_BLACK);
-    DelayMs(200U);
-    LCD_FillScreen(LCD_COLOR_WHITE);
-    DelayMs(200U);
-    LCD_FillScreen(colors[i]);
-    DelayMs(800U);
-  }
-}
-
-static void DelayMs(uint32_t delay_ms)
-{
-  uint32_t start_tick = HAL_GetTick();
-
-  while ((HAL_GetTick() - start_tick) < delay_ms)
-  {
+    App_Demo_Run();
   }
 }
 

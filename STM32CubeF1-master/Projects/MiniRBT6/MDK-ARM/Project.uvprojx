@@ -337,7 +337,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xB</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;../../../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../../../Drivers/STM32F1xx_HAL_Driver/Inc;../../../Utilities/Fonts</IncludePath>
+              <IncludePath>../Inc;../BSP/Inc;../ThirdParty/Graphics/Inc;../ThirdParty/Fonts/Inc;../App/Inc;../../../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../../../Drivers/STM32F1xx_HAL_Driver/Inc;../../../Utilities/Fonts</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -412,16 +412,6 @@
               <FilePath>../Src/main.c</FilePath>
             </File>
             <File>
-              <FileName>lcd8080.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/lcd8080.c</FilePath>
-            </File>
-            <File>
-              <FileName>lcd_font_zh.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/lcd_font_zh.c</FilePath>
-            </File>
-            <File>
               <FileName>stm32f1xx_it.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/stm32f1xx_it.c</FilePath>
@@ -430,6 +420,46 @@
               <FileName>bsp_oled.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/bsp_oled.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>BSP</GroupName>
+          <Files>
+            <File>
+              <FileName>lcd8080.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../BSP/Src/lcd8080.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>ThirdParty/Fonts</GroupName>
+          <Files>
+            <File>
+              <FileName>lcd_font_zh.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../ThirdParty/Fonts/Src/lcd_font_zh.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>ThirdParty/Graphics</GroupName>
+          <Files>
+            <File>
+              <FileName>tinygfx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../ThirdParty/Graphics/Src/tinygfx.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>App</GroupName>
+          <Files>
+            <File>
+              <FileName>app_demo.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/Src/app_demo.c</FilePath>
             </File>
           </Files>
         </Group>
