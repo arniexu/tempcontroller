@@ -28,7 +28,7 @@ extern "C" {
 #define SRAM_BANK3_BASE ((uint32_t)0x68000000U)
 #define LCD_BANK4_BASE  ((uint32_t)0x6C000000U)
 #define LCD_REG16       (*((volatile uint16_t *)(LCD_BANK4_BASE)))
-#define LCD_RAM16       (*((volatile uint16_t *)(LCD_BANK4_BASE | (1U << (12 + 1)))))
+#define LCD_RAM16       (*((volatile uint16_t *)(LCD_BANK4_BASE | (1U << (12 + 1))))) /* A12=1 for LCD data in 16-bit FSMC mode */
 
 void Error_Handler(void);
 
