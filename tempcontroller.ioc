@@ -1,0 +1,27 @@
+#MicroXplorer Configuration settings - do not modify
+File.Version=6
+Mcu.Family=STM32F1
+Mcu.IP0=FSMC
+Mcu.IP1=GPIO
+Mcu.IPNb=2
+Mcu.Name=STM32F103Z(E-G)Tx
+Mcu.Package=LQFP144
+ProjectManager.ProjectName=tempcontroller
+ProjectManager.ToolChain=MDK-ARM V5
+ProjectManager.MainLocation=Core/Src
+ProjectManager.FunctionalStack=HAL
+RCC.HSE_VALUE=8000000
+RCC.PLLSourceVirtual=RCC_PLLSOURCE_HSE
+RCC.SYSCLKFreq_VALUE=72000000
+PA5.GPIO_Label=T_CLK
+PB0.GPIO_Label=T_CS
+PB1.GPIO_Label=T_MOSI
+PB2.GPIO_Label=T_MISO_BOOT1
+PD4.Signal=FSMC_NOE
+PD5.Signal=FSMC_NWE
+PG10.Signal=FSMC_NE3
+PG12.Signal=FSMC_NE4
+PF10.GPIO_Label=LCD_BL
+PF11.GPIO_Label=T_PEN
+PG2.Signal=FSMC_A12
+ProjectManager.KeepUserCode=true
