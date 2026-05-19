@@ -1,0 +1,23 @@
+#ifndef TEMPCONTROLLER_CONFIG_H
+#define TEMPCONTROLLER_CONFIG_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define TEMPCONTROLLER_CONTROL_PERIOD_MS      100U
+#define TEMPCONTROLLER_DISPLAY_PERIOD_MS      100U
+#define TEMPCONTROLLER_INPUT_PERIOD_MS        10U
+#define TEMPCONTROLLER_SAMPLE_TIMEOUT_MS      40U
+
+#define TEMPCONTROLLER_DEFAULT_TARGET_C       25.0f
+#define TEMPCONTROLLER_DEFAULT_TOLERANCE_C    0.5f
+#define TEMPCONTROLLER_STEP_PER_CLICK_C       0.1f
+
+#define TEMPCONTROLLER_QUEUE_LEN              8U
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
