@@ -3,225 +3,94 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>0.96" OLED UI 设计稿</title>
+  <title>128x64 OLED 极简 UI</title>
   <style>
     :root {
-      --pixel: 4px;
-      --oled-w: 128;
-      --oled-h: 64;
-      --fg: #d7ffe5;
-      --bg: #03190f;
-      --line: #65ffb5;
-      --dim: #7ec7a4;
-      --glow: 0 0 10px rgba(101, 255, 181, 0.35);
-      --radius: 14px;
-      --mono: "Cascadia Mono", "JetBrains Mono", "Consolas", "SFMono-Regular", system-ui, sans-serif;
+      --scale: 4;
+      --bg: #05110b;
+      --fg: #d9ffe9;
+      --frame: #2e4b3e;
     }
-
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
       display: grid;
       place-items: center;
-      background: radial-gradient(circle at 20% 20%, #1a2f26, #0a0f0d 45%, #060806 100%);
-      font-family: var(--mono);
-      color: #e7f9ef;
-      padding: 24px;
+      background: #0a0f0c;
+      color: #d2e9db;
+      font-family: "Noto Sans CJK SC", "SimSun", "Microsoft YaHei", monospace;
+      padding: 20px;
     }
-
-    .panel {
-      width: min(980px, 96vw);
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    .card {
-      background: #121a16;
-      border: 1px solid #28372f;
-      border-radius: var(--radius);
-      padding: 14px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-    }
-
-    .title {
-      margin: 0 0 10px;
-      font-size: 13px;
-      color: #a5ceb8;
-      letter-spacing: 0.4px;
-    }
+    .wrap { width: min(92vw, 760px); }
+    .title { margin: 0 0 10px; font-size: 14px; color: #9fc5b1; }
 
     .oled {
-      width: calc(var(--oled-w) * var(--pixel));
-      height: calc(var(--oled-h) * var(--pixel));
-      border-radius: 8px;
-      border: 1px solid #2b3a31;
+      width: calc(128px * var(--scale));
+      height: calc(64px * var(--scale));
+      border: 1px solid var(--frame);
+      background: var(--bg);
       position: relative;
       overflow: hidden;
-      margin: 0 auto;
-      box-shadow: inset 0 0 0 1px rgba(101, 255, 181, 0.15), var(--glow);
-      background:
-        repeating-linear-gradient(
-          to right,
-          rgba(101, 255, 181, 0.06) 0,
-          rgba(101, 255, 181, 0.06) 1px,
-          transparent 1px,
-          transparent calc(var(--pixel))
-        ),
-        repeating-linear-gradient(
-          to bottom,
-          rgba(101, 255, 181, 0.05) 0,
-          rgba(101, 255, 181, 0.05) 1px,
-          transparent 1px,
-          transparent calc(var(--pixel))
-        ),
-        var(--bg);
       image-rendering: pixelated;
     }
 
     .screen {
+      width: 128px;
+      height: 64px;
+      transform: scale(var(--scale));
+      transform-origin: top left;
       position: absolute;
       inset: 0;
-      opacity: 0;
-      animation: cycle 15s infinite;
-      padding: calc(2 * var(--pixel));
       color: var(--fg);
-      font-size: calc(2.5 * var(--pixel));
-      line-height: 1.15;
+      background: var(--bg);
+      font-smooth: never;
+      -webkit-font-smoothing: none;
     }
 
-    .screen:nth-child(1) { animation-delay: 0s; }
-    .screen:nth-child(2) { animation-delay: 5s; }
-    .screen:nth-child(3) { animation-delay: 10s; }
-
-    @keyframes cycle {
-      0%, 28% { opacity: 1; }
-      33%, 100% { opacity: 0; }
+    .cn16 { font-size: 16px; line-height: 16px; }
+    .ascii8 {
+      font-size: 8px;
+      line-height: 8px;
+      font-family: "Consolas", "Cascadia Mono", monospace;
+      white-space: pre;
     }
-
-    .row { display: flex; justify-content: space-between; align-items: center; }
-    .dim { color: var(--dim); font-size: calc(2.2 * var(--pixel)); }
-    .big { font-size: calc(5.5 * var(--pixel)); font-weight: 700; letter-spacing: -0.5px; }
-    .unit { font-size: calc(3 * var(--pixel)); margin-left: 2px; }
-
-    .bar {
-      margin-top: calc(2 * var(--pixel));
-      height: calc(3 * var(--pixel));
-      border: 1px solid var(--line);
-      position: relative;
+    .ascii16 {
+      font-size: 16px;
+      line-height: 16px;
+      font-family: "Consolas", "Cascadia Mono", monospace;
+      white-space: pre;
     }
-    .bar > i {
-      position: absolute;
-      inset: 1px;
-      width: 68%;
-      background: var(--line);
-      box-shadow: 0 0 8px rgba(101, 255, 181, 0.5);
-    }
-
-    .divider {
-      margin: calc(2 * var(--pixel)) 0;
-      border-top: 1px dashed rgba(101, 255, 181, 0.45);
-    }
-
-    .menu li {
-      list-style: none;
-      display: flex;
-      justify-content: space-between;
-      margin: 0 0 calc(1.4 * var(--pixel));
-    }
-    .menu .sel {
-      outline: 1px solid var(--line);
-      padding: 1px 3px;
-      box-shadow: inset 0 0 0 1px rgba(101, 255, 181, 0.2);
-    }
-
-    .chart {
-      height: calc(20 * var(--pixel));
-      border: 1px solid rgba(101, 255, 181, 0.6);
-      position: relative;
-      margin-top: calc(1.8 * var(--pixel));
-    }
-    .chart svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
+    .p { position: absolute; }
 
     .notes {
       margin-top: 10px;
-      color: #a5ceb8;
       font-size: 12px;
-      line-height: 1.6;
-    }
-
-    @media (max-width: 840px) {
-      .panel { grid-template-columns: 1fr; }
+      line-height: 1.5;
+      color: #9fc5b1;
     }
   </style>
 </head>
 <body>
-  <div class="panel">
-    <section class="card">
-      <h1 class="title">0.96" OLED（128×64）UI 轮播预览</h1>
-      <div class="oled" role="region" aria-live="polite" aria-label="OLED 界面轮播预览">
-        <div class="screen" lang="en">
-          <div class="row dim"><span>TEMP CTRL</span><span>RUN</span></div>
-          <div class="divider"></div>
-          <div class="row">
-            <div class="big">23.8<span class="unit">°C</span></div>
-            <div class="dim">SP 25.0</div>
-          </div>
-          <div class="bar"><i></i></div>
-          <div class="row dim" style="margin-top: calc(2 * var(--pixel));">
-            <span>HEAT 68%</span><span>FAN 12%</span>
-          </div>
-        </div>
+  <div class="wrap">
+    <h1 class="title">0.96" OLED（128×64）极简界面（真实像素约束）</h1>
+    <div class="oled" role="img" aria-label="温控器 OLED 极简界面">
+      <div class="screen">
+        <!-- 中文按 16x16 字模规划 -->
+        <div class="p cn16" style="left:0px; top:0px;">温控</div>
+        <div class="p cn16" style="left:0px; top:16px;">当前</div>
+        <div class="p cn16" style="left:0px; top:32px;">目标</div>
 
-        <div class="screen" lang="en">
-          <div class="row dim"><span>PARAMETER</span><span>SET</span></div>
-          <div class="divider"></div>
-          <ul class="menu" style="padding:0; margin:0;">
-            <li class="sel"><span>Target Temp</span><span>25.0</span></li>
-            <li><span>Kp</span><span>3.20</span></li>
-            <li><span>Ki</span><span>0.15</span></li>
-            <li><span>Kd</span><span>1.05</span></li>
-          </ul>
-          <div class="row dim" style="margin-top: calc(2 * var(--pixel));">
-            <span>ENC:Rotate</span><span>Press:OK</span>
-          </div>
-        </div>
-
-        <div class="screen" lang="en">
-          <div class="row dim"><span>HISTORY</span><span>30s</span></div>
-          <div class="chart">
-            <svg viewBox="0 0 100 40" preserveAspectRatio="none" role="img">
-              <title>最近30秒温度趋势图</title>
-              <polyline
-                fill="none"
-                stroke="#65ffb5"
-                stroke-width="1.2"
-                points="0,30 8,28 16,24 24,20 32,18 40,17 48,19 56,20 64,18 72,16 80,14 88,13 100,12" />
-              <line x1="0" y1="15" x2="100" y2="15" stroke="#7ec7a4" stroke-dasharray="2 2" />
-            </svg>
-          </div>
-          <div class="row dim" style="margin-top: calc(2 * var(--pixel));">
-            <span>Now 23.8°C</span><span>SP 25.0°C</span>
-          </div>
-        </div>
+        <!-- 数值按 ASCII 6x8/8x16 风格规划 -->
+        <div class="p ascii16" style="left:34px; top:16px;">23.8C</div>
+        <div class="p ascii16" style="left:34px; top:32px;">25.0C</div>
+        <div class="p ascii8" style="left:0px; top:56px;">PID P3.2 I0.15 D1.0</div>
       </div>
-    </section>
+    </div>
 
-    <section class="card">
-      <h2 class="title">设计说明（面向 0.96 OLED）</h2>
-      <div class="notes">
-        1) 单色高对比：仅使用亮色前景 + 深色背景，适配 SSD1306/SH1106。<br />
-        2) 栅格化排版：信息按行分组，避免 128×64 下视觉拥挤。<br />
-        3) 状态优先级：主温度最大字号，设定值和执行器功率次级显示。<br />
-        4) 旋钮交互友好：选中项使用边框反白，适配编码器旋转/按压。<br />
-        5) 趋势可视化：用简化折线替代复杂图表，降低 MCU 绘制负担。<br />
-      </div>
-    </section>
+    <div class="notes">
+      画面严格使用 128×64 逻辑像素布局；中文按 16×16，底部 PID 行按 8 像素高 ASCII 排列。
+    </div>
   </div>
 </body>
 </html>
