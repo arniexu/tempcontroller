@@ -97,6 +97,10 @@
         <!-- 左上角：单标签双状态（示例当前为加热中） -->
         <div class="p cn12 status-tag" lang="zh-CN" role="status" style="left:0px; top:0px;">加热中</div>
 
+        <!-- 可设置参数：目标温度 / 允许误差，按下切换选中 -->
+        <div class="p ascii8 sel" aria-label="Target Temperature: 25.0" style="left:82px; top:0px;">T:25.0</div>
+        <div class="p ascii8" aria-label="Error Tolerance: 0.5" style="left:82px; top:10px;">E:0.5</div>
+
         <!-- 中间：大号当前温度 -->
         <div class="p temp-big" role="text" aria-label="Current Temperature: 23.8 degrees Celsius" style="left:14px; top:18px;">23.8C</div>
 
@@ -107,7 +111,7 @@
     </div>
 
     <div class="notes" lang="zh-CN">
-      中间大号显示当前温度；左上角状态标签可在“加热中 / 恒温保持中”切换；右下角显示允许误差。
+      中间大号显示当前温度；左上角状态标签可在“加热中 / 恒温保持中”切换；右下角显示允许误差；目标温度与误差支持编码器旋转设置、按下切换选中项。
     </div>
   </div>
 </body>
