@@ -27,6 +27,10 @@ static EventGroupHandle_t s_event_group;
 static SemaphoreHandle_t s_runtime_lock;
 
 #define EVT_NEW_SAMPLE (1U << 0)
+#define TASK_PRIO_CONTROL (tskIDLE_PRIORITY + 3U)
+#define TASK_PRIO_SAMPLE  (tskIDLE_PRIORITY + 2U)
+#define TASK_PRIO_INPUT   (tskIDLE_PRIORITY + 2U)
+#define TASK_PRIO_DISPLAY (tskIDLE_PRIORITY + 1U)
 
 static void tempcontroller_runtime_init(void)
 {
@@ -102,6 +106,7 @@ static void tempcontroller_runtime_apply_input(const tempctrl_input_event_t *evt
 static void task_sample(void *arg)
 {
     (void)arg;
+    TickType_t last = xTaskGetTickCount();
 
     for (;;) {
         int32_t raw = 0;
@@ -109,7 +114,7 @@ static void task_sample(void *arg)
             tempcontroller_runtime_store_current_temp(ads1220_raw_to_celsius(raw));
             xEventGroupSetBits(s_event_group, EVT_NEW_SAMPLE);
         }
-        vTaskDelay(pdMS_TO_TICKS(TEMPCONTROLLER_CONTROL_PERIOD_MS));
+        vTaskDelayUntil(&last, pdMS_TO_TICKS(TEMPCONTROLLER_CONTROL_PERIOD_MS));
     }
 }
 
@@ -205,10 +210,10 @@ void tempcontroller_app_start(void)
         return;
     }
 
-    configASSERT(xTaskCreate(task_sample, "sample", 256U, NULL, osPriorityNormal, NULL) == pdPASS);
-    configASSERT(xTaskCreate(task_control, "control", 256U, NULL, osPriorityAboveNormal, NULL) == pdPASS);
-    configASSERT(xTaskCreate(task_display, "display", 256U, NULL, osPriorityBelowNormal, NULL) == pdPASS);
-    configASSERT(xTaskCreate(task_input, "input", 192U, NULL, osPriorityNormal, NULL) == pdPASS);
+    configASSERT(xTaskCreate(task_sample, "sample", 256U, NULL, TASK_PRIO_SAMPLE, NULL) == pdPASS);
+    configASSERT(xTaskCreate(task_control, "control", 256U, NULL, TASK_PRIO_CONTROL, NULL) == pdPASS);
+    configASSERT(xTaskCreate(task_display, "display", 256U, NULL, TASK_PRIO_DISPLAY, NULL) == pdPASS);
+    configASSERT(xTaskCreate(task_input, "input", 192U, NULL, TASK_PRIO_INPUT, NULL) == pdPASS);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
