@@ -1,5 +1,6 @@
 #include "stm32f1xx_hal_i2c.h"
 #include "stm32f1xx_hal.h"
+#include <stddef.h>
 
 #define I2C_CR1_PE    (1U << 0)
 #define I2C_CR1_START (1U << 8)
@@ -16,7 +17,8 @@
 static HAL_StatusTypeDef i2c_wait_flag(const __IO uint32_t *reg, uint32_t mask, uint32_t state, uint32_t timeout_ms)
 {
     uint32_t t0 = HAL_GetTick();
-    while (((*reg & mask) != 0U) != (state != 0U)) {
+    const uint32_t expected = (state != 0U) ? 1U : 0U;
+    while ((((*reg & mask) != 0U) ? 1U : 0U) != expected) {
         if ((HAL_GetTick() - t0) > timeout_ms) {
             return HAL_TIMEOUT;
         }

@@ -1,5 +1,6 @@
 #include "stm32f1xx_hal_spi.h"
 #include "stm32f1xx_hal.h"
+#include <stddef.h>
 
 #define SPI_SR_RXNE (1U << 0)
 #define SPI_SR_TXE  (1U << 1)
@@ -8,7 +9,8 @@
 static HAL_StatusTypeDef spi_wait_flag(const __IO uint32_t *reg, uint32_t mask, uint32_t state, uint32_t timeout_ms)
 {
     uint32_t t0 = HAL_GetTick();
-    while (((*reg & mask) != 0U) != (state != 0U)) {
+    const uint32_t expected = (state != 0U) ? 1U : 0U;
+    while ((((*reg & mask) != 0U) ? 1U : 0U) != expected) {
         if ((HAL_GetTick() - t0) > timeout_ms) {
             return HAL_TIMEOUT;
         }

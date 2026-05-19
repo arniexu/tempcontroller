@@ -26,6 +26,7 @@ __weak void HAL_Delay(uint32_t Delay)
 #if defined(__arm__) || defined(__thumb__)
     uint32_t tickstart = HAL_GetTick();
     while ((HAL_GetTick() - tickstart) < Delay) {
+        __asm volatile("nop");
     }
 #else
     (void)Delay;
