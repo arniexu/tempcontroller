@@ -19,7 +19,7 @@
       place-items: center;
       background: #0a0f0c;
       color: #d2e9db;
-      font-family: "Noto Sans CJK SC", "SimSun", "Microsoft YaHei", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", "Microsoft YaHei", "SimSun", sans-serif;
       padding: 20px;
     }
     .wrap { width: min(92vw, 760px); }
@@ -66,7 +66,7 @@
       line-height: 32px;
       letter-spacing: -1px;
       font-weight: 700;
-      font-family: "DIN Alternate", "Bahnschrift", "Segoe UI", "Trebuchet MS", sans-serif;
+      font-family: "DIN Alternate", "Bahnschrift", "Segoe UI", "Arial Narrow", "Trebuchet MS", sans-serif;
       white-space: pre;
     }
     .p { position: absolute; }
@@ -91,11 +91,11 @@
 </head>
 <body>
   <div class="wrap">
-    <h1 class="title"><span lang="zh-CN">0.96" OLED（128x64）极简界面（真实像素约束）</span> / <span lang="en">Minimal UI</span></h1>
+    <h1 class="title" lang="zh-CN">0.96" OLED（128x64）极简界面（真实像素约束） / <span lang="en">Minimal UI</span></h1>
     <div class="oled" role="img" aria-label="温控器 OLED 极简界面 / Temperature Controller OLED Minimal UI">
       <div class="screen">
         <!-- 左上角：单标签双状态（示例当前为加热中） -->
-        <div class="p cn12 status-tag" lang="zh-CN" role="status" aria-label="当前状态：加热中" style="left:0px; top:0px;">加热中</div>
+        <div class="p cn12 status-tag" lang="zh-CN" role="status" style="left:0px; top:0px;">加热中</div>
 
         <!-- 可设置参数：目标温度 / 允许误差，按下切换选中 -->
         <div class="p ascii8 sel" aria-label="Target Temperature: 25.0" style="left:82px; top:0px;">T:25.0</div>
