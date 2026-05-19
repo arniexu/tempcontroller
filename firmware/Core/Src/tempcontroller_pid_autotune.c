@@ -37,16 +37,16 @@ static bool tempctrl_pid_autotune_finalize(const tempctrl_pid_autotune_t *ctx, t
         return false;
     }
 
-    float pu_s = ctx->period_sum_s / (float)ctx->period_count;
-    float amp_c = ctx->amplitude_sum_c / (float)ctx->amplitude_count;
-    if (pu_s <= 0.0f || amp_c <= 0.0f || ctx->cfg.relay_amplitude_c <= 0.0f) {
+    float ultimate_period_s = ctx->period_sum_s / (float)ctx->period_count;
+    float avg_amplitude_c = ctx->amplitude_sum_c / (float)ctx->amplitude_count;
+    if (ultimate_period_s <= 0.0f || avg_amplitude_c <= 0.0f || ctx->cfg.relay_amplitude_c <= 0.0f) {
         return false;
     }
 
-    float ku = (4.0f * ctx->cfg.relay_amplitude_c) / (TEMPCONTROLLER_PI * amp_c);
-    out_gains->kp = 0.6f * ku;
-    out_gains->ki = (1.2f * ku) / pu_s;
-    out_gains->kd = 0.075f * ku * pu_s;
+    float ultimate_gain = (4.0f * ctx->cfg.relay_amplitude_c) / (TEMPCONTROLLER_PI * avg_amplitude_c);
+    out_gains->kp = 0.6f * ultimate_gain;
+    out_gains->ki = (1.2f * ultimate_gain) / ultimate_period_s;
+    out_gains->kd = 0.075f * ultimate_gain * ultimate_period_s;
     return true;
 }
 
