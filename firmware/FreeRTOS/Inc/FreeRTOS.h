@@ -36,16 +36,23 @@ typedef uint32_t TickType_t;
 #error "configTICK_RATE_HZ must be greater than 0"
 #endif
 
+#if (configTICK_RATE_HZ > 1000U)
+#error "configTICK_RATE_HZ above 1000 is not supported by this shim"
+#endif
+
+#ifndef portMAX_DELAY
+#define portMAX_DELAY ((TickType_t)0xFFFFFFFFUL)
+#endif
+
 #ifndef portTICK_PERIOD_MS
 #define portTICK_PERIOD_MS ((TickType_t)(1000U / (uint32_t)configTICK_RATE_HZ))
 #endif
 
 #ifndef pdMS_TO_TICKS
-#define pdMS_TO_TICKS(xTimeInMs) ((TickType_t)(((uint64_t)(xTimeInMs) * (uint64_t)configTICK_RATE_HZ) / 1000ULL))
-#endif
-
-#ifndef portMAX_DELAY
-#define portMAX_DELAY ((TickType_t)0xFFFFFFFFUL)
+#define pdMS_TO_TICKS(xTimeInMs)                                                                                              \
+    ((TickType_t)((((uint64_t)(xTimeInMs) * (uint64_t)configTICK_RATE_HZ) >= ((uint64_t)portMAX_DELAY * 1000ULL))          \
+                     ? (uint64_t)portMAX_DELAY                                                                                \
+                     : ((((uint64_t)(xTimeInMs) * (uint64_t)configTICK_RATE_HZ) + 999ULL) / 1000ULL)))
 #endif
 
 #ifndef configASSERT
