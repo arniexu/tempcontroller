@@ -44,10 +44,10 @@ int8_t ec11_take_step(ec11_t *dev)
     int8_t step = 0;
     if (acc >= EC11_STEP_THRESHOLD) {
         step = 1;
-        dev->accumulated = 0;
+        dev->accumulated = acc - EC11_STEP_THRESHOLD;
     } else if (acc <= -EC11_STEP_THRESHOLD) {
         step = -1;
-        dev->accumulated = 0;
+        dev->accumulated = acc + EC11_STEP_THRESHOLD;
     }
     ec11_irq_unlock(primask);
     return step;

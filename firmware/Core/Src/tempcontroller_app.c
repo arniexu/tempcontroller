@@ -193,6 +193,9 @@ void tempcontroller_app_init(void)
     s_input_queue = xQueueCreate(TEMPCONTROLLER_QUEUE_LEN, sizeof(tempctrl_input_event_t));
     s_event_group = xEventGroupCreate();
     s_runtime_lock = xSemaphoreCreateMutex();
+    configASSERT(s_input_queue != NULL);
+    configASSERT(s_event_group != NULL);
+    configASSERT(s_runtime_lock != NULL);
 }
 
 void tempcontroller_app_start(void)
@@ -202,12 +205,10 @@ void tempcontroller_app_start(void)
         return;
     }
 
-    BaseType_t ok = pdPASS;
-    ok &= xTaskCreate(task_sample, "sample", 256U, NULL, osPriorityNormal, NULL);
-    ok &= xTaskCreate(task_control, "control", 256U, NULL, osPriorityAboveNormal, NULL);
-    ok &= xTaskCreate(task_display, "display", 256U, NULL, osPriorityBelowNormal, NULL);
-    ok &= xTaskCreate(task_input, "input", 192U, NULL, osPriorityNormal, NULL);
-    configASSERT(ok == pdPASS);
+    configASSERT(xTaskCreate(task_sample, "sample", 256U, NULL, osPriorityNormal, NULL) == pdPASS);
+    configASSERT(xTaskCreate(task_control, "control", 256U, NULL, osPriorityAboveNormal, NULL) == pdPASS);
+    configASSERT(xTaskCreate(task_display, "display", 256U, NULL, osPriorityBelowNormal, NULL) == pdPASS);
+    configASSERT(xTaskCreate(task_input, "input", 192U, NULL, osPriorityNormal, NULL) == pdPASS);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
