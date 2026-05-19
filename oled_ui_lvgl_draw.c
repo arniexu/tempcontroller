@@ -105,7 +105,7 @@ void tempcontroller_oled_ui_create(lv_obj_t *parent)
 {
     init_styles();
 
-    lv_obj_set_size(parent, 128, 64);
+    lv_obj_set_size(parent, 96, 96);
     lv_obj_add_style(parent, &style_screen, LV_PART_MAIN);
     lv_obj_clear_flag(parent, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -117,22 +117,22 @@ void tempcontroller_oled_ui_create(lv_obj_t *parent)
     ui_target_label = lv_label_create(parent);
     lv_obj_add_style(ui_target_label, &style_ascii, LV_PART_MAIN);
     lv_label_set_text(ui_target_label, "T:25.0");
-    lv_obj_set_pos(ui_target_label, 82, 0);
+    lv_obj_set_pos(ui_target_label, 58, 0);
 
     ui_error_label = lv_label_create(parent);
     lv_obj_add_style(ui_error_label, &style_ascii, LV_PART_MAIN);
     lv_label_set_text(ui_error_label, "E:0.5");
-    lv_obj_set_pos(ui_error_label, 82, 10);
+    lv_obj_set_pos(ui_error_label, 58, 10);
 
     ui_temp_label = lv_label_create(parent);
     lv_obj_add_style(ui_temp_label, &style_temp, LV_PART_MAIN);
     lv_label_set_text(ui_temp_label, "23.8C");
-    lv_obj_set_pos(ui_temp_label, 14, 18);
+    lv_obj_set_pos(ui_temp_label, 8, 30);
 
     ui_tolerance_label = lv_label_create(parent);
     lv_obj_add_style(ui_tolerance_label, &style_ascii, LV_PART_MAIN);
     lv_label_set_text(ui_tolerance_label, "±0.5C");
-    lv_obj_set_pos(ui_tolerance_label, 84, 54);
+    lv_obj_set_pos(ui_tolerance_label, 62, 86);
 
     tempcontroller_oled_ui_set_focus(OLED_FOCUS_TARGET);
 }

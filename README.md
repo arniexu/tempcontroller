@@ -12,5 +12,5 @@ a mcu project used to test ai workflow
 
 ## OLED UI（LVGL）
 
-- `oled_ui_lvgl_draw.c`：128x64 OLED 温控界面 LVGL 绘制示例
+- `oled_ui_lvgl_draw.c`：96x96 OLED 温控界面 LVGL 绘制示例
 - 包含状态标签、目标温度/允许误差、中心大号当前温度与右下误差快照
