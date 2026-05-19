@@ -58,6 +58,14 @@ a mcu project used to test ai workflow
 - 驱动层默认配置可直接运行，建议仍按具体屏幕型号与传感器量程/PGA参数做最终标定。
 - STM32F103RBT6 可用但资源不宽裕，建议持续跟踪各任务栈水位与总RAM占用。
 
+## STM32CubeF1 HAL 移植
+
+- 已新增目录：`firmware/STM32CubeF1/Inc`
+- 提供了本项目当前使用到的 STM32CubeF1 HAL 头文件子集（GPIO/I2C/SPI/CORTEX + 基础 HAL 定义）
+- 现有驱动中对 `stm32f1xx_hal.h` 的依赖可直接复用该目录
+- 在 CubeIDE/CubeMX 工程中请将 `firmware/STM32CubeF1/Inc` 加入 Include Path
+- 这些文件仅提供接口与类型对齐；实际硬件运行仍需链接 STM32CubeF1 官方 HAL 源码实现
+
 ## PID 自整定（已移植：中继法 Relay Auto-Tune）
 
 - 新增：
