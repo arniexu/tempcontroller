@@ -32,13 +32,16 @@ typedef uint32_t TickType_t;
 #define configTICK_RATE_HZ 1000U
 #endif
 
+#if (configTICK_RATE_HZ == 0U)
+#error "configTICK_RATE_HZ must be greater than 0"
+#endif
+
 #ifndef portTICK_PERIOD_MS
 #define portTICK_PERIOD_MS ((TickType_t)(1000U / (uint32_t)configTICK_RATE_HZ))
 #endif
 
 #ifndef pdMS_TO_TICKS
-#define pdMS_TO_TICKS(xTimeInMs) \
-    ((TickType_t)(((uint64_t)(xTimeInMs) * (uint64_t)((configTICK_RATE_HZ) == 0U ? 1U : (configTICK_RATE_HZ))) / 1000ULL))
+#define pdMS_TO_TICKS(xTimeInMs) ((TickType_t)(((uint64_t)(xTimeInMs) * (uint64_t)configTICK_RATE_HZ) / 1000ULL))
 #endif
 
 #ifndef portMAX_DELAY
