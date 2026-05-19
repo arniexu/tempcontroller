@@ -31,6 +31,10 @@ static SemaphoreHandle_t s_runtime_lock;
 #define TASK_PRIO_SAMPLE  (tskIDLE_PRIORITY + 2U)
 #define TASK_PRIO_INPUT   (tskIDLE_PRIORITY + 2U)
 #define TASK_PRIO_DISPLAY (tskIDLE_PRIORITY + 1U)
+#define TASK_STACK_SAMPLE  256U
+#define TASK_STACK_CONTROL 256U
+#define TASK_STACK_DISPLAY 256U
+#define TASK_STACK_INPUT   192U
 
 static void tempcontroller_runtime_init(void)
 {
@@ -66,12 +70,16 @@ static void tempcontroller_runtime_update_control(void)
         return;
     }
 
+    float half_band = s_runtime.tolerance_c * 0.5f;
+    float turn_on_th = s_runtime.target_temp_c - half_band;
+    float turn_off_th = s_runtime.target_temp_c + half_band;
+
     if (s_runtime.heating_on) {
-        if (s_runtime.current_temp_c >= s_runtime.target_temp_c) {
+        if (s_runtime.current_temp_c >= turn_off_th) {
             s_runtime.heating_on = false;
             s_runtime.state = TEMPCTRL_STATE_HOLD;
         }
-    } else if (s_runtime.current_temp_c <= (s_runtime.target_temp_c - s_runtime.tolerance_c)) {
+    } else if (s_runtime.current_temp_c <= turn_on_th) {
         s_runtime.heating_on = true;
         s_runtime.state = TEMPCTRL_STATE_HEATING;
     }
@@ -106,7 +114,7 @@ static void tempcontroller_runtime_apply_input(const tempctrl_input_event_t *evt
 static void task_sample(void *arg)
 {
     (void)arg;
-    TickType_t last = xTaskGetTickCount();
+    TickType_t last_wake_time = xTaskGetTickCount();
 
     for (;;) {
         int32_t raw = 0;
@@ -114,7 +122,7 @@ static void task_sample(void *arg)
             tempcontroller_runtime_store_current_temp(ads1220_raw_to_celsius(raw));
             xEventGroupSetBits(s_event_group, EVT_NEW_SAMPLE);
         }
-        vTaskDelayUntil(&last, pdMS_TO_TICKS(TEMPCONTROLLER_CONTROL_PERIOD_MS));
+        vTaskDelayUntil(&last_wake_time, pdMS_TO_TICKS(TEMPCONTROLLER_CONTROL_PERIOD_MS));
     }
 }
 
@@ -210,10 +218,10 @@ void tempcontroller_app_start(void)
         return;
     }
 
-    configASSERT(xTaskCreate(task_sample, "sample", 256U, NULL, TASK_PRIO_SAMPLE, NULL) == pdPASS);
-    configASSERT(xTaskCreate(task_control, "control", 256U, NULL, TASK_PRIO_CONTROL, NULL) == pdPASS);
-    configASSERT(xTaskCreate(task_display, "display", 256U, NULL, TASK_PRIO_DISPLAY, NULL) == pdPASS);
-    configASSERT(xTaskCreate(task_input, "input", 192U, NULL, TASK_PRIO_INPUT, NULL) == pdPASS);
+    configASSERT(xTaskCreate(task_sample, "sample", TASK_STACK_SAMPLE, NULL, TASK_PRIO_SAMPLE, NULL) == pdPASS);
+    configASSERT(xTaskCreate(task_control, "control", TASK_STACK_CONTROL, NULL, TASK_PRIO_CONTROL, NULL) == pdPASS);
+    configASSERT(xTaskCreate(task_display, "display", TASK_STACK_DISPLAY, NULL, TASK_PRIO_DISPLAY, NULL) == pdPASS);
+    configASSERT(xTaskCreate(task_input, "input", TASK_STACK_INPUT, NULL, TASK_PRIO_INPUT, NULL) == pdPASS);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
