@@ -66,6 +66,25 @@ a mcu project used to test ai workflow
 - 在 CubeIDE/CubeMX 工程中请将 `firmware/STM32CubeF1/Inc` 加入 Include Path
 - 这些文件仅提供接口与类型对齐；实际硬件运行仍需链接 STM32CubeF1 官方 HAL 源码实现
 
+## Keil MDK 工程
+
+- 已新增工程文件：`firmware/KeilMDK/TempController.uvprojx`
+- 目标芯片：`STM32F103RB`（Pack: `Keil.STM32F1xx_DFP`）
+- 已预配置源码分组：
+  - `Core`: `tempcontroller_app.c` / `tempcontroller_pid_autotune.c`
+  - `Drivers`: `ads1220.c` / `ec11.c` / `oled96x96_i2c.c`
+- 已预配置 Include Path：
+  - `firmware/Core/Inc`
+  - `firmware/Drivers/*`
+  - `firmware/STM32CubeF1/Inc`
+
+使用方式：
+
+1. 用 Keil uVision 打开 `firmware/KeilMDK/TempController.uvprojx`
+2. 在 **Manage Run-Time Environment** 中添加你工程实际使用的 CMSIS/HAL/FreeRTOS 组件
+3. 将 CubeMX 生成的启动与系统文件加入工程（`startup_stm32f103xb.s`、`system_stm32f1xx.c`、`main.c` 等）
+4. 补齐 HAL 源码与 FreeRTOS 源码后即可完整编译链接
+
 ## PID 自整定（已移植：中继法 Relay Auto-Tune）
 
 - 新增：

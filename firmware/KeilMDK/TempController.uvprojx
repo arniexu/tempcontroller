@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="project_projx.xsd">
+  <SchemaVersion>2.1</SchemaVersion>
+  <Header>### uVision Project, (C) Keil Software</Header>
+  <Targets>
+    <Target>
+      <TargetName>TempController_STM32F103RB</TargetName>
+      <ToolsetNumber>0x4</ToolsetNumber>
+      <ToolsetName>ARM-ADS</ToolsetName>
+      <pCCUsed>5060750::V5.06 update 7 (build 750)::ARMCC</pCCUsed>
+      <uAC6>1</uAC6>
+      <TargetOption>
+        <TargetCommonOption>
+          <Device>STM32F103RB</Device>
+          <Vendor>STMicroelectronics</Vendor>
+          <PackID>Keil.STM32F1xx_DFP.2.4.1</PackID>
+          <PackURL>https://www.keil.com/dd2/pack/</PackURL>
+          <Cpu>IRAM(0x20000000-0x20005000) IROM(0x08000000-0x08020000) CLOCK(8000000) CPUTYPE("Cortex-M3") FPU2 NOEMI</Cpu>
+          <OutputDirectory>.\Objects\</OutputDirectory>
+          <OutputName>tempcontroller</OutputName>
+          <CreateExecutable>1</CreateExecutable>
+          <CreateHexFile>1</CreateHexFile>
+          <DebugInformation>1</DebugInformation>
+          <BrowseInformation>1</BrowseInformation>
+        </TargetCommonOption>
+        <TargetArmAds>
+          <ArmAdsMisc>
+            <Define>USE_HAL_DRIVER,STM32F103xB</Define>
+            <IncludePath>..\Core\Inc;..\Drivers\ADS1220;..\Drivers\EC11;..\Drivers\OLED96X96;..\STM32CubeF1\Inc</IncludePath>
+          </ArmAdsMisc>
+          <Cads>
+            <VariousControls>
+              <MiscControls>--c99</MiscControls>
+            </VariousControls>
+          </Cads>
+        </TargetArmAds>
+      </TargetOption>
+      <Groups>
+        <Group>
+          <GroupName>Core</GroupName>
+          <Files>
+            <File>
+              <FileName>tempcontroller_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\tempcontroller_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>tempcontroller_pid_autotune.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\tempcontroller_pid_autotune.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Drivers</GroupName>
+          <Files>
+            <File>
+              <FileName>ads1220.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\ADS1220\ads1220.c</FilePath>
+            </File>
+            <File>
+              <FileName>ec11.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\EC11\ec11.c</FilePath>
+            </File>
+            <File>
+              <FileName>oled96x96_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\OLED96X96\oled96x96_i2c.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+      </Groups>
+    </Target>
+  </Targets>
+</Project>
