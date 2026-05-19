@@ -15,6 +15,18 @@ a mcu project used to test ai workflow
 - `oled_ui_lvgl_draw.c`：96x96 OLED 温控界面 LVGL 绘制示例
 - 包含状态标签、目标温度/允许误差、中心大号当前温度与右下误差快照
 
+### LVGL 体量评估（STM32F103 + 96x96 OLED）
+
+- 对 F103（RAM/Flash 紧张）来说，**完整 LVGL 通常偏重**，尤其在开启多字体、动画、复杂控件时。
+- 对 `96x96` 小尺寸 OLED，仅显示温度/状态/菜单时，优先建议轻量绘制方案。
+
+可选更小图形库：
+
+- **u8g2**：面向单色 OLED/液晶，生态成熟，字体和绘图齐全，资源占用通常低于 LVGL。
+- **u8x8（u8g2 子集）**：文本 UI 极轻量，适合参数菜单和状态页。
+- **SSD1306/SH110x 专用驱动 + 自绘字库**：最省资源，代价是 UI 组件需自行维护。
+- **Adafruit GFX（移植版）**：接口简单，功能比 u8x8 强，体量通常仍小于 LVGL。
+
 ## STM32F103RBT6 最小集成骨架（HAL + FreeRTOS + 设备驱动）
 
 已新增目录：`firmware/`
@@ -45,3 +57,19 @@ a mcu project used to test ai workflow
 
 - 该骨架用于快速落地“可运行最小系统”，OLED/ADS1220初始化序列可按具体屏/传感器接线微调。
 - STM32F103RBT6 可用但资源不宽裕，建议持续跟踪各任务栈水位与总RAM占用。
+
+## PID 自整定（已移植：中继法 Relay Auto-Tune）
+
+- 新增：
+  - `firmware/Core/Inc/tempcontroller_pid_autotune.h`
+  - `firmware/Core/Src/tempcontroller_pid_autotune.c`
+- 在 `task_control` 控制流程中已接入一轮自整定：
+  - 根据目标温度上下滞回做中继切换（加热开/关）
+  - 采集振荡周期与幅值
+  - 计算并回写 `Kp/Ki/Kd`（Ziegler-Nichols 经典 PID 参数）
+- 默认参数位于 `firmware/Core/Inc/tempcontroller_config.h`：
+  - `TEMPCONTROLLER_ENABLE_AUTOTUNE`
+  - `TEMPCONTROLLER_AUTOTUNE_RELAY_C`
+  - `TEMPCONTROLLER_AUTOTUNE_HYST_C`
+  - `TEMPCONTROLLER_AUTOTUNE_CYCLES`
+  - `TEMPCONTROLLER_AUTOTUNE_TIMEOUT_MS`
