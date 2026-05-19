@@ -34,8 +34,8 @@ a mcu project used to test ai workflow
 - `Core/Inc/board_pins.h`：管脚定义（可按实际硬件改）
 - `Core/Inc/tempcontroller_config.h`：控制周期与默认参数
 - `Core/Src/tempcontroller_app.c`：FreeRTOS 任务与状态机骨架
-- `Drivers/ADS1220`：SPI 读数驱动骨架
-- `Drivers/OLED96X96`：I2C OLED 驱动骨架
+- `Drivers/ADS1220`：SPI 读数驱动（含寄存器配置/读回校验/重试与超时）
+- `Drivers/OLED96X96`：I2C OLED 驱动（含初始化序列/窗口寻址/帧缓冲刷新）
 - `Drivers/EC11`：EC11 编码器输入层（A/B 旋转 + KEY）
 
 当前默认引脚分配：
@@ -55,7 +55,7 @@ a mcu project used to test ai workflow
 
 说明：
 
-- 该骨架用于快速落地“可运行最小系统”，OLED/ADS1220初始化序列可按具体屏/传感器接线微调。
+- 驱动层默认配置可直接运行，建议仍按具体屏幕型号与传感器量程/PGA参数做最终标定。
 - STM32F103RBT6 可用但资源不宽裕，建议持续跟踪各任务栈水位与总RAM占用。
 
 ## PID 自整定（已移植：中继法 Relay Auto-Tune）
