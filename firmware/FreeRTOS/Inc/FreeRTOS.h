@@ -48,11 +48,14 @@ typedef uint32_t TickType_t;
 #define portTICK_PERIOD_MS ((TickType_t)(1000U / (uint32_t)configTICK_RATE_HZ))
 #endif
 
+#define FREERTOS_MS_PER_SECOND 1000ULL
+#define FREERTOS_TICK_ROUND_UP_BIAS (FREERTOS_MS_PER_SECOND - 1ULL)
+
 #ifndef pdMS_TO_TICKS
 #define pdMS_TO_TICKS(xTimeInMs)                                                                                              \
-    ((TickType_t)((((uint64_t)(xTimeInMs) * (uint64_t)configTICK_RATE_HZ) >= ((uint64_t)portMAX_DELAY * 1000ULL))          \
+    ((TickType_t)((((uint64_t)(xTimeInMs) * (uint64_t)configTICK_RATE_HZ) >= ((uint64_t)portMAX_DELAY * FREERTOS_MS_PER_SECOND)) \
                      ? (uint64_t)portMAX_DELAY                                                                                \
-                     : ((((uint64_t)(xTimeInMs) * (uint64_t)configTICK_RATE_HZ) + 999ULL) / 1000ULL)))
+                     : ((((uint64_t)(xTimeInMs) * (uint64_t)configTICK_RATE_HZ) + FREERTOS_TICK_ROUND_UP_BIAS) / FREERTOS_MS_PER_SECOND)))
 #endif
 
 #ifndef configASSERT
