@@ -165,13 +165,15 @@ HAL_StatusTypeDef ads1220_write_registers(ads1220_t *dev, uint8_t start_reg, con
     }
 
     uint8_t cmd[2];
+    uint8_t tx_data[ADS1220_REGISTER_COUNT];
     cmd[0] = (uint8_t)(ADS1220_CMD_WREG | ((start_reg & 0x03U) << 2));
     cmd[1] = (uint8_t)(len - 1U);
+    memcpy(tx_data, data, len);
 
     ads1220_cs(dev, GPIO_PIN_RESET);
     HAL_StatusTypeDef rc = HAL_SPI_Transmit(dev->hspi, cmd, 2U, dev->config.spi_timeout_ms);
     if (rc == HAL_OK) {
-        rc = HAL_SPI_Transmit(dev->hspi, (uint8_t *)data, len, dev->config.spi_timeout_ms);
+        rc = HAL_SPI_Transmit(dev->hspi, tx_data, len, dev->config.spi_timeout_ms);
     }
     ads1220_cs(dev, GPIO_PIN_SET);
     return rc;

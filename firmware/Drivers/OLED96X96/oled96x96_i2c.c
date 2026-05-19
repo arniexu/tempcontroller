@@ -257,7 +257,7 @@ static void oled_draw_text(oled96x96_t *dev, uint8_t x, uint8_t y, const char *t
 
     uint8_t cursor_x = x;
     while (*text != '\0') {
-        if ((cursor_x + 5U) >= OLED_WIDTH) {
+        if ((cursor_x + 6U) > OLED_WIDTH) {
             break;
         }
         oled_draw_char(dev, cursor_x, y, *text);
