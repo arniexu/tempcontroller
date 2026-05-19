@@ -48,7 +48,7 @@
       -webkit-font-smoothing: none;
     }
 
-    .cn16 { font-size: 16px; line-height: 16px; }
+    .cn16 { font-size: 16px; line-height: 16px; white-space: pre; }
     .ascii8 {
       font-size: 8px;
       line-height: 8px;
@@ -61,7 +61,19 @@
       font-family: "Consolas", "Cascadia Mono", monospace;
       white-space: pre;
     }
+    .temp-big {
+      font-size: 32px;
+      line-height: 32px;
+      letter-spacing: -1px;
+      font-weight: 700;
+      font-family: "DIN Alternate", "Bahnschrift", "Segoe UI", "Trebuchet MS", sans-serif;
+      white-space: pre;
+    }
     .p { position: absolute; }
+    .sel {
+      outline: 1px solid var(--fg);
+      padding: 0 1px;
+    }
 
     .notes {
       margin-top: 10px;
@@ -76,20 +88,26 @@
     <h1 class="title"><span lang="zh-CN">0.96" OLED（128×64）极简界面（真实像素约束）</span><span lang="en"> / Minimal UI</span></h1>
     <div class="oled" role="img" aria-label="温控器 OLED 极简界面">
       <div class="screen">
-        <!-- 中文按 16x16 字模规划 -->
-        <div class="p cn16" style="left:0px; top:0px;">温控</div>
-        <div class="p cn16" style="left:0px; top:16px;">当前</div>
-        <div class="p cn16" style="left:0px; top:32px;">目标</div>
+        <!-- 左上角：单标签双状态（示例当前为加热中） -->
+        <div class="p cn16" style="left:0px; top:0px;">加热中</div>
 
-        <!-- 数值按 ASCII 6x8/8x16 风格规划 -->
-        <div class="p ascii16" style="left:34px; top:16px;">23.8C</div>
-        <div class="p ascii16" style="left:34px; top:32px;">25.0C</div>
-        <div class="p ascii8" style="left:0px; top:56px;">PID P3.2 I0.15 D1.0</div>
+        <!-- 可设置参数：目标温度 / 允许误差，按下切换选中 -->
+        <div class="p ascii8 sel" style="left:80px; top:0px;">T:25.0</div>
+        <div class="p ascii8" style="left:80px; top:9px;">E:0.5</div>
+
+        <!-- 中间：大号当前温度 -->
+        <div class="p temp-big" style="left:20px; top:18px;">23.8C</div>
+
+        <!-- 右下角：允许误差 -->
+        <div class="p ascii8" style="left:90px; top:56px;">±0.5C</div>
+
+        <!-- 旋转编码器操作提示 -->
+        <div class="p ascii8" style="left:0px; top:56px;">ROT ADJ  BTN SW</div>
       </div>
     </div>
 
     <div class="notes">
-      画面严格使用 128×64 逻辑像素布局；中文按 16×16，底部 PID 行按 8 像素高 ASCII 排列。
+      中间大号显示当前温度；左上角状态标签可在“加热中 / 恒温保持中”切换；右下角显示允许误差；目标温度与误差支持编码器旋转设置、按下切换选中项。
     </div>
   </div>
 </body>
