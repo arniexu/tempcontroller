@@ -5,15 +5,17 @@
 
 #define OLED_CTRL_CMD  0x00U
 #define OLED_CTRL_DATA 0x40U
+#define OLED_DATA_CHUNK 16U
+#define OLED_FRAME_SIZE (1U + OLED_DATA_CHUNK)
 
 static HAL_StatusTypeDef oled_tx(oled96x96_t *dev, uint8_t ctrl, const uint8_t *data, uint16_t len)
 {
-    uint8_t frame[17];
+    uint8_t frame[OLED_FRAME_SIZE];
     frame[0] = ctrl;
 
     uint16_t offset = 0U;
     while (offset < len) {
-        uint16_t chunk = (uint16_t)((len - offset) > 16U ? 16U : (len - offset));
+        uint16_t chunk = (uint16_t)((len - offset) > OLED_DATA_CHUNK ? OLED_DATA_CHUNK : (len - offset));
         memcpy(&frame[1], &data[offset], chunk);
         HAL_StatusTypeDef rc = HAL_I2C_Master_Transmit(dev->hi2c, (uint16_t)(dev->addr_7bit << 1), frame, (uint16_t)(1U + chunk), 100U);
         if (rc != HAL_OK) {

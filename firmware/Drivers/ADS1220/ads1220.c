@@ -5,6 +5,8 @@
 #define ADS1220_CMD_RDATA      0x10U
 #define ADS1220_TEMP_SCALE_C_PER_LSB 0.001f
 #define ADS1220_TEMP_OFFSET_C 0.0f
+#define ADS1220_SIGN_BIT_MASK 0x800000L
+#define ADS1220_SIGN_EXTEND_MASK 0xFF000000L
 
 static inline void ads1220_cs(ads1220_t *dev, GPIO_PinState state)
 {
@@ -60,8 +62,8 @@ HAL_StatusTypeDef ads1220_read_raw24(ads1220_t *dev, int32_t *raw, uint32_t time
     }
 
     int32_t value = ((int32_t)buf[0] << 16) | ((int32_t)buf[1] << 8) | (int32_t)buf[2];
-    if (value & 0x800000L) {
-        value |= (int32_t)0xFF000000L;
+    if (value & ADS1220_SIGN_BIT_MASK) {
+        value |= (int32_t)ADS1220_SIGN_EXTEND_MASK;
     }
     *raw = value;
     return HAL_OK;

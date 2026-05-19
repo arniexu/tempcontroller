@@ -198,13 +198,16 @@ void tempcontroller_app_init(void)
 void tempcontroller_app_start(void)
 {
     if (s_input_queue == NULL || s_event_group == NULL || s_runtime_lock == NULL) {
+        configASSERT(0);
         return;
     }
 
-    xTaskCreate(task_sample, "sample", 256U, NULL, osPriorityNormal, NULL);
-    xTaskCreate(task_control, "control", 256U, NULL, osPriorityAboveNormal, NULL);
-    xTaskCreate(task_display, "display", 256U, NULL, osPriorityBelowNormal, NULL);
-    xTaskCreate(task_input, "input", 192U, NULL, osPriorityNormal, NULL);
+    BaseType_t ok = pdPASS;
+    ok &= xTaskCreate(task_sample, "sample", 256U, NULL, osPriorityNormal, NULL);
+    ok &= xTaskCreate(task_control, "control", 256U, NULL, osPriorityAboveNormal, NULL);
+    ok &= xTaskCreate(task_display, "display", 256U, NULL, osPriorityBelowNormal, NULL);
+    ok &= xTaskCreate(task_input, "input", 192U, NULL, osPriorityNormal, NULL);
+    configASSERT(ok == pdPASS);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)

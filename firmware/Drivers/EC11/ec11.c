@@ -1,5 +1,7 @@
 #include "ec11.h"
 
+#define EC11_STEP_THRESHOLD 4
+
 static uint32_t ec11_irq_lock(void)
 {
     uint32_t primask = __get_PRIMASK();
@@ -40,10 +42,10 @@ int8_t ec11_take_step(ec11_t *dev)
     uint32_t primask = ec11_irq_lock();
     int32_t acc = dev->accumulated;
     int8_t step = 0;
-    if (acc >= 4) {
+    if (acc >= EC11_STEP_THRESHOLD) {
         step = 1;
         dev->accumulated = 0;
-    } else if (acc <= -4) {
+    } else if (acc <= -EC11_STEP_THRESHOLD) {
         step = -1;
         dev->accumulated = 0;
     }
