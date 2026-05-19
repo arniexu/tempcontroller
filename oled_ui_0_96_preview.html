@@ -48,7 +48,7 @@
       -webkit-font-smoothing: none;
     }
 
-    .cn16 { font-size: 16px; line-height: 16px; white-space: pre; }
+    .cn12 { font-size: 12px; line-height: 12px; white-space: pre; }
     .ascii8 {
       font-size: 8px;
       line-height: 8px;
@@ -70,8 +70,14 @@
       white-space: pre;
     }
     .p { position: absolute; }
+    .status-tag {
+      outline: 1px solid var(--fg);
+      padding: 0 1px;
+    }
     .sel {
       outline: 1px solid var(--fg);
+      background: var(--fg);
+      color: var(--bg);
       padding: 0 1px;
     }
 
@@ -89,20 +95,20 @@
     <div class="oled" role="img" aria-label="温控器 OLED 极简界面 / Temperature Controller OLED Minimal UI">
       <div class="screen">
         <!-- 左上角：单标签双状态（示例当前为加热中） -->
-        <div class="p cn16" style="left:0px; top:0px;">加热中</div>
+        <div class="p cn12 status-tag" style="left:0px; top:0px;">加热中</div>
 
         <!-- 可设置参数：目标温度 / 允许误差，按下切换选中 -->
-        <div class="p ascii8 sel" style="left:80px; top:0px;">T:25.0</div>
-        <div class="p ascii8" style="left:80px; top:9px;">E:0.5</div>
+        <div class="p ascii8 sel" style="left:82px; top:0px;">T:25.0</div>
+        <div class="p ascii8" style="left:82px; top:10px;">E:0.5</div>
 
         <!-- 中间：大号当前温度 -->
-        <div class="p temp-big" style="left:20px; top:18px;">23.8C</div>
+        <div class="p temp-big" style="left:14px; top:18px;">23.8C</div>
 
         <!-- 右下角：允许误差 -->
-        <div class="p ascii8" style="left:90px; top:56px;">±0.5C</div>
+        <div class="p ascii8" style="left:84px; top:54px;">±0.5C</div>
 
         <!-- 旋转编码器操作提示 -->
-        <div class="p ascii8" lang="en" style="left:0px; top:56px;">ROT ADJ BTN SW</div>
+        <div class="p ascii8" lang="en" style="left:0px; top:54px;">ROT ADJ BTN SW</div>
       </div>
     </div>
 
