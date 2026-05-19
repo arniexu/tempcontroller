@@ -17,7 +17,7 @@ a mcu project used to test ai workflow
 
 ## STM32F103RBT6 最小集成骨架（HAL + FreeRTOS + 设备驱动）
 
-已新增目录：`/home/runner/work/tempcontroller/tempcontroller/firmware`
+已新增目录：`firmware/`
 
 - `Core/Inc/board_pins.h`：管脚定义（可按实际硬件改）
 - `Core/Inc/tempcontroller_config.h`：控制周期与默认参数

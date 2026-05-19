@@ -5,9 +5,6 @@
 
 #define OLED_CTRL_CMD  0x00U
 #define OLED_CTRL_DATA 0x40U
-#define OLED_BUF_SIZE  (96U * 96U / 8U)
-
-static uint8_t s_oled_fb[OLED_BUF_SIZE];
 
 static HAL_StatusTypeDef oled_tx(oled96x96_t *dev, uint8_t ctrl, const uint8_t *data, uint16_t len)
 {
@@ -38,8 +35,8 @@ HAL_StatusTypeDef oled96x96_init(oled96x96_t *dev)
 
 HAL_StatusTypeDef oled96x96_fill(oled96x96_t *dev, uint8_t value)
 {
-    memset(s_oled_fb, value, sizeof(s_oled_fb));
-    return oled_tx(dev, OLED_CTRL_DATA, s_oled_fb, (uint16_t)sizeof(s_oled_fb));
+    memset(dev->framebuffer, value, sizeof(dev->framebuffer));
+    return oled_tx(dev, OLED_CTRL_DATA, dev->framebuffer, (uint16_t)sizeof(dev->framebuffer));
 }
 
 HAL_StatusTypeDef oled96x96_show_status(oled96x96_t *dev, bool heating, float current_temp, float target_temp, float tolerance)

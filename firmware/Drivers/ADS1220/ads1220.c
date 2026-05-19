@@ -3,6 +3,8 @@
 #define ADS1220_CMD_RESET      0x06U
 #define ADS1220_CMD_START_SYNC 0x08U
 #define ADS1220_CMD_RDATA      0x10U
+#define ADS1220_TEMP_SCALE_C_PER_LSB 0.001f
+#define ADS1220_TEMP_OFFSET_C 0.0f
 
 static inline void ads1220_cs(ads1220_t *dev, GPIO_PinState state)
 {
@@ -67,5 +69,5 @@ HAL_StatusTypeDef ads1220_read_raw24(ads1220_t *dev, int32_t *raw, uint32_t time
 
 float ads1220_raw_to_celsius(int32_t raw)
 {
-    return (float)raw * 0.001f;
+    return ((float)raw * ADS1220_TEMP_SCALE_C_PER_LSB) + ADS1220_TEMP_OFFSET_C;
 }

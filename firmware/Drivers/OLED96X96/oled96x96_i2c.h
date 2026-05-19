@@ -12,6 +12,7 @@ extern "C" {
 typedef struct {
     I2C_HandleTypeDef *hi2c;
     uint16_t addr_7bit;
+    uint8_t framebuffer[96U * 96U / 8U];
 } oled96x96_t;
 
 HAL_StatusTypeDef oled96x96_init(oled96x96_t *dev);

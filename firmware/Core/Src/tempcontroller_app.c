@@ -11,6 +11,7 @@
 #include "FreeRTOS.h"
 #include "event_groups.h"
 #include "queue.h"
+#include "semphr.h"
 #include "task.h"
 
 extern I2C_HandleTypeDef OLED_I2C_HANDLE;
@@ -23,8 +24,9 @@ static tempctrl_runtime_t s_runtime;
 
 static QueueHandle_t s_input_queue;
 static EventGroupHandle_t s_event_group;
+static SemaphoreHandle_t s_runtime_lock;
 
-#define EVT_NEW_SAMPLE   (1U << 0)
+#define EVT_NEW_SAMPLE (1U << 0)
 
 static void tempcontroller_runtime_init(void)
 {
@@ -36,6 +38,67 @@ static void tempcontroller_runtime_init(void)
     s_runtime.focus = TEMPCTRL_FOCUS_TARGET;
 }
 
+static void tempcontroller_runtime_store_current_temp(float value)
+{
+    if (xSemaphoreTake(s_runtime_lock, portMAX_DELAY) == pdTRUE) {
+        s_runtime.current_temp_c = value;
+        (void)xSemaphoreGive(s_runtime_lock);
+    }
+}
+
+static tempctrl_runtime_t tempcontroller_runtime_snapshot(void)
+{
+    tempctrl_runtime_t snap = {0};
+    if (xSemaphoreTake(s_runtime_lock, portMAX_DELAY) == pdTRUE) {
+        snap = s_runtime;
+        (void)xSemaphoreGive(s_runtime_lock);
+    }
+    return snap;
+}
+
+static void tempcontroller_runtime_update_control(void)
+{
+    if (xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE) {
+        return;
+    }
+
+    if (s_runtime.heating_on) {
+        if (s_runtime.current_temp_c >= s_runtime.target_temp_c) {
+            s_runtime.heating_on = false;
+            s_runtime.state = TEMPCTRL_STATE_HOLD;
+        }
+    } else if (s_runtime.current_temp_c <= (s_runtime.target_temp_c - s_runtime.tolerance_c)) {
+        s_runtime.heating_on = true;
+        s_runtime.state = TEMPCTRL_STATE_HEATING;
+    }
+
+    (void)xSemaphoreGive(s_runtime_lock);
+}
+
+static void tempcontroller_runtime_apply_input(const tempctrl_input_event_t *evt)
+{
+    if (xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE) {
+        return;
+    }
+
+    if (evt->key_pressed) {
+        s_runtime.focus = (s_runtime.focus == TEMPCTRL_FOCUS_TARGET) ? TEMPCTRL_FOCUS_TOLERANCE : TEMPCTRL_FOCUS_TARGET;
+    }
+
+    if (evt->step != 0) {
+        if (s_runtime.focus == TEMPCTRL_FOCUS_TARGET) {
+            s_runtime.target_temp_c += evt->step * TEMPCONTROLLER_STEP_PER_CLICK_C;
+        } else {
+            s_runtime.tolerance_c += evt->step * TEMPCONTROLLER_STEP_PER_CLICK_C;
+            if (s_runtime.tolerance_c < 0.1f) {
+                s_runtime.tolerance_c = 0.1f;
+            }
+        }
+    }
+
+    (void)xSemaphoreGive(s_runtime_lock);
+}
+
 static void task_sample(void *arg)
 {
     (void)arg;
@@ -43,7 +106,7 @@ static void task_sample(void *arg)
     for (;;) {
         int32_t raw = 0;
         if (ads1220_read_raw24(&s_ads1220, &raw, TEMPCONTROLLER_SAMPLE_TIMEOUT_MS) == HAL_OK) {
-            s_runtime.current_temp_c = ads1220_raw_to_celsius(raw);
+            tempcontroller_runtime_store_current_temp(ads1220_raw_to_celsius(raw));
             xEventGroupSetBits(s_event_group, EVT_NEW_SAMPLE);
         }
         vTaskDelay(pdMS_TO_TICKS(TEMPCONTROLLER_CONTROL_PERIOD_MS));
@@ -74,29 +137,11 @@ static void task_control(void *arg)
     for (;;) {
         EventBits_t bits = xEventGroupWaitBits(s_event_group, EVT_NEW_SAMPLE, pdTRUE, pdFALSE, pdMS_TO_TICKS(TEMPCONTROLLER_CONTROL_PERIOD_MS));
         if ((bits & EVT_NEW_SAMPLE) != 0U) {
-            if (s_runtime.current_temp_c < (s_runtime.target_temp_c - s_runtime.tolerance_c)) {
-                s_runtime.heating_on = true;
-                s_runtime.state = TEMPCTRL_STATE_HEATING;
-            } else {
-                s_runtime.heating_on = false;
-                s_runtime.state = TEMPCTRL_STATE_HOLD;
-            }
+            tempcontroller_runtime_update_control();
         }
 
         while (xQueueReceive(s_input_queue, &evt, 0U) == pdPASS) {
-            if (evt.key_pressed) {
-                s_runtime.focus = (s_runtime.focus == TEMPCTRL_FOCUS_TARGET) ? TEMPCTRL_FOCUS_TOLERANCE : TEMPCTRL_FOCUS_TARGET;
-            }
-            if (evt.step != 0) {
-                if (s_runtime.focus == TEMPCTRL_FOCUS_TARGET) {
-                    s_runtime.target_temp_c += evt.step * 0.1f;
-                } else {
-                    s_runtime.tolerance_c += evt.step * 0.1f;
-                    if (s_runtime.tolerance_c < 0.1f) {
-                        s_runtime.tolerance_c = 0.1f;
-                    }
-                }
-            }
+            tempcontroller_runtime_apply_input(&evt);
         }
     }
 }
@@ -106,12 +151,13 @@ static void task_display(void *arg)
     (void)arg;
 
     for (;;) {
+        tempctrl_runtime_t snap = tempcontroller_runtime_snapshot();
         (void)oled96x96_show_status(
             &s_oled,
-            s_runtime.heating_on,
-            s_runtime.current_temp_c,
-            s_runtime.target_temp_c,
-            s_runtime.tolerance_c);
+            snap.heating_on,
+            snap.current_temp_c,
+            snap.target_temp_c,
+            snap.tolerance_c);
 
         vTaskDelay(pdMS_TO_TICKS(TEMPCONTROLLER_DISPLAY_PERIOD_MS));
     }
@@ -146,10 +192,15 @@ void tempcontroller_app_init(void)
 
     s_input_queue = xQueueCreate(TEMPCONTROLLER_QUEUE_LEN, sizeof(tempctrl_input_event_t));
     s_event_group = xEventGroupCreate();
+    s_runtime_lock = xSemaphoreCreateMutex();
 }
 
 void tempcontroller_app_start(void)
 {
+    if (s_input_queue == NULL || s_event_group == NULL || s_runtime_lock == NULL) {
+        return;
+    }
+
     xTaskCreate(task_sample, "sample", 256U, NULL, osPriorityNormal, NULL);
     xTaskCreate(task_control, "control", 256U, NULL, osPriorityAboveNormal, NULL);
     xTaskCreate(task_display, "display", 256U, NULL, osPriorityBelowNormal, NULL);
