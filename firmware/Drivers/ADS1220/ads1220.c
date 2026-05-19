@@ -13,6 +13,7 @@
 #define ADS1220_DEFAULT_RETRIES 2U
 #define ADS1220_DEFAULT_SPI_TIMEOUT_MS 20U
 #define ADS1220_DEFAULT_DRDY_TIMEOUT_MS 100U
+/* ADS1220 internal temperature sensor output LSB is 1/32°C in temp mode (datasheet transfer function). */
 #define ADS1220_DEFAULT_TEMP_SCALE_C_PER_LSB 0.03125f
 #define ADS1220_DEFAULT_TEMP_OFFSET_C 0.0f
 
