@@ -1,6 +1,6 @@
 #include "tempcontroller_pid_autotune.h"
 
-#define TEMPCONTROLLER_PI_VALUE 3.1415926f
+#define TEMPCONTROLLER_PI 3.1415926f
 
 void tempctrl_pid_autotune_init(tempctrl_pid_autotune_t *ctx)
 {
@@ -43,7 +43,7 @@ static bool tempctrl_pid_autotune_finalize(const tempctrl_pid_autotune_t *ctx, t
         return false;
     }
 
-    float ku = (4.0f * ctx->cfg.relay_amplitude_c) / (TEMPCONTROLLER_PI_VALUE * amp_c);
+    float ku = (4.0f * ctx->cfg.relay_amplitude_c) / (TEMPCONTROLLER_PI * amp_c);
     out_gains->kp = 0.6f * ku;
     out_gains->ki = (1.2f * ku) / pu_s;
     out_gains->kd = 0.075f * ku * pu_s;

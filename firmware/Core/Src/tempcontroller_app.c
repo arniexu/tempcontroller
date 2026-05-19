@@ -99,6 +99,7 @@ static void tempcontroller_runtime_update_control(void)
         uint32_t now_ms = (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS);
         bool tune_done = tempctrl_pid_autotune_step(&s_pid_autotune, s_runtime.current_temp_c, now_ms, &relay_on, &tuned);
         s_runtime.heating_on = relay_on;
+        s_runtime.autotune_running = s_pid_autotune.running;
         if (tune_done) {
             s_runtime.pid_kp = tuned.kp;
             s_runtime.pid_ki = tuned.ki;
@@ -106,8 +107,7 @@ static void tempcontroller_runtime_update_control(void)
             s_runtime.autotune_running = false;
             s_runtime.autotune_done = true;
             s_runtime.state = TEMPCTRL_STATE_HOLD;
-        } else if (!s_pid_autotune.running) {
-            s_runtime.autotune_running = false;
+        } else if (!s_runtime.autotune_running) {
             s_runtime.autotune_done = true;
             s_runtime.state = TEMPCTRL_STATE_IDLE;
         }
