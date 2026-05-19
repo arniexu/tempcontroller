@@ -66,6 +66,19 @@ a mcu project used to test ai workflow
 - 在 CubeIDE/CubeMX 工程中请将 `firmware/STM32CubeF1/Inc` 加入 Include Path
 - 这些文件仅提供接口与类型对齐；实际硬件运行仍需链接 STM32CubeF1 官方 HAL 源码实现
 
+## FreeRTOS 移植
+
+- 已新增目录：`firmware/FreeRTOS/Inc`
+- 提供了本项目当前使用到的 FreeRTOS 头文件子集：
+  - `FreeRTOS.h`
+  - `task.h`
+  - `queue.h`
+  - `semphr.h`
+  - `event_groups.h`
+  - `cmsis_os.h`（兼容占位）
+- 在 CubeIDE/CubeMX 工程中请将 `firmware/FreeRTOS/Inc` 加入 Include Path
+- 这些文件仅提供接口与类型对齐；实际硬件运行仍需链接 FreeRTOS 内核源码实现
+
 ## PID 自整定（已移植：中继法 Relay Auto-Tune）
 
 - 新增：
