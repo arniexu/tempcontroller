@@ -172,7 +172,7 @@ static void task_sample(void *arg)
     for (;;) {
         int32_t raw = 0;
         if (ads1220_read_raw24(&s_ads1220, &raw, TEMPCONTROLLER_SAMPLE_TIMEOUT_MS) == HAL_OK) {
-            tempcontroller_runtime_store_current_temp(ads1220_raw_to_celsius(raw));
+            tempcontroller_runtime_store_current_temp(ads1220_raw_to_celsius(&s_ads1220, raw));
             xEventGroupSetBits(s_event_group, EVT_NEW_SAMPLE);
         }
         vTaskDelayUntil(&last_wake_time, pdMS_TO_TICKS(TEMPCONTROLLER_CONTROL_PERIOD_MS));
@@ -240,9 +240,11 @@ void tempcontroller_app_init(void)
     s_ads1220.drdy_pin = ADS1220_DRDY_PIN;
     s_ads1220.rst_port = ADS1220_RST_PORT;
     s_ads1220.rst_pin = ADS1220_RST_PIN;
+    ads1220_get_default_config(&s_ads1220.config);
 
     s_oled.hi2c = &OLED_I2C_HANDLE;
     s_oled.addr_7bit = OLED_I2C_ADDR_7BIT;
+    oled96x96_get_default_config(&s_oled.config);
 
     s_ec11.port_a = EC11_A_PORT;
     s_ec11.pin_a = EC11_A_PIN;
