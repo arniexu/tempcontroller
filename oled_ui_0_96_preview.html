@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>96x96 OLED 极简界面 / Minimal UI</title>
+  <style>
+    :root {
+      --scale: 4;
+      --bg: #05110b;
+      --fg: #d9ffe9;
+      --frame: #2e4b3e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #0a0f0c;
+      color: #d2e9db;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", sans-serif;
+      padding: 20px;
+    }
+    .wrap { width: min(92vw, 760px); }
+    .title { margin: 0 0 10px; font-size: 14px; color: #9fc5b1; }
+
+    .oled {
+      width: calc(96px * var(--scale));
+      height: calc(96px * var(--scale));
+      border: 1px solid var(--frame);
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+      image-rendering: pixelated;
+    }
+
+    .screen {
+      width: 96px;
+      height: 96px;
+      transform: scale(var(--scale));
+      transform-origin: top left;
+      position: absolute;
+      inset: 0;
+      color: var(--fg);
+      background: var(--bg);
+      font-smooth: never;
+      -webkit-font-smoothing: none;
+    }
+
+    .cn12 { font-size: 12px; line-height: 12px; white-space: pre; }
+    .ascii8 {
+      font-size: 8px;
+      line-height: 8px;
+      font-family: "Consolas", "Cascadia Mono", monospace;
+      white-space: pre;
+    }
+    .ascii16 {
+      font-size: 16px;
+      line-height: 16px;
+      font-family: "Consolas", "Cascadia Mono", monospace;
+      white-space: pre;
+    }
+    .temp-big {
+      font-size: 32px;
+      line-height: 32px;
+      letter-spacing: -1px;
+      font-weight: 700;
+      font-family: "DIN Alternate", "Bahnschrift", "Segoe UI", "Arial Narrow", "Trebuchet MS", sans-serif;
+      white-space: pre;
+    }
+    .p { position: absolute; }
+    .status-tag {
+      outline: 1px solid var(--fg);
+      padding: 0 1px;
+    }
+    .sel {
+      outline: 1px solid var(--fg);
+      background: var(--fg);
+      color: var(--bg);
+      padding: 0 1px;
+    }
+
+    .notes {
+      margin-top: 10px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #9fc5b1;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="title"><span lang="zh-CN">0.96" OLED（96x96）极简界面（真实像素约束）</span> / <span lang="en">Minimal UI</span></h1>
+    <div class="oled" role="img" aria-label="温控器 OLED 极简界面 / Temperature Controller OLED Minimal UI">
+      <div class="screen">
+        <!-- 左上角：单标签双状态（示例当前为加热中） -->
+        <div class="p cn12 status-tag" lang="zh-CN" role="status" style="left:0px; top:0px;">加热中</div>
+
+        <!-- 可设置参数：目标温度 / 允许误差，按下切换选中 -->
+        <div class="p ascii8 sel" aria-label="Target Temperature: 25.0" style="left:60px; top:0px;">T:25.0</div>
+        <div class="p ascii8" aria-label="Error Tolerance: 0.5" style="left:60px; top:10px;">E:0.5</div>
+
+        <!-- 中间：大号当前温度 -->
+        <div class="p temp-big" role="text" aria-label="Current Temperature: 23.8 degrees Celsius" style="left:10px; top:27px;">23.8C</div>
+
+        <!-- 右下角：允许误差 -->
+        <div class="p ascii8" aria-label="Error Tolerance Range: plus or minus 0.5 degrees Celsius" style="left:62px; top:81px;">±0.5C</div>
+
+      </div>
+    </div>
+
+    <div class="notes" lang="zh-CN">
+      中间大号显示当前温度；左上角状态标签可在“加热中 / 恒温保持中”切换；右下角显示允许误差；目标温度与误差支持编码器旋转设置、按下切换选中项。
+    </div>
+  </div>
+</body>
+</html>
