@@ -64,6 +64,7 @@ a mcu project used to test ai workflow
 - 提供了本项目当前使用到的 STM32CubeF1 HAL 头文件子集（GPIO/I2C/SPI/CORTEX + 基础 HAL 定义）
 - 现有驱动中对 `stm32f1xx_hal.h` 的依赖可直接复用该目录
 - 在 CubeIDE/CubeMX 工程中请将 `firmware/STM32CubeF1/Inc` 加入 Include Path
+- 这些文件仅提供接口与类型对齐；实际硬件运行仍需链接 STM32CubeF1 官方 HAL 源码实现
 
 ## PID 自整定（已移植：中继法 Relay Auto-Tune）
 

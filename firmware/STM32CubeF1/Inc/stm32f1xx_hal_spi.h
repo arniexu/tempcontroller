@@ -2,13 +2,14 @@
 #define STM32F1XX_HAL_SPI_H
 
 #include "stm32f1xx_hal_def.h"
+#include "stm32f1xx.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct {
-    void *Instance;
+    SPI_TypeDef *Instance;
     HAL_LockTypeDef Lock;
 } SPI_HandleTypeDef;
 

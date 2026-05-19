@@ -2,13 +2,14 @@
 #define STM32F1XX_HAL_I2C_H
 
 #include "stm32f1xx_hal_def.h"
+#include "stm32f1xx.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct {
-    void *Instance;
+    I2C_TypeDef *Instance;
     HAL_LockTypeDef Lock;
 } I2C_HandleTypeDef;
 
