@@ -2,6 +2,7 @@
 
 #include "board_pins.h"
 #include "tempcontroller_config.h"
+#include "tempcontroller_pid_autotune.h"
 #include "tempcontroller_types.h"
 
 #include "ads1220.h"
@@ -21,6 +22,7 @@ static ads1220_t s_ads1220;
 static oled96x96_t s_oled;
 static ec11_t s_ec11;
 static tempctrl_runtime_t s_runtime;
+static tempctrl_pid_autotune_t s_pid_autotune;
 
 static QueueHandle_t s_input_queue;
 static EventGroupHandle_t s_event_group;
@@ -41,9 +43,15 @@ static void tempcontroller_runtime_init(void)
     s_runtime.current_temp_c = 0.0f;
     s_runtime.target_temp_c = TEMPCONTROLLER_DEFAULT_TARGET_C;
     s_runtime.tolerance_c = TEMPCONTROLLER_DEFAULT_TOLERANCE_C;
+    s_runtime.pid_kp = TEMPCONTROLLER_DEFAULT_PID_KP;
+    s_runtime.pid_ki = TEMPCONTROLLER_DEFAULT_PID_KI;
+    s_runtime.pid_kd = TEMPCONTROLLER_DEFAULT_PID_KD;
     s_runtime.heating_on = false;
+    s_runtime.autotune_running = false;
+    s_runtime.autotune_done = false;
     s_runtime.state = TEMPCTRL_STATE_IDLE;
     s_runtime.focus = TEMPCTRL_FOCUS_TARGET;
+    tempctrl_pid_autotune_init(&s_pid_autotune);
 }
 
 static void tempcontroller_runtime_store_current_temp(float value)
@@ -69,6 +77,43 @@ static void tempcontroller_runtime_update_control(void)
     if (xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE) {
         return;
     }
+
+#if (TEMPCONTROLLER_ENABLE_AUTOTUNE == 1U)
+    if (!s_runtime.autotune_running && !s_runtime.autotune_done) {
+        tempctrl_pid_autotune_cfg_t cfg = {
+            .setpoint_c = s_runtime.target_temp_c,
+            .relay_amplitude_c = TEMPCONTROLLER_AUTOTUNE_RELAY_C,
+            .hysteresis_c = TEMPCONTROLLER_AUTOTUNE_HYST_C,
+            .cycles = TEMPCONTROLLER_AUTOTUNE_CYCLES,
+            .timeout_ms = TEMPCONTROLLER_AUTOTUNE_TIMEOUT_MS
+        };
+        uint32_t now_ms = (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS);
+        tempctrl_pid_autotune_start(&s_pid_autotune, &cfg, now_ms);
+        s_runtime.autotune_running = true;
+        s_runtime.state = TEMPCTRL_STATE_AUTOTUNE;
+    }
+
+    if (s_runtime.autotune_running) {
+        bool relay_on = false;
+        tempctrl_pid_gains_t tuned = {0};
+        uint32_t now_ms = (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS);
+        bool tune_done = tempctrl_pid_autotune_step(&s_pid_autotune, s_runtime.current_temp_c, now_ms, &relay_on, &tuned);
+        s_runtime.heating_on = relay_on;
+        s_runtime.autotune_running = s_pid_autotune.running;
+        if (tune_done) {
+            s_runtime.pid_kp = tuned.kp;
+            s_runtime.pid_ki = tuned.ki;
+            s_runtime.pid_kd = tuned.kd;
+            s_runtime.autotune_done = true;
+            s_runtime.state = TEMPCTRL_STATE_HOLD;
+        } else if (!s_runtime.autotune_running) {
+            s_runtime.autotune_done = true;
+            s_runtime.state = TEMPCTRL_STATE_IDLE;
+        }
+        (void)xSemaphoreGive(s_runtime_lock);
+        return;
+    }
+#endif
 
     float half_band = s_runtime.tolerance_c * 0.5f;
     float turn_on_th = s_runtime.target_temp_c - half_band;
@@ -100,6 +145,14 @@ static void tempcontroller_runtime_apply_input(const tempctrl_input_event_t *evt
     if (evt->step != 0) {
         if (s_runtime.focus == TEMPCTRL_FOCUS_TARGET) {
             s_runtime.target_temp_c += evt->step * TEMPCONTROLLER_STEP_PER_CLICK_C;
+#if (TEMPCONTROLLER_ENABLE_AUTOTUNE == 1U)
+            if (s_runtime.autotune_running) {
+                tempctrl_pid_autotune_stop(&s_pid_autotune);
+                s_runtime.autotune_running = false;
+                s_runtime.state = TEMPCTRL_STATE_IDLE;
+            }
+            s_runtime.autotune_done = false;
+#endif
         } else {
             s_runtime.tolerance_c += evt->step * TEMPCONTROLLER_STEP_PER_CLICK_C;
             if (s_runtime.tolerance_c < 0.1f) {
