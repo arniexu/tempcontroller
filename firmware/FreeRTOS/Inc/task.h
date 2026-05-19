@@ -10,13 +10,17 @@ extern "C" {
 typedef void (*TaskFunction_t)(void *arg);
 typedef void *TaskHandle_t;
 
+#ifndef configSTACK_DEPTH_TYPE
+#define configSTACK_DEPTH_TYPE uint16_t
+#endif
+
 #ifndef tskIDLE_PRIORITY
 #define tskIDLE_PRIORITY ((UBaseType_t)0U)
 #endif
 
 BaseType_t xTaskCreate(TaskFunction_t pxTaskCode,
                        const char *const pcName,
-                       const uint16_t usStackDepth,
+                       const configSTACK_DEPTH_TYPE usStackDepth,
                        void *const pvParameters,
                        UBaseType_t uxPriority,
                        TaskHandle_t *const pxCreatedTask);
