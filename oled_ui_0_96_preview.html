@@ -91,7 +91,7 @@
 </head>
 <body>
   <div class="wrap">
-    <h1 class="title" lang="zh-CN">0.96" OLED（128x64）极简界面（真实像素约束） / <span lang="en">Minimal UI</span></h1>
+    <h1 class="title"><span lang="zh-CN">0.96" OLED（128x64）极简界面（真实像素约束）</span> / <span lang="en">Minimal UI</span></h1>
     <div class="oled" role="img" aria-label="温控器 OLED 极简界面 / Temperature Controller OLED Minimal UI">
       <div class="screen">
         <!-- 左上角：单标签双状态（示例当前为加热中） -->
@@ -105,14 +105,14 @@
         <div class="p temp-big" role="text" aria-label="Current Temperature: 23.8 degrees Celsius" style="left:14px; top:18px;">23.8C</div>
 
         <!-- 右下角：允许误差 -->
-        <div class="p ascii8" style="left:84px; top:54px;">±0.5C</div>
+        <div class="p ascii8" aria-label="Error Tolerance Range: plus or minus 0.5 degrees Celsius" style="left:84px; top:54px;">±0.5C</div>
 
         <!-- 旋转编码器操作提示 -->
-        <div class="p ascii8" lang="en" style="left:0px; top:54px;">ROT ADJ BTN SW</div>
+        <div class="p ascii8" lang="en" aria-label="Rotate to adjust, button to switch" style="left:0px; top:54px;">ROT ADJ BTN SW</div>
       </div>
     </div>
 
-    <div class="notes">
+    <div class="notes" lang="zh-CN">
       中间大号显示当前温度；左上角状态标签可在“加热中 / 恒温保持中”切换；右下角显示允许误差；目标温度与误差支持编码器旋转设置、按下切换选中项。
     </div>
   </div>
