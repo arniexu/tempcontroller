@@ -104,7 +104,6 @@ static void tempcontroller_runtime_update_control(void)
             s_runtime.pid_kp = tuned.kp;
             s_runtime.pid_ki = tuned.ki;
             s_runtime.pid_kd = tuned.kd;
-            s_runtime.autotune_running = false;
             s_runtime.autotune_done = true;
             s_runtime.state = TEMPCTRL_STATE_HOLD;
         } else if (!s_runtime.autotune_running) {
@@ -150,6 +149,7 @@ static void tempcontroller_runtime_apply_input(const tempctrl_input_event_t *evt
             if (s_runtime.autotune_running) {
                 tempctrl_pid_autotune_stop(&s_pid_autotune);
                 s_runtime.autotune_running = false;
+                s_runtime.state = TEMPCTRL_STATE_IDLE;
             }
             s_runtime.autotune_done = false;
 #endif
