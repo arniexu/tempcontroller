@@ -12,7 +12,6 @@ static lv_obj_t *ui_target_label;
 static lv_obj_t *ui_error_label;
 static lv_obj_t *ui_temp_label;
 static lv_obj_t *ui_tolerance_label;
-static lv_obj_t *ui_hint_label;
 
 static lv_style_t style_screen;
 static lv_style_t style_ascii;
@@ -134,11 +133,6 @@ void tempcontroller_oled_ui_create(lv_obj_t *parent)
     lv_obj_add_style(ui_tolerance_label, &style_ascii, LV_PART_MAIN);
     lv_label_set_text(ui_tolerance_label, "±0.5C");
     lv_obj_set_pos(ui_tolerance_label, 84, 54);
-
-    ui_hint_label = lv_label_create(parent);
-    lv_obj_add_style(ui_hint_label, &style_ascii, LV_PART_MAIN);
-    lv_label_set_text(ui_hint_label, "ROT ADJ BTN SW");
-    lv_obj_set_pos(ui_hint_label, 0, 54);
 
     tempcontroller_oled_ui_set_focus(OLED_FOCUS_TARGET);
 }
