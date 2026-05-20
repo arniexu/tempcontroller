@@ -20,13 +20,13 @@ extern "C" {
 #define ADS1220_RST_PIN            GPIO_PIN_1
 
 #define EC11_A_PORT                GPIOA
-#define EC11_A_PIN                 GPIO_PIN_0
+#define EC11_A_PIN                 GPIO_PIN_3
 #define EC11_B_PORT                GPIOA
 #define EC11_B_PIN                 GPIO_PIN_1
 #define EC11_KEY_PORT              GPIOA
 #define EC11_KEY_PIN               GPIO_PIN_2
 
-#define EC11_EXTI_IRQ_A            EXTI0_IRQn
+#define EC11_EXTI_IRQ_A            EXTI3_IRQn
 #define EC11_EXTI_IRQ_B            EXTI1_IRQn
 #define EC11_EXTI_IRQ_KEY          EXTI2_IRQn
 

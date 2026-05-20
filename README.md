@@ -42,7 +42,7 @@ a mcu project used to test ai workflow
 
 - OLED(I2C1): `PB6(SCL)` `PB7(SDA)` 地址 `0x3C`
 - ADS1220(SPI1): `PA5(SCK)` `PA6(MISO)` `PA7(MOSI)` `PA4(CS)` `PB0(DRDY)` `PB1(RST)`
-- EC11: `PA0(A)` `PA1(B)` `PA2(KEY)`
+- EC11: `PA3(A)` `PA1(B)` `PA2(KEY)`
 
 接入步骤：
 
